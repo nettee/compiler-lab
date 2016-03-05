@@ -1,2 +1,8 @@
 parser
+
+*.yy.c
+
+*.out
+*.o
+
 *.pdf
