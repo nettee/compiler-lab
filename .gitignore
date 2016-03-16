@@ -6,3 +6,5 @@ parser
 *.o
 
 *.pdf
+
+Test/auto/*.cmm
