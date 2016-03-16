@@ -4,9 +4,9 @@
 
 delim [ \t\n]
 ws {delim}+
-letter [A-Za-z]
+letter_ [A-Za-z]
 digit [0-9]
-id {letter}({letter}|{digit})*
+id {letter_}({letter_}|{digit})*
 number {digit}+(\.{digit}?)?(E[+-]?{digit}+)?
 
 %%
@@ -33,12 +33,12 @@ whlie { printf("WHLIE"); }
 ";" { printf("SEMI\n"); }
 "," { printf("COMMA\n"); }
 "=" { printf("ASSIGNOP\n"); }
-"<" { printf("RELOP LT\n"); }
-"<=" { printf("RELOP GT\n"); }
-">" { printf("RELOP GT\n"); }
-">=" { printf("RELOP GE\n"); }
-"==" { printf("RELOP EQ\n"); }
-"!=" { printf("RELOP NE\n"); }
+"<" { printf("RELOP-LT\n"); }
+"<=" { printf("RELOP-LE\n"); }
+">" { printf("RELOP-GT\n"); }
+">=" { printf("RELOP-GE\n"); }
+"==" { printf("RELOP-EQ\n"); }
+"!=" { printf("RELOP-NE\n"); }
 "+" { printf("PLUS\n"); }
 "-" { printf("MINUS\n"); }
 "*" { printf("STAR\n"); }
