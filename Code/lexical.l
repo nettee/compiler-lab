@@ -1,5 +1,8 @@
 %{
+#include <stdio.h>
+#include <stdlib.h>
 
+void error();
 %}
 
 delim [ \t\n]
@@ -10,7 +13,7 @@ letter_ {letter}|_
 digit [0-9]
 
 integer 0|[1-9]{digit}*
-oct 0[1-7][0-7]*
+oct 0[0-7]+
 inv_oct 0{digit}+
 hex 0[Xx][0-9A-Fa-f]+
 inv_hex 0[Xx]({digit}|{letter})+
@@ -40,6 +43,7 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
     /* invalid oct number */
     printf("Error type A at Line %d: Invalid OCT '%s'\n",
             yylineno, yytext);
+    error();
 }
 
 {hex} {
@@ -50,6 +54,7 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 {inv_hex} {
     printf("Error type A at Line %d: Invalid HEX '%s'\n",
             yylineno, yytext);
+    error();
 }
 
 {float} {
@@ -74,6 +79,7 @@ whlie { printf("WHLIE"); }
     /* invalid id */
     printf("Error type A at Line %d: Invalid ID '%s'\n", 
             yylineno, yytext);
+    error();
 }
 
 ";" { printf("SEMI\n"); }
@@ -103,9 +109,14 @@ whlie { printf("WHLIE"); }
 . {
     printf("Error type A at Line %d: Mysterious character '%s'\n",
             yylineno, yytext);
+    error();
 }
 
 %%
+
+void error() {
+    
+}
 
 int main(int argc, char **argv) {
     yylex();
