@@ -52,7 +52,9 @@ def test_single_token():
         cmd = "echo '{}' > {}".format(token, filename)
         subprocess.call(cmd, shell=True)
     
-        test_cmd = '../../Code/lexer < {}'.format(filename)
+        lexer_path = '../../Code/lexer.out'
+        test_cmd = '{} < {}'.format(lexer_path, filename)
+
         proc = subprocess.Popen(test_cmd, shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
@@ -61,8 +63,17 @@ def test_single_token():
         passed = output_result(token, expected[token], out)
 
 
+def test_id():
+
+    proc = subprocess.Popen('ls test-id-*.cmm', shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+    out = proc.stdout.read().decode('utf-8')
+    for item in out.split('\n'):
+        print(item)
     
 
 if __name__ == '__main__':
 
-    test_single_token()
+    #test_single_token()
+    test_id()
