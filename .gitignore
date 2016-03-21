@@ -8,3 +8,5 @@ parser
 *.pdf
 
 Test/auto/*.cmm
+
+*.swp

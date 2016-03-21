@@ -1,5 +1,5 @@
-int main()
+int inc()
 {
-    int i = 1;
-    int j = 2;
+    int i;
+    i = i + 1;
 }

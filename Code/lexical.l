@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "syntax.tab.h"
+
 void error();
 %}
 
@@ -32,11 +34,15 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 {integer} {
     int num = atoi(yytext);
     printf("INTEGER %d\n", num);
+
+    return INT;
 }
 
 {oct} {
     unsigned int num = (unsigned int)strtol(yytext, NULL, 8);
     printf("OCT 0%o\n", num);
+
+    return INT;
 }
 
 {inv_oct} {
@@ -49,6 +55,8 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 {hex} {
     unsigned int num = (unsigned int)strtol(yytext, NULL, 16);
     printf("HEX 0x%x\n", num);
+
+    return INT;
 }
 
 {inv_hex} {
@@ -60,19 +68,22 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 {float} {
     float num = atof(yytext);
     printf("FLOAT %.3f\n", num);
+
+    return FLOAT;
 }
 
-int { printf("TYPE int\n"); }
-float { printf("TYPE float\n"); }
+int { printf("TYPE int\n"); return TYPE; }
+float { printf("TYPE float\n"); return TYPE; }
 
-struct { printf("STRUCT\n"); }
-return { printf("RETURN\n"); }
-if { printf("IF\n"); }
-else { printf("ELSE\n"); }
-whlie { printf("WHLIE"); }
+struct { printf("STRUCT\n"); return STRUCT; }
+return { printf("RETURN\n"); return RETURN; }
+if { printf("IF\n"); return IF; }
+else { printf("ELSE\n"); return ELSE; }
+whlie { printf("WHLIE"); return WHILE; }
 
 {id} { 
     printf("ID '%s'\n", yytext); 
+    return ID;
 }
 
 {inv_id} {
@@ -82,29 +93,29 @@ whlie { printf("WHLIE"); }
     error();
 }
 
-";" { printf("SEMI\n"); }
-"," { printf("COMMA\n"); }
-"=" { printf("ASSIGNOP\n"); }
-"<" { printf("RELOP-LT\n"); }
-"<=" { printf("RELOP-LE\n"); }
-">" { printf("RELOP-GT\n"); }
-">=" { printf("RELOP-GE\n"); }
-"==" { printf("RELOP-EQ\n"); }
-"!=" { printf("RELOP-NE\n"); }
-"+" { printf("PLUS\n"); }
-"-" { printf("MINUS\n"); }
-"*" { printf("STAR\n"); }
-"/" { printf("DIV\n"); }
-"&&" { printf("AND\n"); }
-"||" { printf("OR\n"); }
-"." { printf("DOT\n"); }
-"!" { printf("NOT\n"); }
-"(" { printf("LP\n"); }
-")" { printf("RP\n"); }
-"[" { printf("LB\n"); }
-"]" { printf("RB\n"); }
-"{" { printf("LC\n"); }
-"}" { printf("RC\n"); }
+";" { printf("SEMI\n"); return SEMI; }
+"," { printf("COMMA\n"); return COMMA; }
+"=" { printf("ASSIGNOP\n"); return ASSIGNOP; }
+"<" { printf("RELOP-LT\n"); return RELOP; }
+"<=" { printf("RELOP-LE\n"); return RELOP; }
+">" { printf("RELOP-GT\n"); return RELOP; }
+">=" { printf("RELOP-GE\n"); return RELOP; }
+"==" { printf("RELOP-EQ\n"); return RELOP; }
+"!=" { printf("RELOP-NE\n"); return RELOP; }
+"+" { printf("PLUS\n"); return PLUS; }
+"-" { printf("MINUS\n"); return MINUS; }
+"*" { printf("STAR\n"); return STAR; }
+"/" { printf("DIV\n"); return DIV; }
+"&&" { printf("AND\n"); return AND; }
+"||" { printf("OR\n"); return OR; }
+"." { printf("DOT\n"); return DOT; }
+"!" { printf("NOT\n"); return NOT; }
+"(" { printf("LP\n"); return LP; }
+")" { printf("RP\n"); return RP; }
+"[" { printf("LB\n"); return LB; }
+"]" { printf("RB\n"); return RB; }
+"{" { printf("LC\n"); return LC; }
+"}" { printf("RC\n"); return RC; }
 
 . {
     printf("Error type A at Line %d: Mysterious character '%s'\n",
@@ -115,10 +126,5 @@ whlie { printf("WHLIE"); }
 %%
 
 void error() {
-    
-}
-
-int main(int argc, char **argv) {
-    yylex();
-    return 0;
+    exit(1);   
 }
