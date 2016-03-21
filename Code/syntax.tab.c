@@ -62,14 +62,17 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "syntax.y" /* yacc.c:339  */
+#line 1 "./syntax.y" /* yacc.c:339  */
+
+#define YYSTYPE void *
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "lex.yy.c"
+#include "ast.h"
 
-#line 73 "syntax.tab.c" /* yacc.c:339  */
+#line 76 "./syntax.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -150,7 +153,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 154 "syntax.tab.c" /* yacc.c:358  */
+#line 157 "./syntax.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -450,12 +453,12 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    22,    22,    25,    26,    29,    30,    31,    34,    35,
-      38,    39,    42,    43,    46,    47,    50,    53,    54,    57,
-      58,    61,    62,    65,    68,    71,    72,    75,    76,    77,
-      78,    79,    80,    83,    84,    87,    90,    91,    94,    95,
-      98,    99,   100,   101,   102,   103,   104,   105,   106,   107,
-     108,   109,   110,   111,   112,   113,   114,   115,   118,   119
+       0,    25,    25,    28,    29,    32,    33,    34,    37,    38,
+      41,    42,    45,    46,    49,    50,    53,    56,    57,    60,
+      61,    64,    65,    68,    71,    74,    75,    78,    79,    80,
+      81,    82,    83,    86,    87,    90,    93,    94,    97,    98,
+     101,   102,   103,   104,   105,   106,   107,   108,   109,   110,
+     111,   112,   113,   114,   115,   116,   117,   118,   121,   122
 };
 #endif
 
@@ -1312,8 +1315,26 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-      
-#line 1317 "syntax.tab.c" /* yacc.c:1646  */
+        case 2:
+#line 25 "./syntax.y" /* yacc.c:1646  */
+    { root = newProgram((yyvsp[0])); }
+#line 1322 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 3:
+#line 28 "./syntax.y" /* yacc.c:1646  */
+    { printf("ExtDefList1\n"); }
+#line 1328 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 4:
+#line 29 "./syntax.y" /* yacc.c:1646  */
+    { printf("ExtDefList2\n"); }
+#line 1334 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+
+#line 1338 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1541,5 +1562,6 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 123 "syntax.y" /* yacc.c:1906  */
+#line 126 "./syntax.y" /* yacc.c:1906  */
+
 

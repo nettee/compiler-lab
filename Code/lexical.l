@@ -33,28 +33,27 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 
 {integer} {
     int num = atoi(yytext);
-    printf("INTEGER %d\n", num);
+    //printf("INTEGER %d\n", num);
 
     return INT;
 }
 
 {oct} {
     unsigned int num = (unsigned int)strtol(yytext, NULL, 8);
-    printf("OCT 0%o\n", num);
+    //printf("OCT 0%o\n", num);
 
     return INT;
 }
 
 {inv_oct} {
     /* invalid oct number */
-    printf("Error type A at Line %d: Invalid OCT '%s'\n",
-            yylineno, yytext);
+    printf("Error type A at Line %d: Invalid OCT '%s'\n", yylineno, yytext);
     error();
 }
 
 {hex} {
     unsigned int num = (unsigned int)strtol(yytext, NULL, 16);
-    printf("HEX 0x%x\n", num);
+    //printf("HEX 0x%x\n", num);
 
     return INT;
 }
@@ -67,19 +66,19 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 
 {float} {
     float num = atof(yytext);
-    printf("FLOAT %.3f\n", num);
+    //printf("FLOAT %.3f\n", num);
 
     return FLOAT;
 }
 
-int { printf("TYPE int\n"); return TYPE; }
-float { printf("TYPE float\n"); return TYPE; }
+int { return TYPE; }
+float { return TYPE; }
 
-struct { printf("STRUCT\n"); return STRUCT; }
-return { printf("RETURN\n"); return RETURN; }
-if { printf("IF\n"); return IF; }
-else { printf("ELSE\n"); return ELSE; }
-whlie { printf("WHLIE"); return WHILE; }
+struct { return STRUCT; }
+return { return RETURN; }
+if { return IF; }
+else { return ELSE; }
+whlie { return WHILE; }
 
 {id} { 
     printf("ID '%s'\n", yytext); 
@@ -93,29 +92,29 @@ whlie { printf("WHLIE"); return WHILE; }
     error();
 }
 
-";" { printf("SEMI\n"); return SEMI; }
-"," { printf("COMMA\n"); return COMMA; }
-"=" { printf("ASSIGNOP\n"); return ASSIGNOP; }
-"<" { printf("RELOP-LT\n"); return RELOP; }
-"<=" { printf("RELOP-LE\n"); return RELOP; }
-">" { printf("RELOP-GT\n"); return RELOP; }
-">=" { printf("RELOP-GE\n"); return RELOP; }
-"==" { printf("RELOP-EQ\n"); return RELOP; }
-"!=" { printf("RELOP-NE\n"); return RELOP; }
-"+" { printf("PLUS\n"); return PLUS; }
-"-" { printf("MINUS\n"); return MINUS; }
-"*" { printf("STAR\n"); return STAR; }
-"/" { printf("DIV\n"); return DIV; }
-"&&" { printf("AND\n"); return AND; }
-"||" { printf("OR\n"); return OR; }
-"." { printf("DOT\n"); return DOT; }
-"!" { printf("NOT\n"); return NOT; }
-"(" { printf("LP\n"); return LP; }
-")" { printf("RP\n"); return RP; }
-"[" { printf("LB\n"); return LB; }
-"]" { printf("RB\n"); return RB; }
-"{" { printf("LC\n"); return LC; }
-"}" { printf("RC\n"); return RC; }
+";" { return SEMI; }
+"," { return COMMA; }
+"=" { return ASSIGNOP; }
+"<" { return RELOP; }
+"<=" { return RELOP; }
+">" { return RELOP; }
+">=" { return RELOP; }
+"==" { return RELOP; }
+"!=" { return RELOP; }
+"+" { return PLUS; }
+"-" { return MINUS; }
+"*" { return STAR; }
+"/" { return DIV; }
+"&&" { return AND; }
+"||" { return OR; }
+"." { return DOT; }
+"!" { return NOT; }
+"(" { return LP; }
+")" { return RP; }
+"[" { return LB; }
+"]" { return RB; }
+"{" { return LC; }
+"}" { return RC; }
 
 . {
     printf("Error type A at Line %d: Mysterious character '%s'\n",

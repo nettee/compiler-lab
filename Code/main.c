@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "ast.h"
 
 int main(int argc, char **argv)
 {
@@ -12,5 +13,6 @@ int main(int argc, char **argv)
     }
     yyrestart(f);
     yyparse();
+    print_ast();
     return 0;
 }

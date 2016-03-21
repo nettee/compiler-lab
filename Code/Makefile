@@ -17,11 +17,8 @@ YFC = $(shell find ./ -name "*.y" | sed s/[^/]*\\.y/syntax.tab.c/)
 LFO = $(LFC:.c=.o)
 YFO = $(YFC:.c=.o)
 
-nettee: lexical
-	$(CC) lex.yy.c -lfl -o lexer.out
-
 parser: syntax $(filter-out $(LFO),$(OBJS))
-	$(CC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly
+	$(CC) -o parser -Wall $(filter-out $(LFO),$(OBJS)) -lfl -ly
 
 syntax: lexical syntax-c
 	$(CC) -c $(YFC) -o $(YFO)
@@ -30,7 +27,7 @@ lexical: $(LFILE)
 	$(FLEX) -o $(LFC) $(LFILE)
 
 syntax-c: $(YFILE)
-	$(BISON) -o $(YFC) -d -v $(YFILE)
+	$(BISON) -o $(YFC) -Wall -d -v $(YFILE)
 
 -include $(patsubst %.o, %.d, $(OBJS))
 

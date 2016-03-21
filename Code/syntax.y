@@ -1,8 +1,11 @@
 %{
+#define YYSTYPE void *
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "lex.yy.c"
+#include "ast.h"
 %}
 
 /* declared tokens */
@@ -19,20 +22,20 @@
 
 %%
 
-Program : ExtDefList
+Program : ExtDefList { root = newProgram($1); }
 ;
 
-ExtDefList : ExtDef ExtDefList
-    | %empty
+ExtDefList : ExtDef ExtDefList { printf("ExtDefList1\n"); }
+    | %empty { printf("ExtDefList2\n"); }
 ;
 
-ExtDef : Specifier ExtDecList SEMI
-    | Specifier SEMI
-    | Specifier FunDec CompSt
+ExtDef : Specifier ExtDecList SEMI 
+    | Specifier SEMI 
+    | Specifier FunDec CompSt 
 ;
 
-ExtDecList : VarDec
-    | VarDec COMMA ExtDecList
+ExtDecList : VarDec 
+    | VarDec COMMA ExtDecList 
 ;
 
 Specifier : TYPE 
@@ -121,3 +124,4 @@ Args : Exp COMMA Args
 
 
 %%
+
