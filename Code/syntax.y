@@ -117,8 +117,8 @@ DefList : Def DefList
 Def : Specifier DecList SEMI
 ;
 
-DecList : Dec
-    | Dec COMMA DefList
+DecList : Dec { printf("DecList : Dec\n"); }
+    | Dec COMMA DefList { printf("Dec COMMA DefList\n"); }
 ;
 
 Dec : VarDec { root = newDec_1($1); }

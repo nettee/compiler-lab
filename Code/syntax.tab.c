@@ -1328,14 +1328,26 @@ yyreduce:
 #line 1329 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
-  case 38:
-#line 124 "./syntax.y" /* yacc.c:1646  */
-    { root = newDec_1((yyvsp[0].type_node)); }
+  case 36:
+#line 120 "./syntax.y" /* yacc.c:1646  */
+    { printf("DecList : Dec\n"); }
 #line 1335 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
+  case 37:
+#line 121 "./syntax.y" /* yacc.c:1646  */
+    { printf("Dec COMMA DefList\n"); }
+#line 1341 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
 
-#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
+  case 38:
+#line 124 "./syntax.y" /* yacc.c:1646  */
+    { root = newDec_1((yyvsp[0].type_node)); }
+#line 1347 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+
+#line 1351 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

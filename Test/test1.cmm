@@ -1,5 +1,5 @@
 int inc()
 {
-    int i;
+    int i, k;
     i = i + 1;
 }

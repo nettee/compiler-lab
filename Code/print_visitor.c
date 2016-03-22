@@ -7,90 +7,100 @@ typedef void (*funcptr)(void *);
 
 void visit(void *node);
 
+static int indent = -1;
+
+static void print(const char *str) {
+    int i;
+    for (i = 0; i < indent; i++) {
+        printf("  ");
+    }
+    printf("%s\n", str);
+}
+
 void visitProgram(void *node) {
-    printf("visitProgram\n");
+    print("Program");
 }
 
 void visitExtDefList(void *node) {
-    printf("visitExtDefList\n");
+    print("ExtDefList");
 }
 
 void visitExtDef(void *node) {
-    printf("visitExtDef\n");
+    print("ExtDef");
 }
 
 void visitExtDecList(void *node) {
-    printf("visitExtDecList\n");
+    print("ExtDecList");
 }
 
 void visitSpecifier(void *node) {
-    printf("visitSpecifier\n");
+    print("Specifier");
 }
 
 void visitStructSpecifier(void *node) {
-    printf("visitStructSpecifier\n");
+    print("StructSpecifier");
 }
 
 void visitOptTag(void *node) {
-    printf("visitOptTag\n");
+    print("OptTag");
 }
 
 void visitTag(void *node) {
-    printf("visitTag\n");
+    print("Tag");
 }
 
 void visitVarDec(void *node) {
-    printf("visitVarDec\n");
+    print("VarDec");
 }
 
 void visitFunDec(void *node) {
-    printf("visitFunDec\n");
+    print("FunDec");
 }
 
 void visitVarList(void *node) {
-    printf("visitVarList\n");
+    print("VarList");
 }
 
 void visitParamDec(void *node) {
-    printf("visitParamDec\n");
+    print("ParamDec");
 }
 
 void visitCompSt(void *node) {
-    printf("visitCompSt\n");
+    print("CompSt");
 }
 
 void visitStmtList(void *node) {
-    printf("visitStmtList\n");
+    print("StmtList");
 }
 
 void visitStmt(void *node) {
-    printf("visitStmt\n");
+    print("Stmt");
 }
 
 void visitDefList(void *node) {
-    printf("visitDefList\n");
+    print("DefList");
 }
 
 void visitDef(void *node) {
-    printf("visitDef\n");
+    print("Def");
 }
 
 void visitDecList(void *node) {
-    printf("visitDecList\n");
+    print("DecList");
 }
 
 void visitDec(void *node) {
-    printf("visitDec\n");
+    print("Dec");
     Dec *dec = (Dec *)node;
     visit(dec->varDec);
 }
 
 void visitExp(void *node) {
-    printf("visitExp\n");
+    print("Exp");
 }
 
 void visitArgs(void *node) {
-    printf("visitArgs\n");
+    print("Args");
 }
 
 funcptr visitor_table[] = {
@@ -120,8 +130,10 @@ funcptr visitor_table[] = {
 void visit(void *node) {
     //printf("node = %p\n", node);
     int type = *(int *)node;
-    printf("type = %d\n", type);
+    //printf("type = %d\n", type);
+    indent++;
     visitor_table[type-400](node);
+    indent--;
 }
 
 void print_ast() {
