@@ -38,6 +38,31 @@ Program *newProgram(void *extDefList) {
     return program;
 }
 
+ExtDefList *newExtDefList() {
+    ExtDefList *extDefList = malloc(sizeof(ExtDefList));
+    extDefList->type = EXT_DEF_LIST;
+    extDefList->parent = NULL;
+    extDefList->list = NULL;
+    return extDefList;
+}
+
+ExtDefList *ExtDefList_add(void *arg0, void *arg1) {
+    ExtDef *extDef = (ExtDef *)arg0;
+    ExtDefList *extDefList = (ExtDefList *)arg1;
+
+    /* insert extDef before head of extDefList->list */
+    // TODO
+}
+
+
+
+
+VarDec *newVarDec_1(void *arg0) {
+    printf("newVarDec_1\n");
+    return NULL;
+}
+
+
 static void visit(void *node) {
     int type = *(int *)node;
     printf("type = %d\n", type);

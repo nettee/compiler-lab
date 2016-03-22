@@ -1323,18 +1323,24 @@ yyreduce:
 
   case 3:
 #line 28 "./syntax.y" /* yacc.c:1646  */
-    { printf("ExtDefList1\n"); }
+    { (yyval) = ExtDefList_add((yyvsp[-1]), (yyvsp[0])); }
 #line 1328 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
 #line 29 "./syntax.y" /* yacc.c:1646  */
-    { printf("ExtDefList2\n"); }
+    { (yyval) = newExtDefList(); }
 #line 1334 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
+  case 17:
+#line 56 "./syntax.y" /* yacc.c:1646  */
+    { (yyval) = newVarDec_1((yyvsp[0])); }
+#line 1340 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
 
-#line 1338 "./syntax.tab.c" /* yacc.c:1646  */
+
+#line 1344 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

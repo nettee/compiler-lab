@@ -25,8 +25,8 @@
 Program : ExtDefList { root = newProgram($1); }
 ;
 
-ExtDefList : ExtDef ExtDefList { printf("ExtDefList1\n"); }
-    | %empty { printf("ExtDefList2\n"); }
+ExtDefList : ExtDef ExtDefList { $$ = ExtDefList_add($1, $2); }
+    | %empty { $$ = newExtDefList(); }
 ;
 
 ExtDef : Specifier ExtDecList SEMI 
@@ -53,7 +53,7 @@ OptTag : ID
 Tag : ID
 ;
 
-VarDec : ID
+VarDec : ID { $$ = newVarDec_1($1); }
     | VarDec LB INT RB
 ;
 

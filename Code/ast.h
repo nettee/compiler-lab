@@ -22,6 +22,22 @@ enum AstNodeType {
     ARGS = 420,
 };
 
+typedef struct {
+    int type;
+    void *parent;
+    // TODO
+} VarDec;
+
+typedef struct {
+    int type;
+    void *parent;
+} ExtDef;
+
+typedef struct {
+    int type;
+    void *parent;
+    ExtDef *list;  /* list of extDef */
+} ExtDefList;
 
 typedef struct {
     int type;
@@ -29,8 +45,13 @@ typedef struct {
     void *extDefList;
 } Program;
 
-
 Program *newProgram(void *);
+
+ExtDefList *newExtDefList();
+ExtDefList *ExtDefList_add(void *, void *);
+
+VarDec *newVarDec_1(void *); /* VarDec : ID */
+
 
 void print_ast();
 
