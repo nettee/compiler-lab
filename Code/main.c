@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "ast.h"
 
+void print_ast();
+
 int main(int argc, char **argv)
 {
     if (argc <= 1) {
