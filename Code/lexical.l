@@ -82,6 +82,7 @@ whlie { return WHILE; }
 
 {id} { 
     printf("ID '%s'\n", yytext); 
+    yylval.type_int = 1078;
     return ID;
 }
 

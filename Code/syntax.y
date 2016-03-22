@@ -49,7 +49,7 @@
 
 %%
 
-Program : ExtDefList { root = NULL; }
+Program : ExtDefList
 ;
 
 ExtDefList : ExtDef ExtDefList 
@@ -80,7 +80,7 @@ OptTag : ID
 Tag : ID
 ;
 
-VarDec : ID { printf("VarDec : ID\n"); }
+VarDec : ID { $$ = newVarDec_1($1); }
     | VarDec LB INT RB
 ;
 
@@ -121,7 +121,7 @@ DecList : Dec
     | Dec COMMA DefList
 ;
 
-Dec : VarDec { printf("Dec : VarDec\n"); }
+Dec : VarDec { root = newDec_1($1); }
     | VarDec ASSIGNOP Exp
 ;
 

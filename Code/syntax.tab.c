@@ -1322,26 +1322,20 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 2:
-#line 52 "./syntax.y" /* yacc.c:1646  */
-    { root = NULL; }
-#line 1329 "./syntax.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 17:
+        case 17:
 #line 83 "./syntax.y" /* yacc.c:1646  */
-    { printf("VarDec : ID\n"); }
-#line 1335 "./syntax.tab.c" /* yacc.c:1646  */
+    { (yyval.type_node) = newVarDec_1((yyvsp[0].type_int)); }
+#line 1329 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
 #line 124 "./syntax.y" /* yacc.c:1646  */
-    { printf("Dec : VarDec\n"); }
-#line 1341 "./syntax.tab.c" /* yacc.c:1646  */
+    { root = newDec_1((yyvsp[0].type_node)); }
+#line 1335 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
