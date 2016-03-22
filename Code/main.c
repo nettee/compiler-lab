@@ -13,6 +13,5 @@ int main(int argc, char **argv)
     }
     yyrestart(f);
     yyparse();
-    print_ast();
     return 0;
 }

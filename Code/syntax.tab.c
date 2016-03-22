@@ -64,15 +64,13 @@
 /* Copy the first part of user declarations.  */
 #line 1 "./syntax.y" /* yacc.c:339  */
 
-#define YYSTYPE void *
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "lex.yy.c"
 #include "ast.h"
 
-#line 76 "./syntax.tab.c" /* yacc.c:339  */
+#line 74 "./syntax.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -139,7 +137,16 @@ extern int yydebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
+{
+#line 10 "./syntax.y" /* yacc.c:355  */
+
+    int type_int;
+    void *type_node;
+
+#line 149 "./syntax.tab.c" /* yacc.c:355  */
+};
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif
@@ -153,7 +160,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 157 "./syntax.tab.c" /* yacc.c:358  */
+#line 164 "./syntax.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -453,12 +460,12 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    25,    25,    28,    29,    32,    33,    34,    37,    38,
-      41,    42,    45,    46,    49,    50,    53,    56,    57,    60,
-      61,    64,    65,    68,    71,    74,    75,    78,    79,    80,
-      81,    82,    83,    86,    87,    90,    93,    94,    97,    98,
-     101,   102,   103,   104,   105,   106,   107,   108,   109,   110,
-     111,   112,   113,   114,   115,   116,   117,   118,   121,   122
+       0,    52,    52,    55,    56,    59,    60,    61,    64,    65,
+      68,    69,    72,    73,    76,    77,    80,    83,    84,    87,
+      88,    91,    92,    95,    98,   101,   102,   105,   106,   107,
+     108,   109,   110,   113,   114,   117,   120,   121,   124,   125,
+     128,   129,   130,   131,   132,   133,   134,   135,   136,   137,
+     138,   139,   140,   141,   142,   143,   144,   145,   148,   149
 };
 #endif
 
@@ -1316,31 +1323,25 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 25 "./syntax.y" /* yacc.c:1646  */
-    { root = newProgram((yyvsp[0])); }
-#line 1322 "./syntax.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 3:
-#line 28 "./syntax.y" /* yacc.c:1646  */
-    { (yyval) = ExtDefList_add((yyvsp[-1]), (yyvsp[0])); }
-#line 1328 "./syntax.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 4:
-#line 29 "./syntax.y" /* yacc.c:1646  */
-    { (yyval) = newExtDefList(); }
-#line 1334 "./syntax.tab.c" /* yacc.c:1646  */
+#line 52 "./syntax.y" /* yacc.c:1646  */
+    { root = NULL; }
+#line 1329 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 56 "./syntax.y" /* yacc.c:1646  */
-    { (yyval) = newVarDec_1((yyvsp[0])); }
-#line 1340 "./syntax.tab.c" /* yacc.c:1646  */
+#line 83 "./syntax.y" /* yacc.c:1646  */
+    { printf("VarDec : ID\n"); }
+#line 1335 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 38:
+#line 124 "./syntax.y" /* yacc.c:1646  */
+    { printf("Dec : VarDec\n"); }
+#line 1341 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1344 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1568,6 +1569,6 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 126 "./syntax.y" /* yacc.c:1906  */
+#line 153 "./syntax.y" /* yacc.c:1906  */
 
 

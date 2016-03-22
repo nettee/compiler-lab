@@ -1,6 +1,4 @@
 %{
-#define YYSTYPE void *
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,25 +6,54 @@
 #include "ast.h"
 %}
 
+/* declared types */
+%union {
+    int type_int;
+    void *type_node;
+}
+
 /* declared tokens */
-%token TYPE
-%token ID
-%token INT FLOAT
-%token STRUCT RETURN IF ELSE WHILE
-%token SEMI COMMA ASSIGNOP RELOP
-%token PLUS MINUS STAR DIV
-%token AND OR
-%token DOT
-%token NOT
-%token LP RP LB RB LC RC
+%token <type_int> TYPE
+%token <type_int> ID
+%token <type_int> INT FLOAT
+%token <type_int> STRUCT RETURN IF ELSE WHILE
+%token <type_int> SEMI COMMA ASSIGNOP RELOP
+%token <type_int> PLUS MINUS STAR DIV
+%token <type_int> AND OR
+%token <type_int> DOT
+%token <type_int> NOT
+%token <type_int> LP RP LB RB LC RC
+
+/* declare type for non-terminals */
+%type <type_node> Program
+%type <type_node> ExtDefList
+%type <type_node> ExtDef
+%type <type_node> ExtDecList
+%type <type_node> Specifier
+%type <type_node> StructSpecifier
+%type <type_node> OptTag
+%type <type_node> Tag
+%type <type_node> VarDec
+%type <type_node> FunDec
+%type <type_node> VarList
+%type <type_node> ParamDec
+%type <type_node> CompSt
+%type <type_node> StmtList
+%type <type_node> Stmt
+%type <type_node> DefList
+%type <type_node> Def
+%type <type_node> DecList
+%type <type_node> Dec
+%type <type_node> Exp
+%type <type_node> Args
 
 %%
 
-Program : ExtDefList { root = newProgram($1); }
+Program : ExtDefList { root = NULL; }
 ;
 
-ExtDefList : ExtDef ExtDefList { $$ = ExtDefList_add($1, $2); }
-    | %empty { $$ = newExtDefList(); }
+ExtDefList : ExtDef ExtDefList 
+    | %empty 
 ;
 
 ExtDef : Specifier ExtDecList SEMI 
@@ -53,7 +80,7 @@ OptTag : ID
 Tag : ID
 ;
 
-VarDec : ID { $$ = newVarDec_1($1); }
+VarDec : ID { printf("VarDec : ID\n"); }
     | VarDec LB INT RB
 ;
 
@@ -94,7 +121,7 @@ DecList : Dec
     | Dec COMMA DefList
 ;
 
-Dec : VarDec
+Dec : VarDec { printf("Dec : VarDec\n"); }
     | VarDec ASSIGNOP Exp
 ;
 
