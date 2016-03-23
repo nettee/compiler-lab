@@ -154,9 +154,45 @@ Exp *newExp_infix(int op, void *arg0, void *arg1) {
     Exp *exp = malloc(sizeof(Exp));
     exp->type = EXP;
     exp->exp_type = EXP_T_INFIX;
-    exp->op = op;
-    exp->exp_left = exp_left;
-    exp->exp_right = exp_right;
+    exp->infix.op = op;
+    exp->infix.exp_left = exp_left;
+    exp->infix.exp_right = exp_right;
+
+    return exp;
+}
+
+Exp *newExp_paren(void *arg0) {
+    Exp *parened_exp = (Exp *) arg0;
+
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_PAREN;
+    exp->paren.exp = parened_exp;
+
+    return exp;
+}
+
+Exp *newExp_unary(int op, void *arg0) {
+    Exp *unary_exp = (Exp *) arg0;
+
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_UNARY;
+    exp->unary.op = op;
+    exp->unary.exp = unary_exp;
+    
+    return exp;
+}
+
+Exp *newExp_subscript(void *arg0, void *arg1) {
+    Exp *array = (Exp *) arg0;
+    Exp *index = (Exp *) arg1;
+
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_SUBSCRIPT;
+    exp->subscript.array = array;
+    exp->subscript.index = index;
 
     return exp;
 }

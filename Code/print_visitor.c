@@ -189,9 +189,24 @@ void visitExp(void *node) {
     Exp *exp = (Exp *)node;
     switch (exp->exp_type) {
     case EXP_T_INFIX:
-        visit(exp->exp_left);
-        print("  %s", token_str(exp->op));
-        visit(exp->exp_right);
+        visit(exp->infix.exp_left);
+        print("  %s", token_str(exp->infix.op));
+        visit(exp->infix.exp_right);
+        break;
+    case EXP_T_PAREN:
+        print("  %s", token_str(LP));
+        visit(exp->paren.exp);
+        print("  %s", token_str(RP));
+        break;
+    case EXP_T_UNARY:
+        print("  %s", token_str(exp->unary.op));
+        visit(exp->unary.exp);
+        break;
+    case EXP_T_SUBSCRIPT:
+        visit(exp->subscript.array);
+        print("  %s", token_str(LB));
+        visit(exp->subscript.index);
+        print("  %s", token_str(RB));
         break;
     case EXP_T_ID:
         print("  ID: %s", resolve_id(exp->id_index));

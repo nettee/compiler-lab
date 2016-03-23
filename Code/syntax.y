@@ -133,12 +133,12 @@ Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
     | Exp MINUS Exp { $$ = newExp_infix(MINUS, $1, $3); } 
     | Exp STAR Exp { $$ = newExp_infix(STAR, $1, $3); } 
     | Exp DIV Exp { $$ = newExp_infix(DIV, $1, $3); } 
-    | LP Exp RP 
-    | MINUS Exp
-    | NOT Exp 
+    | LP Exp RP { $$ = newExp_paren($2); }
+    | MINUS Exp { $$ = newExp_unary(MINUS, $2); }
+    | NOT Exp { $$ = newExp_unary(NOT, $2); }
     | ID LP Args RP 
     | ID LP RP 
-    | Exp LB Exp RB 
+    | Exp LB Exp RB { $$ = newExp_subscript($1, $3); }
     | Exp DOT ID 
     | ID { $$ = newExp_ID($1); }
     | INT { $$ = newExp_INT($1); }
