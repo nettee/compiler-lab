@@ -45,9 +45,9 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 }
 
 {oct} {
-    unsigned int num = (unsigned int)strtol(yytext, NULL, 8);
-    //printf("OCT 0%o\n", num);
-
+    int num = (int)strtol(yytext, NULL, 8);
+    int index = install_int(num);
+    yylval.type_int = index;
     return INT;
 }
 
@@ -58,9 +58,9 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 }
 
 {hex} {
-    unsigned int num = (unsigned int)strtol(yytext, NULL, 16);
-    //printf("HEX 0x%x\n", num);
-
+    int num = (int)strtol(yytext, NULL, 16);
+    int index = install_int(num);
+    yylval.type_int = index;
     return INT;
 }
 
