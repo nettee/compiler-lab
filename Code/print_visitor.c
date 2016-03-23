@@ -8,6 +8,9 @@ typedef void (*funcptr)(void *);
 
 void visit(void *node);
 
+char *resolve_id(int);
+void print_symbol_table();
+
 static int indent = -1;
 
 #define print(...) { \
@@ -64,6 +67,8 @@ void visitTag(void *node) {
 
 void visitVarDec(void *node) {
     print("VarDec");
+    VarDec *varDec = (VarDec *)node;
+    print("  ID: %s", resolve_id(varDec->id_index));
 }
 
 void visitFunDec(void *node) {
@@ -161,6 +166,7 @@ void visit(void *node) {
 }
 
 void print_ast() {
+    print_symbol_table();
     visit(root);
 }
 

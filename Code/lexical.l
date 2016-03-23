@@ -6,6 +6,10 @@
 
 #include "common.h"
 
+int install_id(char *);
+int install_int(int);
+int install_float(float);
+
 void error();
 %}
 
@@ -90,8 +94,8 @@ else { return ELSE; }
 whlie { return WHILE; }
 
 {id} { 
-    //printf("ID '%s'\n", yytext); 
-    yylval.type_int = 1078;
+    int index = install_id(yytext);
+    yylval.type_int = index;
     return ID;
 }
 
