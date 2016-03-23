@@ -1,0 +1,6 @@
+int inc()
+{
+    int i;
+    return i;
+    return j;
+}

@@ -59,10 +59,39 @@ CompSt *newCompSt(void *arg0, void *arg1) {
     StmtList *stmtList = (StmtList *) arg1;
 
     CompSt *compSt = malloc(sizeof(CompSt));
+    compSt->type = COMP_ST;
     compSt->defList = defList;
     compSt->stmtList = stmtList;
 
     return compSt;
+}
+
+StmtList *newStmtList() {
+    StmtList *stmtList = malloc(sizeof(StmtList));
+    stmtList->type = STMT_LIST;
+    stmtList->list_stmt = NULL;
+}
+
+StmtList *StmtList_insert(void *arg0, void *arg1) {
+    Stmt *stmt = (Stmt *) arg0;
+    StmtList *stmtList = (StmtList *) arg1;
+
+    ListNode *node = newListNode(stmt);
+    node->next = stmtList->list_stmt;
+    stmtList->list_stmt = node;
+
+    return stmtList;
+}
+
+Stmt *newStmt_RETURN(void *arg0) {
+    Exp *exp = (Exp *) arg0;
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    stmt->type = STMT;
+    stmt->stmt_type = STMT_T_RETURN;
+    stmt->exp = exp;
+
+    return stmt;
 }
 
 DefList *newDefList() {
@@ -127,6 +156,11 @@ Dec *newDec_1(void *arg0) {
     return dec;
 }
 
-Exp *newExp_ID(int id_value) {
-    return NULL;
+Exp *newExp_ID(int id_index) {
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_ID;
+    exp->id_index = id_index;
+
+    return exp;
 }

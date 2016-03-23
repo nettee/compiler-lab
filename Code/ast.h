@@ -1,3 +1,15 @@
+enum ExpType {
+    EXP_T_ID = 2100,
+    EXP_T_INT,
+    EXP_T_FLOAT,
+    // TODO
+};
+
+enum StmtType {
+    STMT_T_RETURN = 2200,
+    // TODO
+};
+
 enum AstNodeType {
     PROGRAM = 400,
     EXT_DEF_LIST = 401,
@@ -54,9 +66,12 @@ typedef struct {
     // TODO
 } Args;
 
-typedef struct {
+typedef struct Exp_ {
     int type;
-    // TODO
+    int exp_type;
+    union {
+        int id_index;
+    };
 } Exp;
 
 typedef struct {
@@ -81,14 +96,17 @@ typedef struct DefList_ {
     ListNode *list_def;
 } DefList;
 
-typedef struct {
+typedef struct Stmt_ {
     int type;
-    // TODO
+    int stmt_type;
+    union {
+        Exp *exp; // stmt_type = STMT_T_RETURN
+    };
 } Stmt;
 
-typedef struct {
+typedef struct StmtList_ {
     int type;
-    // TODO
+    ListNode *list_stmt;
 } StmtList;
 
 typedef struct CompSt_ {
@@ -169,6 +187,11 @@ Specifier *newSpecifier_1(int);
 VarDec *newVarDec_1(int); /* VarDec : ID */
 
 CompSt *newCompSt(void *, void *); // CompSt : { DefList StmtList }
+
+StmtList *newStmtList(); // StmtList : (epsilon)
+StmtList *StmtList_insert(void *, void *); // StmtList : Stmt StmtList
+
+Stmt *newStmt_RETURN(void *); // Stmt : return Exp ;
 
 DefList *newDefList(); // DefList : (epsilon)
 DefList *DefList_insert(void *, void *); // DefList : Def DefList

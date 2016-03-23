@@ -85,14 +85,29 @@ void visitParamDec(void *node) {
 
 void visitCompSt(void *node) {
     print("CompSt");
+    CompSt *compSt = (CompSt *)node;
+    visit(compSt->defList);
+    visit(compSt->stmtList);
 }
 
 void visitStmtList(void *node) {
     print("StmtList");
+    StmtList *stmtList = (StmtList *)node;
+    for (ListNode *q = stmtList->list_stmt; q != NULL; q = q->next) {
+        visit(q->child);
+    }
 }
 
 void visitStmt(void *node) {
     print("Stmt");
+    Stmt *stmt = (Stmt *)node;
+    switch (stmt->stmt_type) {
+    case STMT_T_RETURN:
+        visit(stmt->exp);
+        break;
+    default:
+        printf("fatal: unknown stmt_type\n");
+    }
 }
 
 void visitDefList(void *node) {
@@ -126,6 +141,14 @@ void visitDec(void *node) {
 
 void visitExp(void *node) {
     print("Exp");
+    Exp *exp = (Exp *)node;
+    switch (exp->exp_type) {
+    case EXP_T_ID:
+        print("  ID: %s", resolve_id(exp->id_index));
+        break;
+    default:
+        printf("fatal: unknown exp_type\n");
+    }
 }
 
 void visitArgs(void *node) {

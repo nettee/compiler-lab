@@ -95,22 +95,22 @@ VarList : ParamDec COMMA VarList
 ParamDec : Specifier VarDec
 ;
 
-CompSt : LC DefList StmtList RC { $$ = newCompSt($2, $3); }
+CompSt : LC DefList StmtList RC { $$ = root = newCompSt($2, $3); }
 ;
 
-StmtList : Stmt StmtList
-    | %empty
+StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
+    | %empty { $$ = newStmtList(); }
 ;
 
 Stmt : Exp SEMI
     | CompSt
-    | RETURN Exp SEMI
+    | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
     | IF LP Exp RP Stmt
     | IF LP Exp RP Stmt ELSE Stmt
     | WHILE LP Exp RP Stmt
 ;
 
-DefList : Def DefList { $$ = root = DefList_insert($1, $2); }
+DefList : Def DefList { $$ = DefList_insert($1, $2); }
     | %empty { $$ = newDefList(); }
 ;
 
