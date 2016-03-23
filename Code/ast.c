@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "ast.h"
+#include "common.h"
 
 void *root;
 
@@ -15,7 +16,7 @@ static ListNode *newListNode(void *child) {
 Program *newProgram(void *extDefList) {
     Program *program = malloc(sizeof(Program));
     program->type = PROGRAM;
-    program->parent = NULL;
+
     program->extDefList = extDefList;
     return program;
 }
@@ -23,7 +24,7 @@ Program *newProgram(void *extDefList) {
 ExtDefList *newExtDefList() {
     ExtDefList *extDefList = malloc(sizeof(ExtDefList));
     extDefList->type = EXT_DEF_LIST;
-    extDefList->parent = NULL;
+
     extDefList->list = NULL;
     return extDefList;
 }
@@ -36,12 +37,50 @@ ExtDefList *ExtDefList_add(void *arg0, void *arg1) {
     // TODO
 }
 
+Specifier *newSpecifier_1(int type_value) {
+    Specifier *specifier = malloc(sizeof(Specifier));
+
+    specifier->type = SPECIFIER;
+    specifier->type_value = type_value;
+
+    return specifier;
+}
+
 VarDec *newVarDec_1(int id_value) {
     VarDec *varDec = malloc(sizeof(VarDec));
     varDec->type = VAR_DEC;
-    varDec->parent = NULL;
+
     varDec->id_index = id_value;
     return varDec;
+}
+
+DefList *newDefList() {
+    DefList *defList = malloc(sizeof(DefList));
+    defList->type = DEF_LIST;
+    defList->list_def = NULL;
+}
+
+DefList *DefList_insert(void *arg0, void *arg1) {
+    Def *def = (Def *) arg0;
+    DefList *defList = (DefList *) arg1;
+
+    ListNode *node = newListNode(def);
+    node->next = defList->list_def;
+    defList->list_def = node;
+
+    return defList;
+}
+
+Def *newDef(void *arg0, void *arg1) {
+    Specifier *specifier = (Specifier *) arg0;
+    DecList *decList = (DecList *) arg1;
+
+    Def *def = malloc(sizeof(Def));
+    def->type = DEF;
+    def->specifier = specifier;
+    def->decList = decList;
+
+    return def;
 }
 
 DecList *newDecList(void *arg0) {
@@ -49,7 +88,6 @@ DecList *newDecList(void *arg0) {
     
     DecList *decList = malloc(sizeof(DecList));
     decList->type = DEC_LIST;
-    decList->parent = NULL;
     decList->list_dec = newListNode(dec);
 
     return decList;
@@ -72,7 +110,7 @@ Dec *newDec_1(void *arg0) {
     
     Dec *dec = malloc(sizeof(Dec));
     dec->type = DEC;
-    dec->parent = NULL;
+
     dec->varDec = varDec;
 
     return dec;

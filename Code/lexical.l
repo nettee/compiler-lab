@@ -4,6 +4,8 @@
 
 #include "syntax.tab.h"
 
+#include "common.h"
+
 void error();
 %}
 
@@ -71,8 +73,15 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
     return FLOAT;
 }
 
-int { return TYPE; }
-float { return TYPE; }
+int { 
+    yylval.type_int = T_INT;
+    return TYPE; 
+}
+
+float { 
+    yylval.type_int = T_FLOAT;
+    return TYPE; 
+}
 
 struct { return STRUCT; }
 return { return RETURN; }

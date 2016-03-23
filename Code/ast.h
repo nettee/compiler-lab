@@ -27,133 +27,134 @@ typedef struct ListNode_ {
     void *child;
 } ListNode;
 
+struct Program_;
+struct ExtDefList_;
+struct ExtDef_;
+struct ExtDecList_;
+struct Specifier_;
+struct StructSpecifier_;
+struct OptTag_;
+struct Tag_;
 struct VarDec_;
+struct FunDec_;
+struct VarList_;
+struct ParamDec_;
+struct CompSt_;
+struct StmtList_;
+struct Stmt_;
+struct DefList_;
+struct Def_;
+struct DecList_;
+struct Dec_;
+struct Exp_;
+struct Args_;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } Args;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } Exp;
 
 typedef struct {
     int type;
-    void *parent;
     struct VarDec_ *varDec;
     // TODO
 } Dec;
 
-typedef struct {
+typedef struct DecList_ {
     int type;
-    void *parent;
     ListNode *list_dec;
 } DecList;
 
-typedef struct {
+typedef struct Def_ {
     int type;
-    void *parent;
-    // TODO
+    struct Specifier_ *specifier;
+    struct DecList_ *decList;
 } Def;
 
-typedef struct {
+typedef struct DefList_ {
     int type;
-    void *parent;
-    // TODO
+    ListNode *list_def;
 } DefList;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } Stmt;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } StmtList;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } CompSt;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } ParamDec;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } VarList;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } FunDec;
 
 typedef struct VarDec_ {
     int type;
-    void *parent;
     int id_index;
     // TODO
 } VarDec;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } Tag;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } OptTag;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } StructSpecifier;
 
-typedef struct {
+typedef struct Specifier_ {
     int type;
-    void *parent;
+    int type_value;
     // TODO
 } Specifier;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } ExtDecList;
 
 typedef struct {
     int type;
-    void *parent;
     // TODO
 } ExtDef;
 
 typedef struct {
     int type;
-    void *parent;
     ExtDef *list;  /* list of extDef */
 } ExtDefList;
 
 typedef struct {
     int type;
-    void *parent;
     void *extDefList;
 } Program;
 
@@ -162,12 +163,20 @@ Program *newProgram(void *);
 ExtDefList *newExtDefList();
 ExtDefList *ExtDefList_add(void *, void *);
 
+Specifier *newSpecifier_1(int);
+
 VarDec *newVarDec_1(int); /* VarDec : ID */
 
-DecList *newDecList(void *); /* DecList : Dec */
-DecList *DecList_insert(void *, void *); /* DecList : Dec, DecList */
+DefList *newDefList(); // DefList : (epsilon)
+DefList *DefList_insert(void *, void *); // DefList : Def DefList
+
+Def *newDef(void *, void *); // Def : Specifier DecList ;
+
+DecList *newDecList(void *); // DecList : Dec
+DecList *DecList_insert(void *, void *); // DecList : Dec, DecList
 
 Dec *newDec_1(void *); /* Dec : VarDec */
+
 
 void print_ast();
 

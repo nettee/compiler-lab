@@ -1320,32 +1320,56 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 17:
+        case 10:
+#line 68 "./syntax.y" /* yacc.c:1646  */
+    { (yyval.type_node) = newSpecifier_1((yyvsp[0].type_int)); }
+#line 1327 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 17:
 #line 83 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = newVarDec_1((yyvsp[0].type_int)); }
-#line 1327 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1333 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 113 "./syntax.y" /* yacc.c:1646  */
+    { (yyval.type_node) = root = DefList_insert((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
+#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 114 "./syntax.y" /* yacc.c:1646  */
+    { (yyval.type_node) = newDefList(); }
+#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 35:
+#line 117 "./syntax.y" /* yacc.c:1646  */
+    { (yyval.type_node) = root = newDef((yyvsp[-2].type_node), (yyvsp[-1].type_node)); }
+#line 1351 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
 #line 120 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = root = newDecList((yyvsp[0].type_node)); }
-#line 1333 "./syntax.tab.c" /* yacc.c:1646  */
+    { (yyval.type_node) = newDecList((yyvsp[0].type_node)); }
+#line 1357 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
 #line 121 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = DecList_insert((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
-#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1363 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
 #line 124 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = newDec_1((yyvsp[0].type_node)); }
-#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1369 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1349 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1373 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

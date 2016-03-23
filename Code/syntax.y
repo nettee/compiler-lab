@@ -65,7 +65,7 @@ ExtDecList : VarDec
     | VarDec COMMA ExtDecList 
 ;
 
-Specifier : TYPE 
+Specifier : TYPE { $$ = newSpecifier_1($1); }
     | StructSpecifier
 ;
 
@@ -110,14 +110,14 @@ Stmt : Exp SEMI
     | WHILE LP Exp RP Stmt
 ;
 
-DefList : Def DefList
-    | %empty
+DefList : Def DefList { $$ = root = DefList_insert($1, $2); }
+    | %empty { $$ = newDefList(); }
 ;
 
-Def : Specifier DecList SEMI
+Def : Specifier DecList SEMI { $$ = root = newDef($1, $2); }
 ;
 
-DecList : Dec { $$ = root = newDecList($1); }
+DecList : Dec { $$ = newDecList($1); }
     | Dec COMMA DecList { $$ = DecList_insert($1, $3); }
 ;
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "common.h"
 #include "ast.h"
 
 typedef void (*funcptr)(void *);
@@ -9,12 +10,13 @@ void visit(void *node);
 
 static int indent = -1;
 
-static void print(const char *str) {
-    int i;
-    for (i = 0; i < indent; i++) {
-        printf("  ");
-    }
-    printf("%s\n", str);
+#define print(...) { \
+    int i; \
+    for (i = 0; i < indent; i++) { \
+        printf("  "); \
+    } \
+    printf(__VA_ARGS__); \
+    printf("\n"); \
 }
 
 void visitProgram(void *node) {
@@ -35,6 +37,17 @@ void visitExtDecList(void *node) {
 
 void visitSpecifier(void *node) {
     print("Specifier");
+    Specifier *specifier = (Specifier *)node;
+    switch (specifier->type_value) {
+    case T_INT:
+        print("  TYPE: int");
+        break;
+    case T_FLOAT:
+        print("  TYPE: float");
+        break;
+    default:
+        printf("Fatal: Unknown specifier->type_value\n");
+    }
 }
 
 void visitStructSpecifier(void *node) {
@@ -79,10 +92,17 @@ void visitStmt(void *node) {
 
 void visitDefList(void *node) {
     print("DefList");
+    DefList *defList = (DefList *)node;
+    for (ListNode *q = defList->list_def; q != NULL; q = q->next) {
+        visit(q->child);
+    }
 }
 
 void visitDef(void *node) {
     print("Def");
+    Def *def = (Def *)node;
+    visit(def->specifier);
+    visit(def->decList);
 }
 
 void visitDecList(void *node) {
