@@ -22,6 +22,11 @@ enum AstNodeType {
     ARGS = 420,
 };
 
+typedef struct ListNode_ {
+    struct ListNode_ *next;
+    void *child;
+} ListNode;
+
 struct VarDec_;
 
 typedef struct {
@@ -46,7 +51,7 @@ typedef struct {
 typedef struct {
     int type;
     void *parent;
-    // TODO
+    ListNode *list_dec;
 } DecList;
 
 typedef struct {

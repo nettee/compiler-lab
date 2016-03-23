@@ -5,6 +5,13 @@
 
 void *root;
 
+static ListNode *newListNode(void *child) {
+    ListNode *listNode = malloc(sizeof(ListNode));
+    listNode->next = NULL;
+    listNode->child = child;
+    return listNode;
+}
+
 Program *newProgram(void *extDefList) {
     Program *program = malloc(sizeof(Program));
     program->type = PROGRAM;
@@ -29,9 +36,6 @@ ExtDefList *ExtDefList_add(void *arg0, void *arg1) {
     // TODO
 }
 
-
-
-
 VarDec *newVarDec_1(int id_value) {
     VarDec *varDec = malloc(sizeof(VarDec));
     varDec->type = VAR_DEC;
@@ -42,11 +46,25 @@ VarDec *newVarDec_1(int id_value) {
 
 DecList *newDecList(void *arg0) {
     Dec *dec = (Dec *) arg0;
-    return NULL;
+    
+    DecList *decList = malloc(sizeof(DecList));
+    decList->type = DEC_LIST;
+    decList->parent = NULL;
+    decList->list_dec = newListNode(dec);
+
+    return decList;
 }
 
 DecList *DecList_insert(void *arg0, void *arg1) {
-    return NULL;
+    Dec *dec = (Dec *) arg0;
+    DecList *decList = (DecList *) arg1;
+
+    /* insert node in front of list_dec */
+    ListNode *node = newListNode(dec);
+    node->next = decList->list_dec;
+    decList->list_dec = node;
+
+    return decList;
 }
 
 Dec *newDec_1(void *arg0) {

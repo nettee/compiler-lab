@@ -1328,7 +1328,7 @@ yyreduce:
 
   case 36:
 #line 120 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newDecList((yyvsp[0].type_node)); }
+    { (yyval.type_node) = root = newDecList((yyvsp[0].type_node)); }
 #line 1333 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1340,7 +1340,7 @@ yyreduce:
 
   case 38:
 #line 124 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = root = newDec_1((yyvsp[0].type_node)); }
+    { (yyval.type_node) = newDec_1((yyvsp[0].type_node)); }
 #line 1345 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 

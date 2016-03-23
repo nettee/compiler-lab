@@ -87,6 +87,10 @@ void visitDef(void *node) {
 
 void visitDecList(void *node) {
     print("DecList");
+    DecList *decList = (DecList *)node;
+    for (ListNode *q = decList->list_dec; q != NULL; q = q->next) {
+        visit(q->child);
+    }
 }
 
 void visitDec(void *node) {
