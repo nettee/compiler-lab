@@ -40,6 +40,15 @@ VarDec *newVarDec_1(int id_value) {
     return varDec;
 }
 
+DecList *newDecList(void *arg0) {
+    Dec *dec = (Dec *) arg0;
+    return NULL;
+}
+
+DecList *DecList_insert(void *arg0, void *arg1) {
+    return NULL;
+}
+
 Dec *newDec_1(void *arg0) {
     VarDec *varDec = (VarDec *)arg0;
     

@@ -117,11 +117,11 @@ DefList : Def DefList
 Def : Specifier DecList SEMI
 ;
 
-DecList : Dec { printf("DecList : Dec\n"); }
-    | Dec COMMA DefList { printf("Dec COMMA DefList\n"); }
+DecList : Dec { $$ = newDecList($1); }
+    | Dec COMMA DecList { $$ = DecList_insert($1, $3); }
 ;
 
-Dec : VarDec { root = newDec_1($1); }
+Dec : VarDec { $$ = root = newDec_1($1); }
     | VarDec ASSIGNOP Exp
 ;
 

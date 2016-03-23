@@ -67,7 +67,7 @@
    34 Def: Specifier DecList SEMI
 
    35 DecList: Dec
-   36        | Dec COMMA DefList
+   36        | Dec COMMA DecList
 
    37 Dec: VarDec
    38    | VarDec ASSIGNOP Exp
@@ -163,11 +163,11 @@ StmtList (44)
 Stmt (45)
     左： 26 27 28 29 30 31, 右： 24 29 30 31
 DefList (46)
-    左： 32 33, 右： 11 23 32 36
+    左： 32 33, 右： 11 23 32
 Def (47)
     左： 34, 右： 32
 DecList (48)
-    左： 35 36, 右： 34
+    左： 35 36, 右： 34 36
 Dec (49)
     左： 37 38, 右： 35 36
 Exp (50)
@@ -554,7 +554,7 @@ State 37
 State 38
 
    35 DecList: Dec .
-   36        | Dec . COMMA DefList
+   36        | Dec . COMMA DecList
 
     COMMA  shift, and go to state 60
 
@@ -795,17 +795,13 @@ State 59
 
 State 60
 
-   36 DecList: Dec COMMA . DefList
+   36 DecList: Dec COMMA . DecList
 
-    TYPE    shift, and go to state 1
-    STRUCT  shift, and go to state 2
+    ID  shift, and go to state 32
 
-    $default  reduce using rule 33 (DefList)
-
-    Specifier        转到状态 25
-    StructSpecifier  转到状态 7
-    DefList          转到状态 83
-    Def              转到状态 27
+    VarDec   转到状态 36
+    DecList  转到状态 83
+    Dec      转到状态 38
 
 
 State 61
@@ -1175,7 +1171,7 @@ State 82
 
 State 83
 
-   36 DecList: Dec COMMA DefList .
+   36 DecList: Dec COMMA DecList .
 
     $default  reduce using rule 36 (DecList)
 

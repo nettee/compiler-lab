@@ -159,6 +159,9 @@ ExtDefList *ExtDefList_add(void *, void *);
 
 VarDec *newVarDec_1(int); /* VarDec : ID */
 
+DecList *newDecList(void *); /* DecList : Dec */
+DecList *DecList_insert(void *, void *); /* DecList : Dec, DecList */
+
 Dec *newDec_1(void *); /* Dec : VarDec */
 
 void print_ast();
