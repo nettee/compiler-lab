@@ -39,8 +39,8 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 
 {integer} {
     int num = atoi(yytext);
-    //printf("INTEGER %d\n", num);
-
+    int index = install_int(num);
+    yylval.type_int = index;
     return INT;
 }
 
@@ -72,8 +72,8 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 
 {float} {
     float num = atof(yytext);
-    //printf("FLOAT %.3f\n", num);
-
+    int index = install_float(num);
+    yylval.type_int = index;
     return FLOAT;
 }
 

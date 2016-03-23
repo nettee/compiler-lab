@@ -71,6 +71,8 @@ typedef struct Exp_ {
     int exp_type;
     union {
         int id_index;
+        int int_index;
+        int float_index;
     };
 } Exp;
 
@@ -204,6 +206,8 @@ DecList *DecList_insert(void *, void *); // DecList : Dec, DecList
 Dec *newDec_1(void *); /* Dec : VarDec */
 
 Exp *newExp_ID(int); // Exp : ID
+Exp *newExp_INT(int); // Exp : INT
+Exp *newExp_FLOAT(int); // Exp : FLOAT
 
 
 extern void *root;

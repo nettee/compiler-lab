@@ -54,11 +54,49 @@ int install_id(char *str) {
 }
 
 int install_int(int num) {
+    /* find if this integer is already in symbol table
+     * if so, return index of the integer
+     */
+    int i;
+    for (i = 0; i < nr_symbol; i++) {
+        if (symbols[i].type == ST_INT) {
+            if (symbols[i].int_value == num) {
+                return i;
+            }
+        }
+    }
 
+    /* create new symbol table item */
+    Symbol *symbol = &symbols[nr_symbol];
+    symbol->type = ST_INT;
+    symbol->int_value = num;
+
+    int index = nr_symbol;
+    nr_symbol++;
+    return index;
 }
 
 int install_float(float num) {
+    /* find if this float is already in symbol table
+     * if so, return index of the float number
+     */
+    int i;
+    for (i = 0; i < nr_symbol; i++) {
+        if (symbols[i].type == ST_FLOAT) {
+            if (symbols[i].float_value == num) {
+                return i;
+            }
+        }
+    }
 
+    /* create new symbol table item */
+    Symbol *symbol = &symbols[nr_symbol];
+    symbol->type = ST_FLOAT;
+    symbol->float_value = num;
+
+    int index = nr_symbol;
+    nr_symbol++;
+    return index;
 }
 
 char *resolve_id(int index) {
@@ -66,6 +104,20 @@ char *resolve_id(int index) {
         printf("fatal: symbol is not id\n");
     }
     return symbols[index].id_str;
+}
+
+int resolve_int(int index) {
+    if (symbols[index].type != ST_INT) {
+        printf("fatal: symbol is not int\n");
+    }
+    return symbols[index].int_value;
+}
+
+float resolve_float(int index) {
+    if (symbols[index].type != ST_FLOAT) {
+        printf("fatal: symbol is not float\n");
+    }
+    return symbols[index].float_value;
 }
 
 

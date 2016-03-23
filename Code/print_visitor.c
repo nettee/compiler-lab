@@ -9,6 +9,9 @@ typedef void (*funcptr)(void *);
 void visit(void *node);
 
 char *resolve_id(int);
+int resolve_int(int);
+float resolve_float(int);
+
 void print_symbol_table();
 
 static int indent = -1;
@@ -145,6 +148,12 @@ void visitExp(void *node) {
     switch (exp->exp_type) {
     case EXP_T_ID:
         print("  ID: %s", resolve_id(exp->id_index));
+        break;
+    case EXP_T_INT:
+        print("  INT: %d", resolve_int(exp->int_index));
+        break;
+    case EXP_T_FLOAT:
+        print("  FLOAT: %f", resolve_float(exp->float_index));
         break;
     default:
         printf("fatal: unknown exp_type\n");

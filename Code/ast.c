@@ -13,30 +13,6 @@ static ListNode *newListNode(void *child) {
     return listNode;
 }
 
-Program *newProgram(void *extDefList) {
-    Program *program = malloc(sizeof(Program));
-    program->type = PROGRAM;
-
-    program->extDefList = extDefList;
-    return program;
-}
-
-ExtDefList *newExtDefList() {
-    ExtDefList *extDefList = malloc(sizeof(ExtDefList));
-    extDefList->type = EXT_DEF_LIST;
-
-    extDefList->list = NULL;
-    return extDefList;
-}
-
-ExtDefList *ExtDefList_add(void *arg0, void *arg1) {
-    ExtDef *extDef = (ExtDef *)arg0;
-    ExtDefList *extDefList = (ExtDefList *)arg1;
-
-    /* insert extDef before head of extDefList->list */
-    // TODO
-}
-
 Specifier *newSpecifier_1(int type_value) {
     Specifier *specifier = malloc(sizeof(Specifier));
 
@@ -70,6 +46,8 @@ StmtList *newStmtList() {
     StmtList *stmtList = malloc(sizeof(StmtList));
     stmtList->type = STMT_LIST;
     stmtList->list_stmt = NULL;
+
+    return stmtList;
 }
 
 StmtList *StmtList_insert(void *arg0, void *arg1) {
@@ -98,6 +76,8 @@ DefList *newDefList() {
     DefList *defList = malloc(sizeof(DefList));
     defList->type = DEF_LIST;
     defList->list_def = NULL;
+
+    return defList;
 }
 
 DefList *DefList_insert(void *arg0, void *arg1) {
@@ -161,6 +141,24 @@ Exp *newExp_ID(int id_index) {
     exp->type = EXP;
     exp->exp_type = EXP_T_ID;
     exp->id_index = id_index;
+
+    return exp;
+}
+
+Exp *newExp_INT(int int_index) {
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_INT;
+    exp->int_index = int_index;
+
+    return exp;
+}
+
+Exp *newExp_FLOAT(int float_index) {
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_FLOAT;
+    exp->float_index = float_index;
 
     return exp;
 }
