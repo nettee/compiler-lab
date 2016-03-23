@@ -54,6 +54,17 @@ VarDec *newVarDec_1(int id_value) {
     return varDec;
 }
 
+CompSt *newCompSt(void *arg0, void *arg1) {
+    DefList *defList = (DefList *) arg0;
+    StmtList *stmtList = (StmtList *) arg1;
+
+    CompSt *compSt = malloc(sizeof(CompSt));
+    compSt->defList = defList;
+    compSt->stmtList = stmtList;
+
+    return compSt;
+}
+
 DefList *newDefList() {
     DefList *defList = malloc(sizeof(DefList));
     defList->type = DEF_LIST;
@@ -114,4 +125,8 @@ Dec *newDec_1(void *arg0) {
     dec->varDec = varDec;
 
     return dec;
+}
+
+Exp *newExp_ID(int id_value) {
+    return NULL;
 }

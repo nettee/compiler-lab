@@ -95,7 +95,7 @@ VarList : ParamDec COMMA VarList
 ParamDec : Specifier VarDec
 ;
 
-CompSt : LC DefList StmtList RC
+CompSt : LC DefList StmtList RC { $$ = newCompSt($2, $3); }
 ;
 
 StmtList : Stmt StmtList
@@ -114,7 +114,7 @@ DefList : Def DefList { $$ = root = DefList_insert($1, $2); }
     | %empty { $$ = newDefList(); }
 ;
 
-Def : Specifier DecList SEMI { $$ = root = newDef($1, $2); }
+Def : Specifier DecList SEMI { $$ = newDef($1, $2); }
 ;
 
 DecList : Dec { $$ = newDecList($1); }
@@ -140,7 +140,7 @@ Exp : Exp ASSIGNOP Exp
     | ID LP RP
     | Exp LB Exp RB
     | Exp DOT ID
-    | ID 
+    | ID { $$ = newExp_ID($1); }
     | INT
     | FLOAT
 ;

@@ -1332,44 +1332,56 @@ yyreduce:
 #line 1333 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
+  case 24:
+#line 98 "./syntax.y" /* yacc.c:1646  */
+    { (yyval.type_node) = newCompSt((yyvsp[-2].type_node), (yyvsp[-1].type_node)); }
+#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
   case 33:
 #line 113 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = root = DefList_insert((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
-#line 1339 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
 #line 114 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = newDefList(); }
-#line 1345 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1351 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
 #line 117 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = root = newDef((yyvsp[-2].type_node), (yyvsp[-1].type_node)); }
-#line 1351 "./syntax.tab.c" /* yacc.c:1646  */
+    { (yyval.type_node) = newDef((yyvsp[-2].type_node), (yyvsp[-1].type_node)); }
+#line 1357 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
 #line 120 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = newDecList((yyvsp[0].type_node)); }
-#line 1357 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1363 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
 #line 121 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = DecList_insert((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
-#line 1363 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1369 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
 #line 124 "./syntax.y" /* yacc.c:1646  */
     { (yyval.type_node) = newDec_1((yyvsp[0].type_node)); }
-#line 1369 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1375 "./syntax.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 55:
+#line 143 "./syntax.y" /* yacc.c:1646  */
+    { (yyval.type_node) = newExp_ID((yyvsp[0].type_int)); }
+#line 1381 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1373 "./syntax.tab.c" /* yacc.c:1646  */
+#line 1385 "./syntax.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

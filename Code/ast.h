@@ -91,9 +91,10 @@ typedef struct {
     // TODO
 } StmtList;
 
-typedef struct {
+typedef struct CompSt_ {
     int type;
-    // TODO
+    DefList *defList;
+    StmtList *stmtList;
 } CompSt;
 
 typedef struct {
@@ -167,6 +168,8 @@ Specifier *newSpecifier_1(int);
 
 VarDec *newVarDec_1(int); /* VarDec : ID */
 
+CompSt *newCompSt(void *, void *); // CompSt : { DefList StmtList }
+
 DefList *newDefList(); // DefList : (epsilon)
 DefList *DefList_insert(void *, void *); // DefList : Def DefList
 
@@ -177,7 +180,7 @@ DecList *DecList_insert(void *, void *); // DecList : Dec, DecList
 
 Dec *newDec_1(void *); /* Dec : VarDec */
 
+Exp *newExp_ID(int); // Exp : ID
 
-void print_ast();
 
 extern void *root;
