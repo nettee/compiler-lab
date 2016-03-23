@@ -61,6 +61,17 @@ StmtList *StmtList_insert(void *arg0, void *arg1) {
     return stmtList;
 }
 
+Stmt *newStmt_exp(void *arg0) {
+    Exp *exp = (Exp *) arg0;
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    stmt->type = STMT;
+    stmt->stmt_type = STMT_T_EXP;
+    stmt->exp = exp;
+
+    return stmt;
+}
+
 Stmt *newStmt_RETURN(void *arg0) {
     Exp *exp = (Exp *) arg0;
 

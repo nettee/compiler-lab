@@ -102,7 +102,7 @@ StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
     | %empty { $$ = newStmtList(); }
 ;
 
-Stmt : Exp SEMI
+Stmt : Exp SEMI { $$ = newStmt_exp($1); }
     | CompSt
     | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
     | IF LP Exp RP Stmt
@@ -134,7 +134,7 @@ Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
     | Exp STAR Exp { $$ = newExp_infix(STAR, $1, $3); } 
     | Exp DIV Exp { $$ = newExp_infix(DIV, $1, $3); } 
     | LP Exp RP 
-    | MINUS Exp 
+    | MINUS Exp
     | NOT Exp 
     | ID LP Args RP 
     | ID LP RP 

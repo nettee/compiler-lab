@@ -141,8 +141,14 @@ void visitStmt(void *node) {
     print("Stmt");
     Stmt *stmt = (Stmt *)node;
     switch (stmt->stmt_type) {
-    case STMT_T_RETURN:
+    case STMT_T_EXP:
         visit(stmt->exp);
+        print("  %s", token_str(SEMI));
+        break;
+    case STMT_T_RETURN:
+        print("  %s", token_str(RETURN));
+        visit(stmt->exp);
+        print("  %s", token_str(SEMI));
         break;
     default:
         printf("fatal: unknown stmt_type\n");

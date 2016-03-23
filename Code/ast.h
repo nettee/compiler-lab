@@ -7,7 +7,8 @@ enum ExpType {
 };
 
 enum StmtType {
-    STMT_T_RETURN = 2200,
+    STMT_T_EXP = 2200,
+    STMT_T_RETURN,
     // TODO
 };
 
@@ -108,7 +109,7 @@ typedef struct Stmt_ {
     int type;
     int stmt_type;
     union {
-        Exp *exp; // stmt_type = STMT_T_RETURN
+        Exp *exp; // STMT_T_EXP, STMT_T_RETURN
     };
 } Stmt;
 
@@ -199,6 +200,7 @@ CompSt *newCompSt(void *, void *); // CompSt : { DefList StmtList }
 StmtList *newStmtList(); // StmtList : (epsilon)
 StmtList *StmtList_insert(void *, void *); // StmtList : Stmt StmtList
 
+Stmt *newStmt_exp(void *); // Stmt : Exp ;
 Stmt *newStmt_RETURN(void *); // Stmt : return Exp ;
 
 DefList *newDefList(); // DefList : (epsilon)
