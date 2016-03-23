@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "ast.h"
+#include "syntax.tab.h"
 
 typedef void (*funcptr)(void *);
 
@@ -13,6 +14,41 @@ int resolve_int(int);
 float resolve_float(int);
 
 void print_symbol_table();
+
+char *token_str(int token_enum) {
+    switch (token_enum) {
+        case TYPE: return "TYPE";
+        case ID: return "ID";
+        case INT: return "INT";
+        case FLOAT: return "FLOAT";
+        case STRUCT: return "STRUCT";
+        case RETURN: return "RETURN";
+        case IF: return "IF";
+        case ELSE: return "ELSE";
+        case WHILE: return "WHILE";
+        case SEMI: return "SEMI";
+        case COMMA: return "COMMA";
+        case ASSIGNOP: return "ASSIGNOP";
+        case RELOP: return "RELOP";
+        case PLUS: return "PLUS";
+        case MINUS: return "MINUS";
+        case STAR: return "STAR";
+        case DIV: return "DIV";
+        case AND: return "AND";
+        case OR: return "OR";
+        case DOT: return "DOT";
+        case NOT: return "NOT";
+        case LP: return "LP";
+        case RP: return "RP";
+        case LB: return "LB";
+        case RB: return "RB";
+        case LC: return "LC";
+        case RC: return "RC";
+        default:
+            printf("fatal: unknown token enum\n");
+            return "";
+    }
+}
 
 static int indent = -1;
 
@@ -146,6 +182,11 @@ void visitExp(void *node) {
     print("Exp");
     Exp *exp = (Exp *)node;
     switch (exp->exp_type) {
+    case EXP_T_INFIX:
+        visit(exp->exp_left);
+        print("  %s", token_str(exp->op));
+        visit(exp->exp_right);
+        break;
     case EXP_T_ID:
         print("  ID: %s", resolve_id(exp->id_index));
         break;
@@ -201,4 +242,3 @@ void print_ast() {
     print_symbol_table();
     visit(root);
 }
-

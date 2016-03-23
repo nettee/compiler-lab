@@ -136,6 +136,20 @@ Dec *newDec_1(void *arg0) {
     return dec;
 }
 
+Exp *newExp_infix(int op, void *arg0, void *arg1) {
+    Exp *exp_left = (Exp *) arg0;
+    Exp *exp_right = (Exp *) arg1;
+
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_INFIX;
+    exp->op = op;
+    exp->exp_left = exp_left;
+    exp->exp_right = exp_right;
+
+    return exp;
+}
+
 Exp *newExp_ID(int id_index) {
     Exp *exp = malloc(sizeof(Exp));
     exp->type = EXP;

@@ -1,5 +1,6 @@
 enum ExpType {
-    EXP_T_ID = 2100,
+    EXP_T_INFIX = 2100,
+    EXP_T_ID,
     EXP_T_INT,
     EXP_T_FLOAT,
     // TODO
@@ -70,6 +71,11 @@ typedef struct Exp_ {
     int type;
     int exp_type;
     union {
+        struct {
+            struct Exp_ *exp_left;
+            int op;
+            struct Exp_ *exp_right;
+        };
         int id_index;
         int int_index;
         int float_index;
@@ -205,6 +211,7 @@ DecList *DecList_insert(void *, void *); // DecList : Dec, DecList
 
 Dec *newDec_1(void *); /* Dec : VarDec */
 
+Exp *newExp_infix(int, void *, void *);
 Exp *newExp_ID(int); // Exp : ID
 Exp *newExp_INT(int); // Exp : INT
 Exp *newExp_FLOAT(int); // Exp : FLOAT

@@ -125,14 +125,14 @@ Dec : VarDec { $$ = newDec_1($1); }
     | VarDec ASSIGNOP Exp
 ;
 
-Exp : Exp ASSIGNOP Exp 
-    | Exp AND Exp 
-    | Exp OR Exp 
-    | Exp RELOP Exp 
-    | Exp PLUS Exp 
-    | Exp MINUS Exp 
-    | Exp STAR Exp 
-    | Exp DIV Exp 
+Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
+    | Exp AND Exp { $$ = newExp_infix(AND, $1, $3); } 
+    | Exp OR Exp { $$ = newExp_infix(OR, $1, $3); } 
+    | Exp RELOP Exp { $$ = newExp_infix(RELOP, $1, $3); } 
+    | Exp PLUS Exp { $$ = newExp_infix(PLUS, $1, $3); }
+    | Exp MINUS Exp { $$ = newExp_infix(MINUS, $1, $3); } 
+    | Exp STAR Exp { $$ = newExp_infix(STAR, $1, $3); } 
+    | Exp DIV Exp { $$ = newExp_infix(DIV, $1, $3); } 
     | LP Exp RP 
     | MINUS Exp 
     | NOT Exp 
