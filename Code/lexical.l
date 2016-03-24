@@ -101,7 +101,7 @@ struct { return STRUCT; }
 return { return RETURN; }
 if { return IF; }
 else { return ELSE; }
-whlie { return WHILE; }
+while { return WHILE; }
 
 {id} { 
     int index = install_id(yytext);
