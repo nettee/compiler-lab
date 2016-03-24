@@ -69,7 +69,7 @@ struct { printf("STRUCT\n"); }
 return { printf("RETURN\n"); }
 if { printf("IF\n"); }
 else { printf("ELSE\n"); }
-whlie { printf("WHLIE"); }
+while { printf("WHILE\n"); }
 
 {id} { 
     printf("ID '%s'\n", yytext); 
