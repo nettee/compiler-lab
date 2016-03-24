@@ -95,8 +95,7 @@ VarList : ParamDec COMMA VarList
 ParamDec : Specifier VarDec
 ;
 
-CompSt : LC DefList StmtList RC { $$ = root = newCompSt($2, $3); 
-       printf("root = %p\n", root); }
+CompSt : LC DefList StmtList RC { $$ = root = newCompSt($2, $3); }
 ;
 
 StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }

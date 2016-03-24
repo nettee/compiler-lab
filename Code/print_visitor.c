@@ -300,6 +300,5 @@ void visit(void *node) {
 
 void print_ast() {
     print_symbol_table();
-    printf("root = %p\n", root);
     visit(root);
 }
