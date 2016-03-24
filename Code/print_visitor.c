@@ -75,16 +75,32 @@ static void print_terminal(int terminal) {
 
 void visitProgram(void *node) {
     print("Program");
+    Program *program = (Program *)node;
+    visit(program->extDefList);
 }
 
 void visitExtDefList(void *node) {
     print("ExtDefList");
+    ExtDefList *extDefList = (ExtDefList *)node;
+    for (ListNode *q = extDefList->list_extdef;
+            q != NULL; q = q->next) {
+        visit(q->child);
+    }
 }
 
 void visitExtDef(void *node) {
     print("ExtDef");
     ExtDef *extDef = (ExtDef *)node;
     switch (extDef->extdef_type) {
+    case EXT_DEF_T_VAR:
+        visit(extDef->var.specifier);
+        visit(extDef->var.extDecList);
+        print_terminal(SEMI);
+        break;
+    case EXT_DEF_T_STRUCT:
+        visit(extDef->struct_.specifier);
+        print_terminal(SEMI);
+        break;
     case EXT_DEF_T_FUN:
         visit(extDef->fun.specifier);
         visit(extDef->fun.funDec);
@@ -97,33 +113,69 @@ void visitExtDef(void *node) {
 
 void visitExtDecList(void *node) {
     print("ExtDecList");
+    ExtDecList *extDecList = (ExtDecList *)node;
+    for (ListNode *q = extDecList->list_vardec;
+            q != NULL; q = q->next) {
+        visit(q->child);
+    }
 }
 
 void visitSpecifier(void *node) {
     print("Specifier");
     Specifier *specifier = (Specifier *)node;
-    switch (specifier->type_index) {
-    case T_INT:
-        print("  TYPE: int");
+    switch (specifier->specifier_type) {
+    case SPECIFIER_T_TYPE:
+        switch (specifier->type_index) {
+        case T_INT:
+            print("  TYPE: int");
+            break;
+        case T_FLOAT:
+            print("  TYPE: float");
+            break;
+        default:
+            printf("Fatal: Unknown specifier->type_value\n");
+        }
         break;
-    case T_FLOAT:
-        print("  TYPE: float");
+    case SPECIFIER_T_STRUCT:
+        visit(specifier->structSpecifier);
         break;
     default:
-        printf("Fatal: Unknown specifier->type_value\n");
+        printf("fatal: unknown specifier_type\n");
     }
 }
 
 void visitStructSpecifier(void *node) {
     print("StructSpecifier");
+    StructSpecifier *structSpecifier = (StructSpecifier *)node;
+    switch (structSpecifier->structspecifier_type) {
+    case STRUCT_SPECIFIER_T_DEC:
+        print_terminal(STRUCT);
+        visit(structSpecifier->dec.tag);
+        break;
+    case STRUCT_SPECIFIER_T_DEF:
+        print_terminal(STRUCT);
+        visit(structSpecifier->def.optTag);
+        print_terminal(LC);
+        visit(structSpecifier->def.defList);
+        print_terminal(RC);
+        break;
+    default:
+        printf("fatal: unknown structspecifier_type\n");
+    }
 }
 
 void visitOptTag(void *node) {
     print("OptTag");
+    OptTag *optTag = (OptTag *)node;
+    if (optTag->has_id) {
+        print_id(optTag->id_index);
+    }
 }
 
 void visitTag(void *node) {
     print("Tag");
+    Tag *tag = (Tag *)node;
+    print_id(tag->id_index);
 }
 
 void visitVarDec(void *node) {

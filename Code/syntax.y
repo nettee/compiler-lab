@@ -52,35 +52,37 @@
 
 %%
 
-Program : ExtDefList
+Program : ExtDefList { $$ = root = newProgram($1); }
 ;
 
-ExtDefList : ExtDef ExtDefList 
-    | %empty 
+ExtDefList : ExtDef ExtDefList { $$ = ExtDefList_insert($1, $2); }
+    | %empty { $$ = newExtDefList(); }
 ;
 
 ExtDef : Specifier ExtDecList SEMI 
-    | Specifier SEMI 
-    | Specifier FunDec CompSt { $$ = root = newExtDef_fun($1, $2, $3); }
+        { $$ = newExtDef_var($1, $2); }
+    | Specifier SEMI { $$ = newExtDef_struct($1); }
+    | Specifier FunDec CompSt { $$ = newExtDef_fun($1, $2, $3); }
 ;
 
-ExtDecList : VarDec 
-    | VarDec COMMA ExtDecList 
+ExtDecList : VarDec { $$ = newExtDecList($1); }
+    | VarDec COMMA ExtDecList { $$ = ExtDecList_insert($1, $3); }
 ;
 
 Specifier : TYPE { $$ = newSpecifier_TYPE($1); }
-    | StructSpecifier
+    | StructSpecifier { $$ = newSpecifier_struct($1); }
 ;
 
 StructSpecifier : STRUCT OptTag LC DefList RC
-    | STRUCT Tag
+        { $$ = newStructSpecifier_def($2, $4); }
+    | STRUCT Tag { $$ = newStructSpecifier_dec($2); }
 ;
 
-OptTag : ID
-    | %empty
+OptTag : ID { $$ = newOptTag($1); }
+    | %empty { $$ = newOptTag_empty(); }
 ;
 
-Tag : ID
+Tag : ID { $$ = newTag($1); }
 ;
 
 VarDec : ID { $$ = newVarDec($1); }

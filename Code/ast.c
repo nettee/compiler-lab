@@ -20,6 +20,60 @@ static IntListNode *newIntListNode(int value) {
     return intListNode;
 }
 
+Program *newProgram(void *arg0) {
+    ExtDefList *extDefList = (ExtDefList *) arg0;
+
+    Program *program = malloc(sizeof(Program));
+    program->type = PROGRAM;
+    program->extDefList = extDefList;
+    
+    return program;
+}
+
+ExtDefList *newExtDefList() {
+    ExtDefList *extDefList = malloc(sizeof(ExtDefList));
+    extDefList->type = EXT_DEF_LIST;
+    extDefList->list_extdef = NULL;
+
+    return extDefList;
+}
+
+ExtDefList *ExtDefList_insert(void *arg0, void *arg1) {
+    ExtDef *extDef = (ExtDef *) arg0;
+    ExtDefList *extDefList = (ExtDefList *) arg1;
+
+    ListNode *node = newListNode(extDef);
+    node->next = extDefList->list_extdef;
+    extDefList->list_extdef = node;
+
+    return extDefList;
+}
+
+ExtDef *newExtDef_var(void *arg0, void *arg1) {
+    Specifier *specifier = (Specifier *) arg0;
+    ExtDecList *extDecList = (ExtDecList *) arg1;
+
+    ExtDef *extDef = malloc(sizeof(ExtDef));
+    extDef->type = EXT_DEF;
+    extDef->extdef_type = EXT_DEF_T_VAR;
+    extDef->var.specifier = specifier;
+    extDef->var.extDecList = extDecList;
+
+    return extDef;
+}
+
+
+ExtDef *newExtDef_struct(void *arg0) {
+    Specifier *specifier = (Specifier *) arg0;
+
+    ExtDef *extDef = malloc(sizeof(ExtDef));
+    extDef->type = EXT_DEF;
+    extDef->extdef_type = EXT_DEF_T_STRUCT;
+    extDef->struct_.specifier = specifier;
+
+    return extDef;
+}
+
 ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2) {
     Specifier *specifier = (Specifier *) arg0;
     FunDec *funDec = (FunDec *) arg1;
@@ -35,6 +89,27 @@ ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2) {
     return extDef;
 }
 
+ExtDecList *newExtDecList(void *arg0) {
+    VarDec *varDec = (VarDec *) arg0;
+
+    ExtDecList *extDecList = malloc(sizeof(ExtDecList));
+    extDecList->type = EXT_DEC_LIST;
+    extDecList->list_vardec = newListNode(varDec);
+
+    return extDecList;
+}
+
+ExtDecList *ExtDecList_insert(void *arg0, void *arg1) {
+    VarDec *varDec = (VarDec *) arg0;
+    ExtDecList *extDecList = (ExtDecList *) arg1;
+
+    ListNode *node = newListNode(varDec);
+    node->next = extDecList->list_vardec;
+    extDecList->list_vardec = node;
+
+    return extDecList;
+}
+
 Specifier *newSpecifier_TYPE(int type_index) {
     Specifier *specifier = malloc(sizeof(Specifier));
     specifier->type = SPECIFIER;
@@ -42,6 +117,67 @@ Specifier *newSpecifier_TYPE(int type_index) {
     specifier->type_index = type_index;
 
     return specifier;
+}
+
+Specifier *newSpecifier_struct(void *arg0) {
+    StructSpecifier *structSpecifier = (StructSpecifier *) arg0;
+
+    Specifier *specifier = malloc(sizeof(Specifier));
+    specifier->type = SPECIFIER;
+    specifier->specifier_type = SPECIFIER_T_STRUCT;
+    specifier->structSpecifier = structSpecifier;
+
+    return specifier;
+}
+
+StructSpecifier *newStructSpecifier_dec(void *arg0) {
+    Tag *tag = (Tag *) arg0;
+
+    StructSpecifier *structSpecifier = malloc(sizeof(StructSpecifier));
+    structSpecifier->type = STRUCT_SPECIFIER;
+    structSpecifier->structspecifier_type = STRUCT_SPECIFIER_T_DEC;
+    structSpecifier->dec.tag = tag;
+
+    return structSpecifier;
+}
+
+StructSpecifier *newStructSpecifier_def(void *arg0, void *arg1) {
+    OptTag *optTag = (OptTag *) arg0;
+    DefList *defList = (DefList *) arg1;
+
+    StructSpecifier *structSpecifier = malloc(sizeof(StructSpecifier));
+    structSpecifier->type = STRUCT_SPECIFIER;
+    structSpecifier->structspecifier_type = STRUCT_SPECIFIER_T_DEF;
+    structSpecifier->def.optTag = optTag;
+    structSpecifier->def.defList = defList;
+
+    return structSpecifier;
+}
+
+OptTag *newOptTag(int id_index) {
+    OptTag *optTag = malloc(sizeof(OptTag));
+    optTag->type = OPT_TAG;
+    optTag->has_id = 1; // true
+    optTag->id_index = id_index;
+
+    return optTag;
+}
+
+OptTag *newOptTag_empty() {
+    OptTag *optTag = malloc(sizeof(OptTag));
+    optTag->type = OPT_TAG;
+    optTag->has_id = 0; // false
+    optTag->id_index = -1;
+
+    return optTag;
+}
+
+Tag *newTag(int id_index) {
+    Tag *tag = malloc(sizeof(Tag));
+    tag->type = TAG;
+    tag->id_index = id_index;
+
+    return tag;
 }
 
 VarDec *newVarDec(int id_value) {

@@ -1,0 +1,8 @@
+struct Point {
+    int x;
+    int y;
+} p;
+
+int add(struct Point p) {
+    return p.x + p.y;
+}
