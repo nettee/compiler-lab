@@ -67,7 +67,18 @@ Stmt *newStmt_exp(void *arg0) {
     Stmt *stmt = malloc(sizeof(Stmt));
     stmt->type = STMT;
     stmt->stmt_type = STMT_T_EXP;
-    stmt->exp = exp;
+    stmt->exp.exp = exp;
+
+    return stmt;
+}
+
+Stmt *newStmt_COMP_ST(void *arg0) {
+    CompSt *compSt = (CompSt *) arg0;
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    stmt->type = STMT;
+    stmt->stmt_type = STMT_T_COMP_ST;
+    stmt->compst.compSt = compSt;
 
     return stmt;
 }
@@ -78,7 +89,20 @@ Stmt *newStmt_RETURN(void *arg0) {
     Stmt *stmt = malloc(sizeof(Stmt));
     stmt->type = STMT;
     stmt->stmt_type = STMT_T_RETURN;
-    stmt->exp = exp;
+    stmt->return_.exp = exp;
+
+    return stmt;
+}
+
+Stmt *newStmt_WHILE(void *arg0, void *arg1) {
+    Exp *exp = (Exp *) arg0;
+    Stmt *body_stmt = (Stmt *) arg1;
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    stmt->type = STMT;
+    stmt->stmt_type = STMT_T_WHILE;
+    stmt->while_.exp = exp;
+    stmt->while_.stmt = body_stmt;
 
     return stmt;
 }

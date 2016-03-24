@@ -150,13 +150,23 @@ void visitStmt(void *node) {
     Stmt *stmt = (Stmt *)node;
     switch (stmt->stmt_type) {
     case STMT_T_EXP:
-        visit(stmt->exp);
+        visit(stmt->exp.exp);
         print("  %s", token_str(SEMI));
+        break;
+    case STMT_T_COMP_ST:
+        visit(stmt->compst.compSt);
         break;
     case STMT_T_RETURN:
         print("  %s", token_str(RETURN));
-        visit(stmt->exp);
+        visit(stmt->return_.exp);
         print("  %s", token_str(SEMI));
+        break;
+    case STMT_T_WHILE:
+        print_terminal(WHILE);
+        print_terminal(LP);
+        visit(stmt->while_.exp);
+        print_terminal(RP);
+        visit(stmt->while_.stmt);
         break;
     default:
         printf("fatal: unknown stmt_type\n");
@@ -290,5 +300,6 @@ void visit(void *node) {
 
 void print_ast() {
     print_symbol_table();
+    printf("root = %p\n", root);
     visit(root);
 }

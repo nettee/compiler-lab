@@ -95,20 +95,20 @@ VarList : ParamDec COMMA VarList
 ParamDec : Specifier VarDec
 ;
 
-CompSt : LC DefList StmtList RC { $$ = root = newCompSt($2, $3); }
+CompSt : LC DefList StmtList RC { $$ = root = newCompSt($2, $3); 
+       printf("root = %p\n", root); }
 ;
 
 StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
     | %empty { $$ = newStmtList(); }
 ;
 
-Stmt : Exp SEMI { $$ = newStmt_exp($1); 
-     printf("lineno = %d\n", @1.last_column); }
-    | CompSt
+Stmt : Exp SEMI { $$ = newStmt_exp($1); }
+    | CompSt { $$ = newStmt_COMP_ST($1); }
     | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
     | IF LP Exp RP Stmt
     | IF LP Exp RP Stmt ELSE Stmt
-    | WHILE LP Exp RP Stmt
+    | WHILE LP Exp RP Stmt { $$ = newStmt_WHILE($3, $5); }
 ;
 
 DefList : Def DefList { $$ = DefList_insert($1, $2); }

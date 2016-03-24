@@ -1,6 +1,6 @@
 int inc()
 {
-    print(x);
-    print(y);
-    print(z);
+    x;
+    y;
+    z;
 }
