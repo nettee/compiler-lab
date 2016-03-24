@@ -61,14 +61,14 @@ ExtDefList : ExtDef ExtDefList
 
 ExtDef : Specifier ExtDecList SEMI 
     | Specifier SEMI 
-    | Specifier FunDec CompSt 
+    | Specifier FunDec CompSt { $$ = root = newExtDef_fun($1, $2, $3); }
 ;
 
 ExtDecList : VarDec 
     | VarDec COMMA ExtDecList 
 ;
 
-Specifier : TYPE { $$ = newSpecifier_1($1); }
+Specifier : TYPE { $$ = newSpecifier_TYPE($1); }
     | StructSpecifier
 ;
 
@@ -83,22 +83,22 @@ OptTag : ID
 Tag : ID
 ;
 
-VarDec : ID { $$ = newVarDec_1($1); }
-    | VarDec LB INT RB
+VarDec : ID { $$ = newVarDec($1); }
+    | VarDec LB INT RB { $$ = VarDec_add($1, $3); }
 ;
 
-FunDec : ID LP VarList RP
-    | ID LP RP
+FunDec : ID LP VarList RP { $$ = newFunDec($1, $3); }
+    | ID LP RP { $$ = newFunDec($1, NULL); }
 ;
 
-VarList : ParamDec COMMA VarList
-    | ParamDec
+VarList : ParamDec COMMA VarList { $$ = VarList_insert($1, $3); }
+    | ParamDec { $$ = newVarList($1); }
 ;
 
-ParamDec : Specifier VarDec
+ParamDec : Specifier VarDec { $$ = newParamDec($1, $2); }
 ;
 
-CompSt : LC DefList StmtList RC { $$ = root = newCompSt($2, $3); }
+CompSt : LC DefList StmtList RC { $$ = newCompSt($2, $3); }
 ;
 
 StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
@@ -109,9 +109,9 @@ Stmt : Exp SEMI { $$ = newStmt_exp($1); }
     | CompSt { $$ = newStmt_COMP_ST($1); }
     | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE 
-    { $$ = newStmt_if($3, $5); }
+        { $$ = newStmt_if($3, $5); }
     | IF LP Exp RP Stmt ELSE Stmt
-    { $$ = newStmt_ifelse($3, $5, $7); }
+        { $$ = newStmt_ifelse($3, $5, $7); }
     | WHILE LP Exp RP Stmt { $$ = newStmt_WHILE($3, $5); }
 ;
 

@@ -8,7 +8,6 @@ enum ExpType {
     EXP_T_ID,
     EXP_T_INT,
     EXP_T_FLOAT,
-    // TODO
 };
 
 enum StmtType {
@@ -18,6 +17,15 @@ enum StmtType {
     STMT_T_IF,
     STMT_T_IF_ELSE,
     STMT_T_WHILE,
+};
+
+enum SpecifierType {
+    SPECIFIER_T_TYPE = 2300,
+    // TODO
+};
+
+enum ExtDefType {
+    EXT_DEF_T_FUN = 2400,
     // TODO
 };
 
@@ -49,6 +57,11 @@ typedef struct ListNode_ {
     struct ListNode_ *next;
     void *child;
 } ListNode;
+
+typedef struct IntListNode_ {
+    struct IntListNode_ *next;
+    int value;
+} IntListNode;
 
 struct Program_;
 struct ExtDefList_;
@@ -194,46 +207,52 @@ typedef struct CompSt_ {
     StmtList *stmtList;
 } CompSt;
 
-typedef struct {
+typedef struct ParamDec_ {
     int type;
-    // TODO
+    struct Specifier_ *specifier;
+    struct VarDec_ *varDec;
 } ParamDec;
 
-typedef struct {
+typedef struct VarList_ {
     int type;
-    // TODO
+    ListNode *list_paramdec;
 } VarList;
 
-typedef struct {
+typedef struct FunDec_ {
     int type;
-    // TODO
+    int id_index;
+    struct VarList_ *varList;
 } FunDec;
 
 typedef struct VarDec_ {
     int type;
     int id_index;
-    // TODO
+    IntListNode *list_int;
+    IntListNode *list_int_last;
 } VarDec;
 
-typedef struct {
+typedef struct Tag_ {
     int type;
     // TODO
 } Tag;
 
-typedef struct {
+typedef struct OptTag_ {
     int type;
     // TODO
 } OptTag;
 
-typedef struct {
+typedef struct StructSpecifier_ {
     int type;
     // TODO
 } StructSpecifier;
 
 typedef struct Specifier_ {
     int type;
-    int type_value;
-    // TODO
+    int specifier_type;
+    union {
+        int type_index;
+        // TODO
+    };
 } Specifier;
 
 typedef struct {
@@ -241,17 +260,25 @@ typedef struct {
     // TODO
 } ExtDecList;
 
-typedef struct {
+typedef struct ExtDef_ {
     int type;
-    // TODO
+    int extdef_type;
+    union {
+        struct {
+            struct Specifier_ *specifier;
+            struct FunDec_ *funDec;
+            struct CompSt_ *compSt;
+        } fun;
+        // TODO
+    };
 } ExtDef;
 
-typedef struct {
+typedef struct ExtDefList_ {
     int type;
     ExtDef *list;  /* list of extDef */
 } ExtDefList;
 
-typedef struct {
+typedef struct Program_ {
     int type;
     void *extDefList;
 } Program;
@@ -261,9 +288,19 @@ Program *newProgram(void *);
 ExtDefList *newExtDefList();
 ExtDefList *ExtDefList_add(void *, void *);
 
-Specifier *newSpecifier_1(int);
+ExtDef *newExtDef_fun(void *, void *, void *); // ExtDef : Specifier FunDec CompSt
 
-VarDec *newVarDec_1(int); /* VarDec : ID */
+Specifier *newSpecifier_TYPE(int);
+
+VarDec *newVarDec(int); /* VarDec : ID */
+VarDec *VarDec_add(void *, int); // VarDec : VarDec [ INT ]
+
+FunDec *newFunDec(int, void *);
+
+VarList *newVarList(void *); // VarList : ParamDec
+VarList *VarList_insert(void *, void *); // VarList : ParamDec , VarList
+
+ParamDec *newParamDec(void *, void *); // ParamDec : Specifier VarDec
 
 CompSt *newCompSt(void *, void *); // CompSt : { DefList StmtList }
 

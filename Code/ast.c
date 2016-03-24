@@ -13,21 +13,105 @@ static ListNode *newListNode(void *child) {
     return listNode;
 }
 
-Specifier *newSpecifier_1(int type_value) {
-    Specifier *specifier = malloc(sizeof(Specifier));
+static IntListNode *newIntListNode(int value) {
+    IntListNode *intListNode = malloc(sizeof(IntListNode));
+    intListNode->next = NULL;
+    intListNode->value = value;
+    return intListNode;
+}
 
+ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2) {
+    Specifier *specifier = (Specifier *) arg0;
+    FunDec *funDec = (FunDec *) arg1;
+    CompSt *compSt = (CompSt *) arg2;
+
+    ExtDef *extDef = malloc(sizeof(ExtDef));
+    extDef->type = EXT_DEF;
+    extDef->extdef_type = EXT_DEF_T_FUN;
+    extDef->fun.specifier = specifier;
+    extDef->fun.funDec = funDec;
+    extDef->fun.compSt = compSt;
+
+    return extDef;
+}
+
+Specifier *newSpecifier_TYPE(int type_index) {
+    Specifier *specifier = malloc(sizeof(Specifier));
     specifier->type = SPECIFIER;
-    specifier->type_value = type_value;
+    specifier->specifier_type = SPECIFIER_T_TYPE;
+    specifier->type_index = type_index;
 
     return specifier;
 }
 
-VarDec *newVarDec_1(int id_value) {
+VarDec *newVarDec(int id_value) {
     VarDec *varDec = malloc(sizeof(VarDec));
     varDec->type = VAR_DEC;
-
     varDec->id_index = id_value;
+    varDec->list_int = NULL;
+    varDec->list_int_last = NULL;
+
     return varDec;
+}
+
+VarDec *VarDec_add(void *arg0, int int_index) {
+    VarDec *varDec = (VarDec *) arg0;
+
+    IntListNode *node = newIntListNode(int_index);
+    if (varDec->list_int_last == NULL) {
+        /* empty list_int */
+        varDec->list_int = node;
+        varDec->list_int_last = node;
+    } else {
+        varDec->list_int_last->next = node;
+        varDec->list_int_last = node;
+    } 
+
+    return varDec;
+}
+
+FunDec *newFunDec(int id_index, void *arg0) {
+    VarList *varList = (VarList *) arg0;
+
+    FunDec *funDec = malloc(sizeof(FunDec));
+    funDec->type = FUN_DEC;
+    funDec->id_index = id_index;
+    funDec->varList = varList;
+
+    return funDec;
+}
+
+VarList *newVarList(void *arg0) {
+    ParamDec *paramDec = (ParamDec *) arg0;
+
+    VarList *varList = malloc(sizeof(VarList));
+    varList->type = VAR_LIST;
+    varList->list_paramdec = newListNode(paramDec);
+
+    return varList;
+}
+
+VarList *VarList_insert(void *arg0, void *arg1) {
+    ParamDec *paramDec = (ParamDec *) arg0;
+    VarList *varList = (VarList *) arg1;
+
+    ListNode *node = newListNode(paramDec);
+    node->next = varList->list_paramdec;
+    varList->list_paramdec = node;
+
+    return varList;
+}
+
+ParamDec *newParamDec(void *arg0, void *arg1) {
+    Specifier *specifier = (Specifier *) arg0;
+    VarDec *varDec = (VarDec *) arg1;
+
+    ParamDec *paramDec = malloc(sizeof(ParamDec));
+    paramDec->type = PARAM_DEC;
+    paramDec->specifier = specifier;
+    paramDec->varDec = varDec;
+
+    return paramDec;
 }
 
 CompSt *newCompSt(void *arg0, void *arg1) {

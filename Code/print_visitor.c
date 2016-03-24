@@ -65,6 +65,10 @@ static void print_id(int id_index) {
     print("  ID: %s", resolve_id(id_index));
 }
 
+static void print_int(int int_index) {
+    print("  INT: %d", resolve_int(int_index));
+}
+
 static void print_terminal(int terminal) {
     print("  %s", token_str(terminal));
 }
@@ -79,6 +83,16 @@ void visitExtDefList(void *node) {
 
 void visitExtDef(void *node) {
     print("ExtDef");
+    ExtDef *extDef = (ExtDef *)node;
+    switch (extDef->extdef_type) {
+    case EXT_DEF_T_FUN:
+        visit(extDef->fun.specifier);
+        visit(extDef->fun.funDec);
+        visit(extDef->fun.compSt);
+        break;
+    default:
+        printf("fatal: unknown extdef_type\n");
+    }
 }
 
 void visitExtDecList(void *node) {
@@ -88,7 +102,7 @@ void visitExtDecList(void *node) {
 void visitSpecifier(void *node) {
     print("Specifier");
     Specifier *specifier = (Specifier *)node;
-    switch (specifier->type_value) {
+    switch (specifier->type_index) {
     case T_INT:
         print("  TYPE: int");
         break;
@@ -115,19 +129,39 @@ void visitTag(void *node) {
 void visitVarDec(void *node) {
     print("VarDec");
     VarDec *varDec = (VarDec *)node;
-    print("  ID: %s", resolve_id(varDec->id_index));
+    print_id(varDec->id_index);
+    for (IntListNode *q = varDec->list_int; q != NULL; q = q->next) {
+        print_terminal(LB);
+        print_int(q->value);
+        print_terminal(RB);
+    }
 }
 
 void visitFunDec(void *node) {
     print("FunDec");
+    FunDec *funDec = (FunDec *)node;
+    print_id(funDec->id_index);
+    print_terminal(LP);
+    if (funDec->varList != NULL) {
+        visit(funDec->varList);
+    }
+    print_terminal(RP);
 }
 
 void visitVarList(void *node) {
     print("VarList");
+    VarList *varList = (VarList *)node;
+    for (ListNode *q = varList->list_paramdec; q != NULL;
+            q = q->next) {
+        visit(q->child);
+    }
 }
 
 void visitParamDec(void *node) {
     print("ParamDec");
+    ParamDec *paramDec = (ParamDec *)node;
+    visit(paramDec->specifier);
+    visit(paramDec->varDec);
 }
 
 void visitCompSt(void *node) {
