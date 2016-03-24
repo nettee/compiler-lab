@@ -102,7 +102,8 @@ StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
     | %empty { $$ = newStmtList(); }
 ;
 
-Stmt : Exp SEMI { $$ = newStmt_exp($1); }
+Stmt : Exp SEMI { $$ = newStmt_exp($1); 
+     printf("lineno = %d\n", @1.last_column); }
     | CompSt
     | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
     | IF LP Exp RP Stmt
