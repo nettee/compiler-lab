@@ -47,6 +47,9 @@
 %type <type_node> Exp
 %type <type_node> Args
 
+%precedence LOWER_THAN_ELSE
+%precedence ELSE
+
 %%
 
 Program : ExtDefList
@@ -105,8 +108,10 @@ StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
 Stmt : Exp SEMI { $$ = newStmt_exp($1); }
     | CompSt { $$ = newStmt_COMP_ST($1); }
     | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
-    | IF LP Exp RP Stmt
+    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE 
+    { $$ = newStmt_if($3, $5); }
     | IF LP Exp RP Stmt ELSE Stmt
+    { $$ = newStmt_ifelse($3, $5, $7); }
     | WHILE LP Exp RP Stmt { $$ = newStmt_WHILE($3, $5); }
 ;
 

@@ -71,7 +71,8 @@ extern int yydebug;
     LB = 281,
     RB = 282,
     LC = 283,
-    RC = 284
+    RC = 284,
+    LOWER_THAN_ELSE = 285
   };
 #endif
 
@@ -85,7 +86,7 @@ union YYSTYPE
     int type_int;
     void *type_node;
 
-#line 89 "./syntax.tab.h" /* yacc.c:1909  */
+#line 90 "./syntax.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

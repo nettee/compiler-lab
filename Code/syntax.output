@@ -8,7 +8,6 @@
 状态 96 conflicts: 10 shift/reduce
 状态 97 conflicts: 10 shift/reduce
 状态 98 conflicts: 10 shift/reduce
-状态 107 conflicts: 1 shift/reduce
 
 
 语法
@@ -126,54 +125,55 @@ LB (281) 17 52
 RB (282) 17 52
 LC (283) 11 23
 RC (284) 11 23
+LOWER_THAN_ELSE (285)
 
 
 Nonterminals, with rules where they appear
 
-$accept (30)
+$accept (31)
     左： 0
-Program (31)
+Program (32)
     左： 1, 右： 0
-ExtDefList (32)
+ExtDefList (33)
     左： 2 3, 右： 1 2
-ExtDef (33)
+ExtDef (34)
     左： 4 5 6, 右： 2
-ExtDecList (34)
+ExtDecList (35)
     左： 7 8, 右： 4 8
-Specifier (35)
+Specifier (36)
     左： 9 10, 右： 4 5 6 22 34
-StructSpecifier (36)
+StructSpecifier (37)
     左： 11 12, 右： 10
-OptTag (37)
+OptTag (38)
     左： 13 14, 右： 11
-Tag (38)
+Tag (39)
     左： 15, 右： 12
-VarDec (39)
+VarDec (40)
     左： 16 17, 右： 7 8 17 22 37 38
-FunDec (40)
+FunDec (41)
     左： 18 19, 右： 6
-VarList (41)
+VarList (42)
     左： 20 21, 右： 18 20
-ParamDec (42)
+ParamDec (43)
     左： 22, 右： 20 21
-CompSt (43)
+CompSt (44)
     左： 23, 右： 6 27
-StmtList (44)
+StmtList (45)
     左： 24 25, 右： 23 24
-Stmt (45)
+Stmt (46)
     左： 26 27 28 29 30 31, 右： 24 29 30 31
-DefList (46)
+DefList (47)
     左： 32 33, 右： 11 23 32
-Def (47)
+Def (48)
     左： 34, 右： 32
-DecList (48)
+DecList (49)
     左： 35 36, 右： 34 36
-Dec (49)
+Dec (50)
     左： 37 38, 右： 35 36
-Exp (50)
+Exp (51)
     左： 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56, 右：
     26 28 29 30 31 38 39 40 41 42 43 44 45 46 47 48 49 52 53 57 58
-Args (51)
+Args (52)
     左： 57 58, 右： 50 57
 
 
@@ -1711,7 +1711,6 @@ State 107
 
     ELSE  shift, and go to state 109
 
-    ELSE      [reduce using rule 29 (Stmt)]
     $default  reduce using rule 29 (Stmt)
 
 

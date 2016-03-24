@@ -15,6 +15,8 @@ enum StmtType {
     STMT_T_EXP = 2200,
     STMT_T_COMP_ST,
     STMT_T_RETURN,
+    STMT_T_IF,
+    STMT_T_IF_ELSE,
     STMT_T_WHILE,
     // TODO
 };
@@ -163,6 +165,17 @@ typedef struct Stmt_ {
 
         struct {
             struct Exp_ *exp;
+            struct Stmt_ *then_stmt;
+        } if_;
+
+        struct {
+            struct Exp_ *exp;
+            struct Stmt_ *then_stmt;
+            struct Stmt_ *else_stmt;
+        } ifelse;
+
+        struct {
+            struct Exp_ *exp;
             struct Stmt_ *stmt;
         } while_;
     };
@@ -260,6 +273,8 @@ StmtList *StmtList_insert(void *, void *); // StmtList : Stmt StmtList
 Stmt *newStmt_exp(void *); // Stmt : Exp ;
 Stmt *newStmt_COMP_ST(void *); // Stmt : CompSt
 Stmt *newStmt_RETURN(void *); // Stmt : return Exp ;
+Stmt *newStmt_if(void *, void *); // Stmt : if ( Exp ) Stmt
+Stmt *newStmt_ifelse(void *, void *, void *); // Stmt : if ( Exp ) Stmt else Stmt
 Stmt *newStmt_WHILE(void *, void *); // Stmt : while ( Exp ) Stmt
 
 DefList *newDefList(); // DefList : (epsilon)

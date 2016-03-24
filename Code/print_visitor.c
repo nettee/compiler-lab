@@ -161,6 +161,22 @@ void visitStmt(void *node) {
         visit(stmt->return_.exp);
         print("  %s", token_str(SEMI));
         break;
+    case STMT_T_IF:
+        print_terminal(IF);
+        print_terminal(LP);
+        visit(stmt->if_.exp);
+        print_terminal(RP);
+        visit(stmt->if_.then_stmt);
+        break;
+    case STMT_T_IF_ELSE:
+        print_terminal(IF);
+        print_terminal(LP);
+        visit(stmt->ifelse.exp);
+        print_terminal(RP);
+        visit(stmt->ifelse.then_stmt);
+        print_terminal(ELSE);
+        visit(stmt->ifelse.else_stmt);
+        break;
     case STMT_T_WHILE:
         print_terminal(WHILE);
         print_terminal(LP);

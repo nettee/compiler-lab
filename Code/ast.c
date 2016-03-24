@@ -94,6 +94,34 @@ Stmt *newStmt_RETURN(void *arg0) {
     return stmt;
 }
 
+Stmt *newStmt_if(void *arg0, void *arg1) {
+    Exp *exp = (Exp *) arg0;
+    Stmt *then_stmt = (Stmt *) arg1;
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    stmt->type = STMT;
+    stmt->stmt_type = STMT_T_IF;
+    stmt->if_.exp = exp;
+    stmt->if_.then_stmt = then_stmt;
+
+    return stmt;
+}
+
+Stmt *newStmt_ifelse(void *arg0, void *arg1, void *arg2) {
+    Exp *exp = (Exp *) arg0;
+    Stmt *then_stmt = (Stmt *) arg1;
+    Stmt *else_stmt = (Stmt *) arg2;
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    stmt->type = STMT;
+    stmt->stmt_type = STMT_T_IF_ELSE;
+    stmt->ifelse.exp = exp;
+    stmt->ifelse.then_stmt = then_stmt;
+    stmt->ifelse.else_stmt = else_stmt;
+
+    return stmt;
+}
+
 Stmt *newStmt_WHILE(void *arg0, void *arg1) {
     Exp *exp = (Exp *) arg0;
     Stmt *body_stmt = (Stmt *) arg1;
