@@ -61,6 +61,14 @@ static int indent = -1;
     printf("\n"); \
 }
 
+static void print_id(int id_index) {
+    print("  ID: %s", resolve_id(id_index));
+}
+
+static void print_terminal(int terminal) {
+    print("  %s", token_str(terminal));
+}
+
 void visitProgram(void *node) {
     print("Program");
 }
@@ -182,6 +190,10 @@ void visitDec(void *node) {
     print("Dec");
     Dec *dec = (Dec *)node;
     visit(dec->varDec);
+    if (dec->exp != NULL) {
+        print_terminal(ASSIGNOP);
+        visit(dec->exp);
+    }
 }
 
 void visitExp(void *node) {
@@ -202,14 +214,27 @@ void visitExp(void *node) {
         print("  %s", token_str(exp->unary.op));
         visit(exp->unary.exp);
         break;
+    case EXP_T_CALL:
+        print_id(exp->call.id_index);
+        print_terminal(LP);
+        if (exp->call.args != NULL) {
+            visit(exp->call.args);
+        }
+        print_terminal(RP);
+        break;
     case EXP_T_SUBSCRIPT:
         visit(exp->subscript.array);
         print("  %s", token_str(LB));
         visit(exp->subscript.index);
         print("  %s", token_str(RB));
         break;
+    case EXP_T_DOT:
+        visit(exp->dot.exp);
+        print("  %s", token_str(DOT));
+        print_id(exp->dot.id_index);
+        break;
     case EXP_T_ID:
-        print("  ID: %s", resolve_id(exp->id_index));
+        print_id(exp->id_index);
         break;
     case EXP_T_INT:
         print("  INT: %d", resolve_int(exp->int_index));
@@ -224,6 +249,10 @@ void visitExp(void *node) {
 
 void visitArgs(void *node) {
     print("Args");
+    Args *args = (Args *)node;
+    for (ListNode *q = args->list_exp; q != NULL; q = q->next) {
+        visit(q->child);
+    }
 }
 
 funcptr visitor_table[] = {

@@ -121,8 +121,8 @@ DecList : Dec { $$ = newDecList($1); }
     | Dec COMMA DecList { $$ = DecList_insert($1, $3); }
 ;
 
-Dec : VarDec { $$ = newDec_1($1); }
-    | VarDec ASSIGNOP Exp
+Dec : VarDec { $$ = newDec($1, NULL); }
+    | VarDec ASSIGNOP Exp { $$ = newDec($1, $3); }
 ;
 
 Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
@@ -136,17 +136,17 @@ Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
     | LP Exp RP { $$ = newExp_paren($2); }
     | MINUS Exp { $$ = newExp_unary(MINUS, $2); }
     | NOT Exp { $$ = newExp_unary(NOT, $2); }
-    | ID LP Args RP 
-    | ID LP RP 
+    | ID LP Args RP { $$ = newExp_call($1, $3); }
+    | ID LP RP { $$ = newExp_call($1, NULL); }
     | Exp LB Exp RB { $$ = newExp_subscript($1, $3); }
-    | Exp DOT ID 
+    | Exp DOT ID { $$ = newExp_DOT($1, $3); }
     | ID { $$ = newExp_ID($1); }
     | INT { $$ = newExp_INT($1); }
     | FLOAT { $$ = newExp_FLOAT($1); }
 ;
 
-Args : Exp COMMA Args
-    | Exp
+Args : Exp COMMA Args { $$ = Args_insert($1, $3); }
+    | Exp { $$ = newArgs($1); }
 ;
 
 

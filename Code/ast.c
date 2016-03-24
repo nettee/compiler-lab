@@ -136,13 +136,14 @@ DecList *DecList_insert(void *arg0, void *arg1) {
     return decList;
 }
 
-Dec *newDec_1(void *arg0) {
-    VarDec *varDec = (VarDec *)arg0;
+Dec *newDec(void *arg0, void *arg1) {
+    VarDec *varDec = (VarDec *) arg0;
+    Exp *exp = (Exp *) arg1;
     
     Dec *dec = malloc(sizeof(Dec));
     dec->type = DEC;
-
     dec->varDec = varDec;
+    dec->exp = exp;
 
     return dec;
 }
@@ -184,6 +185,18 @@ Exp *newExp_unary(int op, void *arg0) {
     return exp;
 }
 
+Exp *newExp_call(int id_index, void *arg0) {
+    Args *args = (Args *) arg0;
+
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_CALL;
+    exp->call.id_index = id_index;
+    exp->call.args = args;
+
+    return exp;
+}
+
 Exp *newExp_subscript(void *arg0, void *arg1) {
     Exp *array = (Exp *) arg0;
     Exp *index = (Exp *) arg1;
@@ -193,6 +206,18 @@ Exp *newExp_subscript(void *arg0, void *arg1) {
     exp->exp_type = EXP_T_SUBSCRIPT;
     exp->subscript.array = array;
     exp->subscript.index = index;
+
+    return exp;
+}
+
+Exp *newExp_DOT(void *arg0, int id_index) {
+    Exp *dotted_exp = (Exp *) arg0;
+
+    Exp *exp = malloc(sizeof(Exp));
+    exp->type = EXP;
+    exp->exp_type = EXP_T_DOT;
+    exp->dot.exp = dotted_exp;
+    exp->dot.id_index = id_index;
 
     return exp;
 }
@@ -222,4 +247,25 @@ Exp *newExp_FLOAT(int float_index) {
     exp->float_index = float_index;
 
     return exp;
+}
+
+Args *newArgs(void *arg0) {
+    Exp *exp = (Exp *) arg0;
+
+    Args *args = malloc(sizeof(Args));
+    args->type = ARGS;
+    args->list_exp = newListNode(exp);
+
+    return args;
+}
+
+Args *Args_insert(void *arg0, void *arg1) {
+    Exp *exp = (Exp *) arg0;
+    Args *args = (Args *) arg1;
+
+    ListNode *node = newListNode(exp);
+    node->next = args->list_exp;
+    args->list_exp = node;
+
+    return args;
 }

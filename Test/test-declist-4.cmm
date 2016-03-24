@@ -1,0 +1,6 @@
+int inc()
+{
+    int i = 1, j;
+    float x;
+    i = i + 1;
+}

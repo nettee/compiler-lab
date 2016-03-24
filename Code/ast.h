@@ -2,7 +2,9 @@ enum ExpType {
     EXP_T_INFIX = 2100,
     EXP_T_PAREN,
     EXP_T_UNARY,
+    EXP_T_CALL,
     EXP_T_SUBSCRIPT,
+    EXP_T_DOT,
     EXP_T_ID,
     EXP_T_INT,
     EXP_T_FLOAT,
@@ -66,9 +68,9 @@ struct Dec_;
 struct Exp_;
 struct Args_;
 
-typedef struct {
+typedef struct Args_ {
     int type;
-    // TODO
+    ListNode *list_exp;
 } Args;
 
 typedef struct Exp_ {
@@ -99,16 +101,29 @@ typedef struct Exp_ {
             struct Exp_ *index;
         } subscript;
 
+        // for Exp : Exp . ID
+        struct {
+            struct Exp_ *exp;
+            int id_index;
+        } dot;
+
+        // for Exp : ID ( Args )
+        // and Exp : ID ( )
+        struct {
+            int id_index;
+            struct Args_ *args;
+        } call;
+
         int id_index; // for Exp : ID
         int int_index; // for Exp : INT
         int float_index; // for Exp : FLOAT
     };
 } Exp;
 
-typedef struct {
+typedef struct Dec_ {
     int type;
     struct VarDec_ *varDec;
-    // TODO
+    struct Exp_ *exp; // can be NULL
 } Dec;
 
 typedef struct DecList_ {
@@ -233,15 +248,19 @@ Def *newDef(void *, void *); // Def : Specifier DecList ;
 DecList *newDecList(void *); // DecList : Dec
 DecList *DecList_insert(void *, void *); // DecList : Dec, DecList
 
-Dec *newDec_1(void *); /* Dec : VarDec */
+Dec *newDec(void *, void *);
 
 Exp *newExp_infix(int, void *, void *);
 Exp *newExp_paren(void *); // Exp : ( Exp )
 Exp *newExp_unary(int, void *);
+Exp *newExp_call(int, void *); // Exp : ID ( Args )
 Exp *newExp_subscript(void *, void *); // Exp: Exp [ Exp ]
+Exp *newExp_DOT(void *, int); // Exp : Exp . ID
 Exp *newExp_ID(int); // Exp : ID
 Exp *newExp_INT(int); // Exp : INT
 Exp *newExp_FLOAT(int); // Exp : FLOAT
 
+Args *newArgs(void *); // Args : Exp
+Args *Args_insert(void *, void *); // Args : Exp , Args
 
 extern void *root;
