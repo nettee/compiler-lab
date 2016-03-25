@@ -35,6 +35,11 @@ enum StructSpecifierType {
     STRUCT_SPECIFIER_T_DEF,
 };
 
+enum VarDecType {
+    VAR_DEC_T_ID = 2600,
+    VAR_DEC_T_DIM,
+};
+
 enum AstNodeType {
     PROGRAM = 400,
     EXT_DEF_LIST = 401,
@@ -93,7 +98,8 @@ struct Args_;
 
 typedef struct Args_ {
     int type;
-    ListNode *list_exp;
+    struct Exp_ *exp;
+    struct Args_ *args; // may be NULL
 } Args;
 
 typedef struct Exp_ {
@@ -151,7 +157,8 @@ typedef struct Dec_ {
 
 typedef struct DecList_ {
     int type;
-    ListNode *list_dec;
+    struct Dec_ *dec;
+    struct DecList_ *decList; // may be NULL
 } DecList;
 
 typedef struct Def_ {
@@ -162,7 +169,8 @@ typedef struct Def_ {
 
 typedef struct DefList_ {
     int type;
-    ListNode *list_def;
+    struct Def_ *def;
+    struct DefList_ *defList;
 } DefList;
 
 typedef struct Stmt_ {
@@ -204,7 +212,8 @@ typedef struct Stmt_ {
 
 typedef struct StmtList_ {
     int type;
-    ListNode *list_stmt;
+    struct Stmt_ *stmt;
+    struct StmtList_ *stmtList;
 } StmtList;
 
 typedef struct CompSt_ {
@@ -221,7 +230,8 @@ typedef struct ParamDec_ {
 
 typedef struct VarList_ {
     int type;
-    ListNode *list_paramdec;
+    struct ParamDec_ *paramDec;
+    struct VarList_ *varList; // may be NULL
 } VarList;
 
 typedef struct FunDec_ {
@@ -232,9 +242,16 @@ typedef struct FunDec_ {
 
 typedef struct VarDec_ {
     int type;
-    int id_index;
-    IntListNode *list_int;
-    IntListNode *list_int_last;
+    int vardec_type;
+    union {
+        // for VarDec : ID
+        int id_index;
+        // for VarDec : VarDec [ INT ]
+        struct {
+            struct VarDec_ *varDec;
+            int int_index;
+        } dim;
+    };
 } VarDec;
 
 typedef struct Tag_ {
@@ -276,7 +293,8 @@ typedef struct Specifier_ {
 
 typedef struct ExtDecList_ {
     int type;
-    ListNode *list_vardec;
+    struct VarDec_ *varDec;
+    struct ExtDecList_ *extDecList; // may be NULL
 } ExtDecList;
 
 typedef struct ExtDef_ {
@@ -303,7 +321,8 @@ typedef struct ExtDef_ {
 
 typedef struct ExtDefList_ {
     int type;
-    ListNode *list_extdef;
+    struct ExtDef_ *extDef; // may be NULL
+    struct ExtDefList_ *extDefList; // may be NULL
 } ExtDefList;
 
 typedef struct Program_ {
@@ -313,15 +332,13 @@ typedef struct Program_ {
 
 Program *newProgram(void *);
 
-ExtDefList *newExtDefList();
-ExtDefList *ExtDefList_insert(void *, void *);
+ExtDefList *newExtDefList(void *, void *);
 
 ExtDef *newExtDef_var(void *, void *); // ExtDef : Specifier ExtDecList ;
 ExtDef *newExtDef_struct(void *); // ExtDef : Specifier ;
 ExtDef *newExtDef_fun(void *, void *, void *); // ExtDef : Specifier FunDec CompSt
 
-ExtDecList *newExtDecList(void *); // ExtDecList : VarDec
-ExtDecList *ExtDecList_insert(void *, void *); // ExtDecList : VarDec , ExtDecList
+ExtDecList *newExtDecList(void *, void *); 
 
 Specifier *newSpecifier_TYPE(int);
 Specifier *newSpecifier_struct(void *);
@@ -334,20 +351,18 @@ OptTag *newOptTag_empty();
 
 Tag *newTag(int);
 
-VarDec *newVarDec(int); /* VarDec : ID */
-VarDec *VarDec_add(void *, int); // VarDec : VarDec [ INT ]
+VarDec *newVarDec_ID(int); // VarDec : ID 
+VarDec *newVarDec_dim(void *, int); // VarDec : VarDec [ INT ]
 
 FunDec *newFunDec(int, void *);
 
-VarList *newVarList(void *); // VarList : ParamDec
-VarList *VarList_insert(void *, void *); // VarList : ParamDec , VarList
+VarList *newVarList(void *, void *); 
 
 ParamDec *newParamDec(void *, void *); // ParamDec : Specifier VarDec
 
 CompSt *newCompSt(void *, void *); // CompSt : { DefList StmtList }
 
-StmtList *newStmtList(); // StmtList : (epsilon)
-StmtList *StmtList_insert(void *, void *); // StmtList : Stmt StmtList
+StmtList *newStmtList(void *, void *); 
 
 Stmt *newStmt_exp(void *); // Stmt : Exp ;
 Stmt *newStmt_COMP_ST(void *); // Stmt : CompSt
@@ -356,13 +371,11 @@ Stmt *newStmt_if(void *, void *); // Stmt : if ( Exp ) Stmt
 Stmt *newStmt_ifelse(void *, void *, void *); // Stmt : if ( Exp ) Stmt else Stmt
 Stmt *newStmt_WHILE(void *, void *); // Stmt : while ( Exp ) Stmt
 
-DefList *newDefList(); // DefList : (epsilon)
-DefList *DefList_insert(void *, void *); // DefList : Def DefList
+DefList *newDefList(void *, void *); 
 
 Def *newDef(void *, void *); // Def : Specifier DecList ;
 
-DecList *newDecList(void *); // DecList : Dec
-DecList *DecList_insert(void *, void *); // DecList : Dec, DecList
+DecList *newDecList(void *, void *); 
 
 Dec *newDec(void *, void *);
 
@@ -376,7 +389,6 @@ Exp *newExp_ID(int); // Exp : ID
 Exp *newExp_INT(int); // Exp : INT
 Exp *newExp_FLOAT(int); // Exp : FLOAT
 
-Args *newArgs(void *); // Args : Exp
-Args *Args_insert(void *, void *); // Args : Exp , Args
+Args *newArgs(void *, void *); 
 
 extern void *root;

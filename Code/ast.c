@@ -6,20 +6,6 @@
 
 void *root;
 
-static ListNode *newListNode(void *child) {
-    ListNode *listNode = malloc(sizeof(ListNode));
-    listNode->next = NULL;
-    listNode->child = child;
-    return listNode;
-}
-
-static IntListNode *newIntListNode(int value) {
-    IntListNode *intListNode = malloc(sizeof(IntListNode));
-    intListNode->next = NULL;
-    intListNode->value = value;
-    return intListNode;
-}
-
 Program *newProgram(void *arg0) {
     ExtDefList *extDefList = (ExtDefList *) arg0;
 
@@ -30,21 +16,14 @@ Program *newProgram(void *arg0) {
     return program;
 }
 
-ExtDefList *newExtDefList() {
+ExtDefList *newExtDefList(void *arg0, void *arg1) {
+    ExtDef *extDef = (ExtDef *) arg0;
+    ExtDefList *extDefList0 = (ExtDefList *) arg1;
+
     ExtDefList *extDefList = malloc(sizeof(ExtDefList));
     extDefList->type = EXT_DEF_LIST;
-    extDefList->list_extdef = NULL;
-
-    return extDefList;
-}
-
-ExtDefList *ExtDefList_insert(void *arg0, void *arg1) {
-    ExtDef *extDef = (ExtDef *) arg0;
-    ExtDefList *extDefList = (ExtDefList *) arg1;
-
-    ListNode *node = newListNode(extDef);
-    node->next = extDefList->list_extdef;
-    extDefList->list_extdef = node;
+    extDefList->extDef = extDef;
+    extDefList->extDefList = extDefList0;
 
     return extDefList;
 }
@@ -89,23 +68,14 @@ ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2) {
     return extDef;
 }
 
-ExtDecList *newExtDecList(void *arg0) {
+ExtDecList *newExtDecList(void *arg0, void *arg1) {
     VarDec *varDec = (VarDec *) arg0;
+    ExtDecList *extDecList0 = (ExtDecList *) arg1;
 
     ExtDecList *extDecList = malloc(sizeof(ExtDecList));
     extDecList->type = EXT_DEC_LIST;
-    extDecList->list_vardec = newListNode(varDec);
-
-    return extDecList;
-}
-
-ExtDecList *ExtDecList_insert(void *arg0, void *arg1) {
-    VarDec *varDec = (VarDec *) arg0;
-    ExtDecList *extDecList = (ExtDecList *) arg1;
-
-    ListNode *node = newListNode(varDec);
-    node->next = extDecList->list_vardec;
-    extDecList->list_vardec = node;
+    extDecList->varDec = varDec;
+    extDecList->extDecList = extDecList0;
 
     return extDecList;
 }
@@ -180,28 +150,25 @@ Tag *newTag(int id_index) {
     return tag;
 }
 
-VarDec *newVarDec(int id_value) {
+VarDec *newVarDec_ID(int id_index) {
     VarDec *varDec = malloc(sizeof(VarDec));
     varDec->type = VAR_DEC;
-    varDec->id_index = id_value;
-    varDec->list_int = NULL;
-    varDec->list_int_last = NULL;
+    varDec->vardec_type = VAR_DEC_T_ID;
+    varDec->id_index = id_index;
+
+    printf("varDec->id_index = %d\n", id_index);
 
     return varDec;
 }
 
-VarDec *VarDec_add(void *arg0, int int_index) {
-    VarDec *varDec = (VarDec *) arg0;
+VarDec *newVarDec_dim(void *arg0, int int_index) {
+    VarDec *varDec0 = (VarDec *) arg0;
 
-    IntListNode *node = newIntListNode(int_index);
-    if (varDec->list_int_last == NULL) {
-        /* empty list_int */
-        varDec->list_int = node;
-        varDec->list_int_last = node;
-    } else {
-        varDec->list_int_last->next = node;
-        varDec->list_int_last = node;
-    } 
+    VarDec *varDec = malloc(sizeof(VarDec));
+    varDec->type = VAR_DEC;
+    varDec->vardec_type = VAR_DEC_T_DIM;
+    varDec->dim.varDec = varDec0;
+    varDec->dim.int_index = int_index;
 
     return varDec;
 }
@@ -217,23 +184,14 @@ FunDec *newFunDec(int id_index, void *arg0) {
     return funDec;
 }
 
-VarList *newVarList(void *arg0) {
+VarList *newVarList(void *arg0, void *arg1) {
     ParamDec *paramDec = (ParamDec *) arg0;
+    VarList *varList0 = (VarList *) arg1;
 
     VarList *varList = malloc(sizeof(VarList));
     varList->type = VAR_LIST;
-    varList->list_paramdec = newListNode(paramDec);
-
-    return varList;
-}
-
-VarList *VarList_insert(void *arg0, void *arg1) {
-    ParamDec *paramDec = (ParamDec *) arg0;
-    VarList *varList = (VarList *) arg1;
-
-    ListNode *node = newListNode(paramDec);
-    node->next = varList->list_paramdec;
-    varList->list_paramdec = node;
+    varList->paramDec = paramDec;
+    varList->varList = varList0;
 
     return varList;
 }
@@ -262,21 +220,14 @@ CompSt *newCompSt(void *arg0, void *arg1) {
     return compSt;
 }
 
-StmtList *newStmtList() {
+StmtList *newStmtList(void *arg0, void *arg1) {
+    Stmt *stmt = (Stmt *) arg0;
+    StmtList *stmtList0 = (StmtList *) arg1;
+
     StmtList *stmtList = malloc(sizeof(StmtList));
     stmtList->type = STMT_LIST;
-    stmtList->list_stmt = NULL;
-
-    return stmtList;
-}
-
-StmtList *StmtList_insert(void *arg0, void *arg1) {
-    Stmt *stmt = (Stmt *) arg0;
-    StmtList *stmtList = (StmtList *) arg1;
-
-    ListNode *node = newListNode(stmt);
-    node->next = stmtList->list_stmt;
-    stmtList->list_stmt = node;
+    stmtList->stmt = stmt;
+    stmtList->stmtList = stmtList0;
 
     return stmtList;
 }
@@ -355,21 +306,14 @@ Stmt *newStmt_WHILE(void *arg0, void *arg1) {
     return stmt;
 }
 
-DefList *newDefList() {
+DefList *newDefList(void *arg0, void *arg1) {
+    Def *def = (Def *) arg0;
+    DefList *defList0 = (DefList *) arg1;
+
     DefList *defList = malloc(sizeof(DefList));
     defList->type = DEF_LIST;
-    defList->list_def = NULL;
-
-    return defList;
-}
-
-DefList *DefList_insert(void *arg0, void *arg1) {
-    Def *def = (Def *) arg0;
-    DefList *defList = (DefList *) arg1;
-
-    ListNode *node = newListNode(def);
-    node->next = defList->list_def;
-    defList->list_def = node;
+    defList->def = def;
+    defList->defList = defList0;
 
     return defList;
 }
@@ -386,24 +330,14 @@ Def *newDef(void *arg0, void *arg1) {
     return def;
 }
 
-DecList *newDecList(void *arg0) {
+DecList *newDecList(void *arg0, void *arg1) {
     Dec *dec = (Dec *) arg0;
-    
+    DecList *decList0 = (DecList *) arg1;
+
     DecList *decList = malloc(sizeof(DecList));
     decList->type = DEC_LIST;
-    decList->list_dec = newListNode(dec);
-
-    return decList;
-}
-
-DecList *DecList_insert(void *arg0, void *arg1) {
-    Dec *dec = (Dec *) arg0;
-    DecList *decList = (DecList *) arg1;
-
-    /* insert node in front of list_dec */
-    ListNode *node = newListNode(dec);
-    node->next = decList->list_dec;
-    decList->list_dec = node;
+    decList->dec = dec;
+    decList->decList = decList0;
 
     return decList;
 }
@@ -521,23 +455,14 @@ Exp *newExp_FLOAT(int float_index) {
     return exp;
 }
 
-Args *newArgs(void *arg0) {
+Args *newArgs(void *arg0, void *arg1) {
     Exp *exp = (Exp *) arg0;
+    Args *args0 = (Args *) arg1;
 
     Args *args = malloc(sizeof(Args));
     args->type = ARGS;
-    args->list_exp = newListNode(exp);
-
-    return args;
-}
-
-Args *Args_insert(void *arg0, void *arg1) {
-    Exp *exp = (Exp *) arg0;
-    Args *args = (Args *) arg1;
-
-    ListNode *node = newListNode(exp);
-    node->next = args->list_exp;
-    args->list_exp = node;
+    args->exp = exp;
+    args->args = args0;
 
     return args;
 }

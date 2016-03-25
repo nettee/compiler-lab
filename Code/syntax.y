@@ -55,8 +55,8 @@
 Program : ExtDefList { $$ = root = newProgram($1); }
 ;
 
-ExtDefList : ExtDef ExtDefList { $$ = ExtDefList_insert($1, $2); }
-    | %empty { $$ = newExtDefList(); }
+ExtDefList : ExtDef ExtDefList { $$ = newExtDefList($1, $2); }
+    | %empty { $$ = newExtDefList(NULL, NULL); }
 ;
 
 ExtDef : Specifier ExtDecList SEMI 
@@ -65,8 +65,8 @@ ExtDef : Specifier ExtDecList SEMI
     | Specifier FunDec CompSt { $$ = newExtDef_fun($1, $2, $3); }
 ;
 
-ExtDecList : VarDec { $$ = newExtDecList($1); }
-    | VarDec COMMA ExtDecList { $$ = ExtDecList_insert($1, $3); }
+ExtDecList : VarDec { $$ = newExtDecList($1, NULL); }
+    | VarDec COMMA ExtDecList { $$ = newExtDecList($1, $3); }
 ;
 
 Specifier : TYPE { $$ = newSpecifier_TYPE($1); }
@@ -85,16 +85,16 @@ OptTag : ID { $$ = newOptTag($1); }
 Tag : ID { $$ = newTag($1); }
 ;
 
-VarDec : ID { $$ = newVarDec($1); }
-    | VarDec LB INT RB { $$ = VarDec_add($1, $3); }
+VarDec : ID { $$ = newVarDec_ID($1); }
+    | VarDec LB INT RB { $$ = newVarDec_dim($1, $3); }
 ;
 
 FunDec : ID LP VarList RP { $$ = newFunDec($1, $3); }
     | ID LP RP { $$ = newFunDec($1, NULL); }
 ;
 
-VarList : ParamDec COMMA VarList { $$ = VarList_insert($1, $3); }
-    | ParamDec { $$ = newVarList($1); }
+VarList : ParamDec COMMA VarList { $$ = newVarList($1, $3); }
+    | ParamDec { $$ = newVarList($1, NULL); }
 ;
 
 ParamDec : Specifier VarDec { $$ = newParamDec($1, $2); }
@@ -103,8 +103,8 @@ ParamDec : Specifier VarDec { $$ = newParamDec($1, $2); }
 CompSt : LC DefList StmtList RC { $$ = newCompSt($2, $3); }
 ;
 
-StmtList : Stmt StmtList { $$ = StmtList_insert($1, $2); }
-    | %empty { $$ = newStmtList(); }
+StmtList : Stmt StmtList { $$ = newStmtList($1, $2); }
+    | %empty { $$ = newStmtList(NULL, NULL); }
 ;
 
 Stmt : Exp SEMI { $$ = newStmt_exp($1); }
@@ -117,15 +117,15 @@ Stmt : Exp SEMI { $$ = newStmt_exp($1); }
     | WHILE LP Exp RP Stmt { $$ = newStmt_WHILE($3, $5); }
 ;
 
-DefList : Def DefList { $$ = DefList_insert($1, $2); }
-    | %empty { $$ = newDefList(); }
+DefList : Def DefList { $$ = newDefList($1, $2); }
+    | %empty { $$ = newDefList(NULL, NULL); }
 ;
 
 Def : Specifier DecList SEMI { $$ = newDef($1, $2); }
 ;
 
-DecList : Dec { $$ = newDecList($1); }
-    | Dec COMMA DecList { $$ = DecList_insert($1, $3); }
+DecList : Dec { $$ = newDecList($1, NULL); }
+    | Dec COMMA DecList { $$ = newDecList($1, $3); }
 ;
 
 Dec : VarDec { $$ = newDec($1, NULL); }
@@ -152,8 +152,8 @@ Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
     | FLOAT { $$ = newExp_FLOAT($1); }
 ;
 
-Args : Exp COMMA Args { $$ = Args_insert($1, $3); }
-    | Exp { $$ = newArgs($1); }
+Args : Exp COMMA Args { $$ = newArgs($1, $3); }
+    | Exp { $$ = newArgs($1, NULL); }
 ;
 
 

@@ -55,22 +55,28 @@ static int indent = -1;
 #define print(...) { \
     int i; \
     for (i = 0; i < indent; i++) { \
-        printf("  "); \
+        printf("| "); \
     } \
     printf(__VA_ARGS__); \
     printf("\n"); \
 }
 
 static void print_id(int id_index) {
-    print("  ID: %s", resolve_id(id_index));
+    indent++;
+    print("ID: %s", resolve_id(id_index));
+    indent--;
 }
 
 static void print_int(int int_index) {
-    print("  INT: %d", resolve_int(int_index));
+    indent++;
+    print("INT: %d", resolve_int(int_index));
+    indent--;
 }
 
 static void print_terminal(int terminal) {
-    print("  %s", token_str(terminal));
+    indent++;
+    print("%s", token_str(terminal));
+    indent--;
 }
 
 void visitProgram(void *node) {
@@ -80,11 +86,12 @@ void visitProgram(void *node) {
 }
 
 void visitExtDefList(void *node) {
-    print("ExtDefList");
+    /* may produce epsilon */
     ExtDefList *extDefList = (ExtDefList *)node;
-    for (ListNode *q = extDefList->list_extdef;
-            q != NULL; q = q->next) {
-        visit(q->child);
+    if (extDefList->extDef != NULL) {
+        print("ExtDefList");
+        visit(extDefList->extDef);
+        visit(extDefList->extDefList);
     }
 }
 
@@ -114,9 +121,10 @@ void visitExtDef(void *node) {
 void visitExtDecList(void *node) {
     print("ExtDecList");
     ExtDecList *extDecList = (ExtDecList *)node;
-    for (ListNode *q = extDecList->list_vardec;
-            q != NULL; q = q->next) {
-        visit(q->child);
+    visit(extDecList->varDec);
+    if (extDecList->extDecList != NULL) {
+        print_terminal(COMMA);
+        visit(extDecList->extDecList);
     }
 }
 
@@ -181,11 +189,18 @@ void visitTag(void *node) {
 void visitVarDec(void *node) {
     print("VarDec");
     VarDec *varDec = (VarDec *)node;
-    print_id(varDec->id_index);
-    for (IntListNode *q = varDec->list_int; q != NULL; q = q->next) {
+    switch (varDec->vardec_type) {
+    case VAR_DEC_T_ID:
+        print_id(varDec->id_index);
+        break;
+    case VAR_DEC_T_DIM:
+        visit(varDec->dim.varDec);
         print_terminal(LB);
-        print_int(q->value);
+        print_int(varDec->dim.int_index);
         print_terminal(RB);
+        break;
+    default:
+        printf("fatal: unknown vardec_type\n");
     }
 }
 
@@ -203,9 +218,10 @@ void visitFunDec(void *node) {
 void visitVarList(void *node) {
     print("VarList");
     VarList *varList = (VarList *)node;
-    for (ListNode *q = varList->list_paramdec; q != NULL;
-            q = q->next) {
-        visit(q->child);
+    visit(varList->paramDec);
+    if (varList->varList != NULL) {
+        print_terminal(COMMA);
+        visit(varList->varList);
     }
 }
 
@@ -224,10 +240,12 @@ void visitCompSt(void *node) {
 }
 
 void visitStmtList(void *node) {
-    print("StmtList");
+    /* may produce epsilon */
     StmtList *stmtList = (StmtList *)node;
-    for (ListNode *q = stmtList->list_stmt; q != NULL; q = q->next) {
-        visit(q->child);
+    if (stmtList->stmt != NULL) {
+        print("StmtList");
+        visit(stmtList->stmt);
+        visit(stmtList->stmtList);
     }
 }
 
@@ -237,15 +255,15 @@ void visitStmt(void *node) {
     switch (stmt->stmt_type) {
     case STMT_T_EXP:
         visit(stmt->exp.exp);
-        print("  %s", token_str(SEMI));
+        print_terminal(SEMI);
         break;
     case STMT_T_COMP_ST:
         visit(stmt->compst.compSt);
         break;
     case STMT_T_RETURN:
-        print("  %s", token_str(RETURN));
+        print_terminal(RETURN);
         visit(stmt->return_.exp);
-        print("  %s", token_str(SEMI));
+        print_terminal(SEMI);
         break;
     case STMT_T_IF:
         print_terminal(IF);
@@ -276,10 +294,12 @@ void visitStmt(void *node) {
 }
 
 void visitDefList(void *node) {
-    print("DefList");
+    /* may produce epsilon */
     DefList *defList = (DefList *)node;
-    for (ListNode *q = defList->list_def; q != NULL; q = q->next) {
-        visit(q->child);
+    if (defList->def != NULL) {
+        print("DefList");
+        visit(defList->def);
+        visit(defList->defList);
     }
 }
 
@@ -293,8 +313,10 @@ void visitDef(void *node) {
 void visitDecList(void *node) {
     print("DecList");
     DecList *decList = (DecList *)node;
-    for (ListNode *q = decList->list_dec; q != NULL; q = q->next) {
-        visit(q->child);
+    visit(decList->dec);
+    if (decList->decList != NULL) {
+        print_terminal(COMMA);
+        visit(decList->decList);
     }
 }
 
@@ -362,8 +384,10 @@ void visitExp(void *node) {
 void visitArgs(void *node) {
     print("Args");
     Args *args = (Args *)node;
-    for (ListNode *q = args->list_exp; q != NULL; q = q->next) {
-        visit(q->child);
+    visit(args->exp);
+    if (args->args != NULL) {
+        print_terminal(COMMA);
+        visit(args->args);
     }
 }
 

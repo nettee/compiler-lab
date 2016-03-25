@@ -1330,13 +1330,13 @@ yyreduce:
 
   case 3:
 #line 58 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = ExtDefList_insert((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newExtDefList((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
 #line 1335 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
 #line 59 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newExtDefList(); }
+    { (yyval.type_node) = newExtDefList(NULL, NULL); }
 #line 1341 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1360,13 +1360,13 @@ yyreduce:
 
   case 8:
 #line 68 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newExtDecList((yyvsp[0].type_node)); }
+    { (yyval.type_node) = newExtDecList((yyvsp[0].type_node), NULL); }
 #line 1365 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
 #line 69 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = ExtDecList_insert((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newExtDecList((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
 #line 1371 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1414,13 +1414,13 @@ yyreduce:
 
   case 17:
 #line 88 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newVarDec((yyvsp[0].type_int)); }
+    { (yyval.type_node) = newVarDec_ID((yyvsp[0].type_int)); }
 #line 1419 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
 #line 89 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = VarDec_add((yyvsp[-3].type_node), (yyvsp[-1].type_int)); }
+    { (yyval.type_node) = newVarDec_dim((yyvsp[-3].type_node), (yyvsp[-1].type_int)); }
 #line 1425 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1438,13 +1438,13 @@ yyreduce:
 
   case 21:
 #line 96 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = VarList_insert((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newVarList((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
 #line 1443 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
 #line 97 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newVarList((yyvsp[0].type_node)); }
+    { (yyval.type_node) = newVarList((yyvsp[0].type_node), NULL); }
 #line 1449 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1462,13 +1462,13 @@ yyreduce:
 
   case 25:
 #line 106 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = StmtList_insert((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newStmtList((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
 #line 1467 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
 #line 107 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newStmtList(); }
+    { (yyval.type_node) = newStmtList(NULL, NULL); }
 #line 1473 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1510,13 +1510,13 @@ yyreduce:
 
   case 33:
 #line 120 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = DefList_insert((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newDefList((yyvsp[-1].type_node), (yyvsp[0].type_node)); }
 #line 1515 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
 #line 121 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newDefList(); }
+    { (yyval.type_node) = newDefList(NULL, NULL); }
 #line 1521 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1528,13 +1528,13 @@ yyreduce:
 
   case 36:
 #line 127 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newDecList((yyvsp[0].type_node)); }
+    { (yyval.type_node) = newDecList((yyvsp[0].type_node), NULL); }
 #line 1533 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
 #line 128 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = DecList_insert((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newDecList((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
 #line 1539 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1660,13 +1660,13 @@ yyreduce:
 
   case 58:
 #line 155 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = Args_insert((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
+    { (yyval.type_node) = newArgs((yyvsp[-2].type_node), (yyvsp[0].type_node)); }
 #line 1665 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
 #line 156 "./syntax.y" /* yacc.c:1646  */
-    { (yyval.type_node) = newArgs((yyvsp[0].type_node)); }
+    { (yyval.type_node) = newArgs((yyvsp[0].type_node), NULL); }
 #line 1671 "./syntax.tab.c" /* yacc.c:1646  */
     break;
 

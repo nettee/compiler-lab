@@ -1,0 +1,6 @@
+int main() 
+{ 
+    print();
+    print(0);
+    print(x, y);
+}
