@@ -178,36 +178,35 @@ typedef struct Stmt_ {
     int stmt_type;
     
     union {
+        // For Stmt : Exp ;
         struct {
             struct Exp_ *exp; 
         } exp;
-
+        // For Stmt : CompSt
         struct {
             struct CompSt_ *compSt;
         } compst;
-
+        // For Stmt : return Exp ;
         struct {
             struct Exp_ *exp;
         } return_;
-
+        // For Stmt : if ( Exp ) Stmt
         struct {
             struct Exp_ *exp;
             struct Stmt_ *then_stmt;
         } if_;
-
+        // For Stmt : if ( Exp ) Stmt else Stmt
         struct {
             struct Exp_ *exp;
             struct Stmt_ *then_stmt;
             struct Stmt_ *else_stmt;
         } ifelse;
-
+        // For Stmt : while ( Exp ) Stmt
         struct {
             struct Exp_ *exp;
             struct Stmt_ *stmt;
         } while_;
     };
-
-    
 } Stmt;
 
 typedef struct StmtList_ {
@@ -273,7 +272,6 @@ typedef struct StructSpecifier_ {
         struct {
             struct Tag_ *tag;
         } dec;
-
         // for StructSpecifier : struct OptTag { DefList }
         struct {
             struct OptTag_ *optTag;
@@ -334,9 +332,12 @@ Program *newProgram(void *);
 
 ExtDefList *newExtDefList(void *, void *);
 
-ExtDef *newExtDef_var(void *, void *); // ExtDef : Specifier ExtDecList ;
-ExtDef *newExtDef_struct(void *); // ExtDef : Specifier ;
-ExtDef *newExtDef_fun(void *, void *, void *); // ExtDef : Specifier FunDec CompSt
+// ExtDef : Specifier ExtDecList ;
+ExtDef *newExtDef_var(void *, void *); 
+// ExtDef : Specifier ;
+ExtDef *newExtDef_struct(void *); 
+// ExtDef : Specifier FunDec CompSt
+ExtDef *newExtDef_fun(void *, void *, void *); 
 
 ExtDecList *newExtDecList(void *, void *); 
 
@@ -351,43 +352,68 @@ OptTag *newOptTag_empty();
 
 Tag *newTag(int);
 
-VarDec *newVarDec_ID(int); // VarDec : ID 
-VarDec *newVarDec_dim(void *, int); // VarDec : VarDec [ INT ]
+// VarDec : ID 
+VarDec *newVarDec_ID(int); 
+// VarDec : VarDec [ INT ]
+VarDec *newVarDec_dim(void *, int); 
 
 FunDec *newFunDec(int, void *);
 
 VarList *newVarList(void *, void *); 
 
-ParamDec *newParamDec(void *, void *); // ParamDec : Specifier VarDec
+ParamDec *newParamDec(void *, void *); 
 
-CompSt *newCompSt(void *, void *); // CompSt : { DefList StmtList }
+CompSt *newCompSt(void *, void *); 
 
 StmtList *newStmtList(void *, void *); 
 
-Stmt *newStmt_exp(void *); // Stmt : Exp ;
-Stmt *newStmt_COMP_ST(void *); // Stmt : CompSt
-Stmt *newStmt_RETURN(void *); // Stmt : return Exp ;
-Stmt *newStmt_if(void *, void *); // Stmt : if ( Exp ) Stmt
-Stmt *newStmt_ifelse(void *, void *, void *); // Stmt : if ( Exp ) Stmt else Stmt
-Stmt *newStmt_WHILE(void *, void *); // Stmt : while ( Exp ) Stmt
+// Stmt : Exp ;
+Stmt *newStmt_exp(void *); 
+// Stmt : CompSt
+Stmt *newStmt_COMP_ST(void *); 
+// Stmt : return Exp ;
+Stmt *newStmt_RETURN(void *); 
+// Stmt : if ( Exp ) Stmt
+Stmt *newStmt_if(void *, void *); 
+// Stmt : if ( Exp ) Stmt else Stmt
+Stmt *newStmt_ifelse(void *, void *, void *); 
+// Stmt : while ( Exp ) Stmt
+Stmt *newStmt_WHILE(void *, void *); 
 
 DefList *newDefList(void *, void *); 
 
-Def *newDef(void *, void *); // Def : Specifier DecList ;
+Def *newDef(void *, void *); 
 
 DecList *newDecList(void *, void *); 
 
 Dec *newDec(void *, void *);
 
+// Exp : Exp = Exp
+// Exp : Exp [+-*/] Exp
+// Exp : Exp && Exp
+// Exp : Exp || Exp
+// Exp : Exp < Exp
+// Exp : Exp <= Exp
+// Exp : Exp > Exp
+// Exp : Exp >= Exp
+// Exp : Exp == Exp
+// Exp : Exp != Exp
 Exp *newExp_infix(int, void *, void *);
-Exp *newExp_paren(void *); // Exp : ( Exp )
+// Exp : ( Exp )
+Exp *newExp_paren(void *); 
+// Exp : - Exp | Exp : ! Exp
 Exp *newExp_unary(int, void *);
 Exp *newExp_call(int, void *); // Exp : ID ( Args )
-Exp *newExp_subscript(void *, void *); // Exp: Exp [ Exp ]
-Exp *newExp_DOT(void *, int); // Exp : Exp . ID
-Exp *newExp_ID(int); // Exp : ID
-Exp *newExp_INT(int); // Exp : INT
-Exp *newExp_FLOAT(int); // Exp : FLOAT
+// Exp: Exp [ Exp ]
+Exp *newExp_subscript(void *, void *); 
+// Exp : Exp . ID
+Exp *newExp_DOT(void *, int); 
+// Exp : ID
+Exp *newExp_ID(int); 
+// Exp : INT
+Exp *newExp_INT(int); 
+// Exp : FLOAT
+Exp *newExp_FLOAT(int); 
 
 Args *newArgs(void *, void *); 
 

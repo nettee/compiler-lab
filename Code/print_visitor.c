@@ -73,6 +73,27 @@ static void print_int(int int_index) {
     indent--;
 }
 
+static void print_float(int float_index) {
+    indent++;
+    print("FLOAT: %f", resolve_float(float_index));
+    indent--;
+}
+
+static void print_type(int type_index) {
+    indent++;
+    switch (type_index) {
+    case T_INT:
+        print("TYPE: int");
+        break;
+    case T_FLOAT:
+        print("TYPE: float");
+        break;
+    default:
+        printf("Fatal: Unknown specifier->type_value\n");
+    }
+    indent--;
+}
+
 static void print_terminal(int terminal) {
     indent++;
     print("%s", token_str(terminal));
@@ -133,16 +154,7 @@ void visitSpecifier(void *node) {
     Specifier *specifier = (Specifier *)node;
     switch (specifier->specifier_type) {
     case SPECIFIER_T_TYPE:
-        switch (specifier->type_index) {
-        case T_INT:
-            print("  TYPE: int");
-            break;
-        case T_FLOAT:
-            print("  TYPE: float");
-            break;
-        default:
-            printf("Fatal: Unknown specifier->type_value\n");
-        }
+        print_type(specifier->type_index); 
         break;
     case SPECIFIER_T_STRUCT:
         visit(specifier->structSpecifier);
@@ -336,16 +348,16 @@ void visitExp(void *node) {
     switch (exp->exp_type) {
     case EXP_T_INFIX:
         visit(exp->infix.exp_left);
-        print("  %s", token_str(exp->infix.op));
+        print_terminal(exp->infix.op);
         visit(exp->infix.exp_right);
         break;
     case EXP_T_PAREN:
-        print("  %s", token_str(LP));
+        print_terminal(LP);
         visit(exp->paren.exp);
-        print("  %s", token_str(RP));
+        print_terminal(RP);
         break;
     case EXP_T_UNARY:
-        print("  %s", token_str(exp->unary.op));
+        print_terminal(exp->unary.op);
         visit(exp->unary.exp);
         break;
     case EXP_T_CALL:
@@ -358,23 +370,23 @@ void visitExp(void *node) {
         break;
     case EXP_T_SUBSCRIPT:
         visit(exp->subscript.array);
-        print("  %s", token_str(LB));
+        print_terminal(LB);
         visit(exp->subscript.index);
-        print("  %s", token_str(RB));
+        print_terminal(RB);
         break;
     case EXP_T_DOT:
         visit(exp->dot.exp);
-        print("  %s", token_str(DOT));
+        print_terminal(DOT);
         print_id(exp->dot.id_index);
         break;
     case EXP_T_ID:
         print_id(exp->id_index);
         break;
     case EXP_T_INT:
-        print("  INT: %d", resolve_int(exp->int_index));
+        print_int(exp->int_index);
         break;
     case EXP_T_FLOAT:
-        print("  FLOAT: %f", resolve_float(exp->float_index));
+        print_float(exp->float_index);
         break;
     default:
         printf("fatal: unknown exp_type\n");

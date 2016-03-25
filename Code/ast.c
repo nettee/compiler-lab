@@ -156,8 +156,6 @@ VarDec *newVarDec_ID(int id_index) {
     varDec->vardec_type = VAR_DEC_T_ID;
     varDec->id_index = id_index;
 
-    printf("varDec->id_index = %d\n", id_index);
-
     return varDec;
 }
 
