@@ -100,6 +100,32 @@ static void print_terminal(int terminal) {
     indent--;
 }
 
+static void print_relop(int yylval) {
+    indent++;
+    switch (yylval) {
+    case RELOP_LT:
+        print("RELOP: <");
+        break;
+    case RELOP_LE:
+        print("RELOP: <=");
+        break;
+    case RELOP_GT:
+        print("RELOP: >");
+        break;
+    case RELOP_GE:
+        print("RELOP: >=");
+        break;
+    case RELOP_EQ:
+        print("RELOP: ==");
+        break;
+    case RELOP_NE:
+        print("RELOP: !=");
+        break;
+    default:
+        printf("fatal: unknown relop yylval\n");
+    }
+}
+
 void visitProgram(void *node) {
     print("Program");
     Program *program = (Program *)node;
@@ -348,7 +374,11 @@ void visitExp(void *node) {
     switch (exp->exp_type) {
     case EXP_T_INFIX:
         visit(exp->infix.exp_left);
-        print_terminal(exp->infix.op);
+        if (exp->infix.op == RELOP) {
+            print_relop(exp->infix.op_yylval);
+        } else {
+            print_terminal(exp->infix.op);
+        }
         visit(exp->infix.exp_right);
         break;
     case EXP_T_PAREN:

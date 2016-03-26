@@ -110,6 +110,7 @@ typedef struct Exp_ {
         struct {
             struct Exp_ *exp_left;
             int op;
+            int op_yylval;
             struct Exp_ *exp_right;
         } infix;
 
@@ -398,7 +399,7 @@ Dec *newDec(void *, void *);
 // Exp : Exp >= Exp
 // Exp : Exp == Exp
 // Exp : Exp != Exp
-Exp *newExp_infix(int, void *, void *);
+Exp *newExp_infix(int, void *, int, void *);
 // Exp : ( Exp )
 Exp *newExp_paren(void *); 
 // Exp : - Exp | Exp : ! Exp

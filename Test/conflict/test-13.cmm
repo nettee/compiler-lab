@@ -1,0 +1,4 @@
+int main()
+{
+    return p[1].x[2];
+}

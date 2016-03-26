@@ -352,7 +352,7 @@ Dec *newDec(void *arg0, void *arg1) {
     return dec;
 }
 
-Exp *newExp_infix(int op, void *arg0, void *arg1) {
+Exp *newExp_infix(int op, void *arg0, int op_yylval, void *arg1) {
     Exp *exp_left = (Exp *) arg0;
     Exp *exp_right = (Exp *) arg1;
 
@@ -360,6 +360,7 @@ Exp *newExp_infix(int op, void *arg0, void *arg1) {
     exp->type = EXP;
     exp->exp_type = EXP_T_INFIX;
     exp->infix.op = op;
+    exp->infix.op_yylval = op_yylval;
     exp->infix.exp_left = exp_left;
     exp->infix.exp_right = exp_right;
 

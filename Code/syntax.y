@@ -50,6 +50,16 @@
 %precedence LOWER_THAN_ELSE
 %precedence ELSE
 
+%right ASSIGNOP
+%left OR
+%left AND
+%left RELOP
+%left PLUS MINUS
+%left STAR DIV
+%precedence NEG NOT
+%precedence DOT LB
+
+
 %%
 
 Program : ExtDefList { $$ = root = newProgram($1); }
@@ -132,21 +142,29 @@ Dec : VarDec { $$ = newDec($1, NULL); }
     | VarDec ASSIGNOP Exp { $$ = newDec($1, $3); }
 ;
 
-Exp : Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $3); }
-    | Exp AND Exp { $$ = newExp_infix(AND, $1, $3); } 
-    | Exp OR Exp { $$ = newExp_infix(OR, $1, $3); } 
-    | Exp RELOP Exp { $$ = newExp_infix(RELOP, $1, $3); } 
-    | Exp PLUS Exp { $$ = newExp_infix(PLUS, $1, $3); }
-    | Exp MINUS Exp { $$ = newExp_infix(MINUS, $1, $3); } 
-    | Exp STAR Exp { $$ = newExp_infix(STAR, $1, $3); } 
-    | Exp DIV Exp { $$ = newExp_infix(DIV, $1, $3); } 
-    | LP Exp RP { $$ = newExp_paren($2); }
-    | MINUS Exp { $$ = newExp_unary(MINUS, $2); }
-    | NOT Exp { $$ = newExp_unary(NOT, $2); }
+Exp : LP Exp RP { $$ = newExp_paren($2); }
     | ID LP Args RP { $$ = newExp_call($1, $3); }
     | ID LP RP { $$ = newExp_call($1, NULL); }
     | Exp LB Exp RB { $$ = newExp_subscript($1, $3); }
     | Exp DOT ID { $$ = newExp_DOT($1, $3); }
+
+    | MINUS %prec NEG Exp { $$ = newExp_unary(MINUS, $2); }
+    | NOT Exp { $$ = newExp_unary(NOT, $2); }
+
+    | Exp STAR Exp { $$ = newExp_infix(STAR, $1, $2, $3); } 
+    | Exp DIV Exp { $$ = newExp_infix(DIV, $1, $2, $3); } 
+
+    | Exp PLUS Exp { $$ = newExp_infix(PLUS, $1, $2, $3); }
+    | Exp MINUS Exp { $$ = newExp_infix(MINUS, $1, $2, $3); } 
+
+    | Exp RELOP Exp { $$ = newExp_infix(RELOP, $1, $2, $3); } 
+
+    | Exp AND Exp { $$ = newExp_infix(AND, $1, $2, $3); } 
+
+    | Exp OR Exp { $$ = newExp_infix(OR, $1, $2, $3); } 
+
+    | Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $2, $3); }
+
     | ID { $$ = newExp_ID($1); }
     | INT { $$ = newExp_INT($1); }
     | FLOAT { $$ = newExp_FLOAT($1); }

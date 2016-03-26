@@ -119,12 +119,12 @@ while { return WHILE; }
 ";" { return SEMI; }
 "," { return COMMA; }
 "=" { return ASSIGNOP; }
-"<" { return RELOP; }
-"<=" { return RELOP; }
-">" { return RELOP; }
-">=" { return RELOP; }
-"==" { return RELOP; }
-"!=" { return RELOP; }
+"<" { yylval.type_int = RELOP_LT; return RELOP; }
+"<=" { yylval.type_int = RELOP_LE; return RELOP; }
+">" { yylval.type_int = RELOP_GT; return RELOP; }
+">=" { yylval.type_int = RELOP_GE; return RELOP; }
+"==" { yylval.type_int = RELOP_EQ; return RELOP; }
+"!=" { yylval.type_int = RELOP_NE; return RELOP; }
 "+" { return PLUS; }
 "-" { return MINUS; }
 "*" { return STAR; }
