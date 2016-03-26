@@ -40,7 +40,7 @@ enum VarDecType {
     VAR_DEC_T_DIM,
 };
 
-enum AstNodeType {
+enum NonterminalType {
     PROGRAM = 400,
     EXT_DEF_LIST = 401,
     EXT_DEF = 402,
@@ -98,12 +98,14 @@ struct Args_;
 
 typedef struct Args_ {
     int type;
+    int lineno;
     struct Exp_ *exp;
     struct Args_ *args; // may be NULL
 } Args;
 
 typedef struct Exp_ {
     int type;
+    int lineno;
     int exp_type;
     union {
         // for Exp_infix
@@ -152,30 +154,35 @@ typedef struct Exp_ {
 
 typedef struct Dec_ {
     int type;
+    int lineno;
     struct VarDec_ *varDec;
     struct Exp_ *exp; // can be NULL
 } Dec;
 
 typedef struct DecList_ {
     int type;
+    int lineno;
     struct Dec_ *dec;
     struct DecList_ *decList; // may be NULL
 } DecList;
 
 typedef struct Def_ {
     int type;
+    int lineno;
     struct Specifier_ *specifier;
     struct DecList_ *decList;
 } Def;
 
 typedef struct DefList_ {
     int type;
+    int lineno;
     struct Def_ *def;
     struct DefList_ *defList;
 } DefList;
 
 typedef struct Stmt_ {
     int type;
+    int lineno;
     int stmt_type;
     
     union {
@@ -212,36 +219,42 @@ typedef struct Stmt_ {
 
 typedef struct StmtList_ {
     int type;
+    int lineno;
     struct Stmt_ *stmt;
     struct StmtList_ *stmtList;
 } StmtList;
 
 typedef struct CompSt_ {
     int type;
+    int lineno;
     DefList *defList;
     StmtList *stmtList;
 } CompSt;
 
 typedef struct ParamDec_ {
     int type;
+    int lineno;
     struct Specifier_ *specifier;
     struct VarDec_ *varDec;
 } ParamDec;
 
 typedef struct VarList_ {
     int type;
+    int lineno;
     struct ParamDec_ *paramDec;
     struct VarList_ *varList; // may be NULL
 } VarList;
 
 typedef struct FunDec_ {
     int type;
+    int lineno;
     int id_index;
     struct VarList_ *varList;
 } FunDec;
 
 typedef struct VarDec_ {
     int type;
+    int lineno;
     int vardec_type;
     union {
         // for VarDec : ID
@@ -256,17 +269,19 @@ typedef struct VarDec_ {
 
 typedef struct Tag_ {
     int type;
+    int lineno;
     int id_index;
 } Tag;
 
 typedef struct OptTag_ {
     int type;
-    int has_id; // boolean
-    int id_index;
+    int lineno;
+    int id_index; // id_index == -1 indicates None
 } OptTag;
 
 typedef struct StructSpecifier_ {
     int type;
+    int lineno;
     int structspecifier_type;
     union {
         // for StructSpecifier : STRUCT Tag
@@ -283,6 +298,7 @@ typedef struct StructSpecifier_ {
 
 typedef struct Specifier_ {
     int type;
+    int lineno;
     int specifier_type;
     union {
         int type_index;
@@ -292,12 +308,14 @@ typedef struct Specifier_ {
 
 typedef struct ExtDecList_ {
     int type;
+    int lineno;
     struct VarDec_ *varDec;
     struct ExtDecList_ *extDecList; // may be NULL
 } ExtDecList;
 
 typedef struct ExtDef_ {
     int type;
+    int lineno;
     int extdef_type;
     union {
         // for ExtDef : Specifier FunDec CompSt
@@ -320,74 +338,75 @@ typedef struct ExtDef_ {
 
 typedef struct ExtDefList_ {
     int type;
+    int lineno;
     struct ExtDef_ *extDef; // may be NULL
     struct ExtDefList_ *extDefList; // may be NULL
 } ExtDefList;
 
 typedef struct Program_ {
     int type;
+    int lineno;
     void *extDefList;
 } Program;
 
-Program *newProgram(void *);
+Program *newProgram(void *, int);
 
-ExtDefList *newExtDefList(void *, void *);
+ExtDefList *newExtDefList(void *, void *, int);
 
 // ExtDef : Specifier ExtDecList ;
-ExtDef *newExtDef_var(void *, void *); 
+ExtDef *newExtDef_var(void *, void *, int); 
 // ExtDef : Specifier ;
-ExtDef *newExtDef_struct(void *); 
+ExtDef *newExtDef_struct(void *, int); 
 // ExtDef : Specifier FunDec CompSt
-ExtDef *newExtDef_fun(void *, void *, void *); 
+ExtDef *newExtDef_fun(void *, void *, void *, int); 
 
-ExtDecList *newExtDecList(void *, void *); 
+ExtDecList *newExtDecList(void *, void *, int); 
 
-Specifier *newSpecifier_TYPE(int);
-Specifier *newSpecifier_struct(void *);
+Specifier *newSpecifier_TYPE(int, int);
+Specifier *newSpecifier_struct(void *, int);
 
-StructSpecifier *newStructSpecifier_dec(void *);
-StructSpecifier *newStructSpecifier_def(void *, void *);
+StructSpecifier *newStructSpecifier_dec(void *, int);
+StructSpecifier *newStructSpecifier_def(void *, void *, int);
 
-OptTag *newOptTag(int);
-OptTag *newOptTag_empty();
+OptTag *newOptTag(int, int);
 
-Tag *newTag(int);
+Tag *newTag(int, int);
 
 // VarDec : ID 
-VarDec *newVarDec_ID(int); 
+VarDec *newVarDec_ID(int, int); 
 // VarDec : VarDec [ INT ]
-VarDec *newVarDec_dim(void *, int); 
+VarDec *newVarDec_dim(void *, int, int); 
 
-FunDec *newFunDec(int, void *);
+FunDec *newFunDec(int, void *, int);
 
-VarList *newVarList(void *, void *); 
+VarList *newVarList(void *, void *, int); 
 
-ParamDec *newParamDec(void *, void *); 
+ParamDec *newParamDec(void *, void *, int); 
 
-CompSt *newCompSt(void *, void *); 
+CompSt *newCompSt(void *, void *, int); 
 
-StmtList *newStmtList(void *, void *); 
+StmtList *newStmtList(void *, void *, int); 
 
 // Stmt : Exp ;
-Stmt *newStmt_exp(void *); 
+Stmt *newStmt_exp(void *, int); 
 // Stmt : CompSt
-Stmt *newStmt_COMP_ST(void *); 
+Stmt *newStmt_COMP_ST(void *, int); 
 // Stmt : return Exp ;
-Stmt *newStmt_RETURN(void *); 
+Stmt *newStmt_RETURN(void *, int); 
 // Stmt : if ( Exp ) Stmt
-Stmt *newStmt_if(void *, void *); 
+Stmt *newStmt_if(void *, void *, int); 
 // Stmt : if ( Exp ) Stmt else Stmt
-Stmt *newStmt_ifelse(void *, void *, void *); 
+Stmt *newStmt_ifelse(void *, void *, void *, int); 
 // Stmt : while ( Exp ) Stmt
-Stmt *newStmt_WHILE(void *, void *); 
+Stmt *newStmt_WHILE(void *, void *, int); 
 
-DefList *newDefList(void *, void *); 
+DefList *newDefList(void *, void *, int); 
 
-Def *newDef(void *, void *); 
+Def *newDef(void *, void *, int); 
 
-DecList *newDecList(void *, void *); 
+DecList *newDecList(void *, void *, int); 
 
-Dec *newDec(void *, void *);
+Dec *newDec(void *, void *, int);
 
 // Exp : Exp = Exp
 // Exp : Exp [+-*/] Exp
@@ -399,23 +418,23 @@ Dec *newDec(void *, void *);
 // Exp : Exp >= Exp
 // Exp : Exp == Exp
 // Exp : Exp != Exp
-Exp *newExp_infix(int, void *, int, void *);
+Exp *newExp_infix(int, void *, int, void *, int);
 // Exp : ( Exp )
-Exp *newExp_paren(void *); 
+Exp *newExp_paren(void *, int); 
 // Exp : - Exp | Exp : ! Exp
-Exp *newExp_unary(int, void *);
-Exp *newExp_call(int, void *); // Exp : ID ( Args )
+Exp *newExp_unary(int, void *, int);
+Exp *newExp_call(int, void *, int); // Exp : ID ( Args )
 // Exp: Exp [ Exp ]
-Exp *newExp_subscript(void *, void *); 
+Exp *newExp_subscript(void *, void *, int); 
 // Exp : Exp . ID
-Exp *newExp_DOT(void *, int); 
+Exp *newExp_DOT(void *, int, int); 
 // Exp : ID
-Exp *newExp_ID(int); 
+Exp *newExp_ID(int, int); 
 // Exp : INT
-Exp *newExp_INT(int); 
+Exp *newExp_INT(int, int); 
 // Exp : FLOAT
-Exp *newExp_FLOAT(int); 
+Exp *newExp_FLOAT(int, int); 
 
-Args *newArgs(void *, void *); 
+Args *newArgs(void *, void *, int); 
 
 extern void *root;

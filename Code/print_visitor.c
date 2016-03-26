@@ -15,7 +15,7 @@ float resolve_float(int);
 
 void print_symbol_table();
 
-char *token_str(int token_enum) {
+char *terminal_str(int token_enum) {
     switch (token_enum) {
         case TYPE: return "TYPE";
         case ID: return "ID";
@@ -47,6 +47,35 @@ char *token_str(int token_enum) {
         default:
             printf("fatal: unknown token enum\n");
             return "";
+    }
+}
+
+char *nonterminal_str(int nonterminal_enum) {
+    switch (nonterminal_enum) {
+    case PROGRAM: return "Program";
+    case EXT_DEF_LIST: return "ExtDefList";
+    case EXT_DEF: return "ExtDef";
+    case EXT_DEC_LIST: return "ExtDecList";
+    case SPECIFIER: return "Specifier";
+    case STRUCT_SPECIFIER: return "StructSpecifier";
+    case OPT_TAG: return "OptTag";
+    case TAG: return "Tag";
+    case VAR_DEC: return "VarDec";
+    case FUN_DEC: return "FunDec";
+    case VAR_LIST: return "VarList";
+    case PARAM_DEC: return "ParamDec";
+    case COMP_ST: return "CompSt";
+    case STMT_LIST: return "StmtList";
+    case STMT: return "Stmt";
+    case DEF_LIST: return "DefList";
+    case DEF: return "Def";
+    case DEC_LIST: return "DecList";
+    case DEC: return "Dec";
+    case EXP: return "Exp";
+    case ARGS: return "Args";
+    default:
+        printf("fatal: unknown token enum\n");
+        return "";
     }
 }
 
@@ -96,7 +125,7 @@ static void print_type(int type_index) {
 
 static void print_terminal(int terminal) {
     indent++;
-    print("%s", token_str(terminal));
+    print("%s", terminal_str(terminal));
     indent--;
 }
 
@@ -126,8 +155,14 @@ static void print_relop(int yylval) {
     }
 }
 
+static void print_this(void *node) {
+    int type = *(int *)node;
+    int lineno = ((int *)node)[1];
+    print("%s (%d)", nonterminal_str(type), lineno);
+}
+
 void visitProgram(void *node) {
-    print("Program");
+    print_this(node);
     Program *program = (Program *)node;
     visit(program->extDefList);
 }
@@ -136,14 +171,14 @@ void visitExtDefList(void *node) {
     /* may produce epsilon */
     ExtDefList *extDefList = (ExtDefList *)node;
     if (extDefList->extDef != NULL) {
-        print("ExtDefList");
+        print_this(node);
         visit(extDefList->extDef);
         visit(extDefList->extDefList);
     }
 }
 
 void visitExtDef(void *node) {
-    print("ExtDef");
+    print_this(node);
     ExtDef *extDef = (ExtDef *)node;
     switch (extDef->extdef_type) {
     case EXT_DEF_T_VAR:
@@ -166,7 +201,7 @@ void visitExtDef(void *node) {
 }
 
 void visitExtDecList(void *node) {
-    print("ExtDecList");
+    print_this(node);
     ExtDecList *extDecList = (ExtDecList *)node;
     visit(extDecList->varDec);
     if (extDecList->extDecList != NULL) {
@@ -176,7 +211,7 @@ void visitExtDecList(void *node) {
 }
 
 void visitSpecifier(void *node) {
-    print("Specifier");
+    print_this(node);
     Specifier *specifier = (Specifier *)node;
     switch (specifier->specifier_type) {
     case SPECIFIER_T_TYPE:
@@ -191,7 +226,7 @@ void visitSpecifier(void *node) {
 }
 
 void visitStructSpecifier(void *node) {
-    print("StructSpecifier");
+    print_this(node);
     StructSpecifier *structSpecifier = (StructSpecifier *)node;
     switch (structSpecifier->structspecifier_type) {
     case STRUCT_SPECIFIER_T_DEC:
@@ -211,21 +246,22 @@ void visitStructSpecifier(void *node) {
 }
 
 void visitOptTag(void *node) {
-    print("OptTag");
+    /* may produce epsilon */
     OptTag *optTag = (OptTag *)node;
-    if (optTag->has_id) {
+    if (optTag->id_index != -1) {
+        print_this(node);
         print_id(optTag->id_index);
     }
 }
 
 void visitTag(void *node) {
-    print("Tag");
+    print_this(node);
     Tag *tag = (Tag *)node;
     print_id(tag->id_index);
 }
 
 void visitVarDec(void *node) {
-    print("VarDec");
+    print_this(node);
     VarDec *varDec = (VarDec *)node;
     switch (varDec->vardec_type) {
     case VAR_DEC_T_ID:
@@ -243,7 +279,7 @@ void visitVarDec(void *node) {
 }
 
 void visitFunDec(void *node) {
-    print("FunDec");
+    print_this(node);
     FunDec *funDec = (FunDec *)node;
     print_id(funDec->id_index);
     print_terminal(LP);
@@ -254,7 +290,7 @@ void visitFunDec(void *node) {
 }
 
 void visitVarList(void *node) {
-    print("VarList");
+    print_this(node);
     VarList *varList = (VarList *)node;
     visit(varList->paramDec);
     if (varList->varList != NULL) {
@@ -264,31 +300,33 @@ void visitVarList(void *node) {
 }
 
 void visitParamDec(void *node) {
-    print("ParamDec");
+    print_this(node);
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
     visit(paramDec->varDec);
 }
 
 void visitCompSt(void *node) {
-    print("CompSt");
+    print_this(node);
     CompSt *compSt = (CompSt *)node;
+    print_terminal(LC);
     visit(compSt->defList);
     visit(compSt->stmtList);
+    print_terminal(RC);
 }
 
 void visitStmtList(void *node) {
     /* may produce epsilon */
     StmtList *stmtList = (StmtList *)node;
     if (stmtList->stmt != NULL) {
-        print("StmtList");
+        print_this(node);
         visit(stmtList->stmt);
         visit(stmtList->stmtList);
     }
 }
 
 void visitStmt(void *node) {
-    print("Stmt");
+    print_this(node);
     Stmt *stmt = (Stmt *)node;
     switch (stmt->stmt_type) {
     case STMT_T_EXP:
@@ -335,21 +373,22 @@ void visitDefList(void *node) {
     /* may produce epsilon */
     DefList *defList = (DefList *)node;
     if (defList->def != NULL) {
-        print("DefList");
+        print_this(node);
         visit(defList->def);
         visit(defList->defList);
     }
 }
 
 void visitDef(void *node) {
-    print("Def");
+    print_this(node);
     Def *def = (Def *)node;
     visit(def->specifier);
     visit(def->decList);
+    print_terminal(SEMI);
 }
 
 void visitDecList(void *node) {
-    print("DecList");
+    print_this(node);
     DecList *decList = (DecList *)node;
     visit(decList->dec);
     if (decList->decList != NULL) {
@@ -359,7 +398,7 @@ void visitDecList(void *node) {
 }
 
 void visitDec(void *node) {
-    print("Dec");
+    print_this(node);
     Dec *dec = (Dec *)node;
     visit(dec->varDec);
     if (dec->exp != NULL) {
@@ -369,7 +408,7 @@ void visitDec(void *node) {
 }
 
 void visitExp(void *node) {
-    print("Exp");
+    print_this(node);
     Exp *exp = (Exp *)node;
     switch (exp->exp_type) {
     case EXP_T_INFIX:
@@ -424,7 +463,7 @@ void visitExp(void *node) {
 }
 
 void visitArgs(void *node) {
-    print("Args");
+    print_this(node);
     Args *args = (Args *)node;
     visit(args->exp);
     if (args->args != NULL) {

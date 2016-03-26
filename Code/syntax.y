@@ -62,116 +62,170 @@
 
 %%
 
-Program : ExtDefList { $$ = root = newProgram($1); }
+Program : ExtDefList 
+        { $$ = root = newProgram($1, @$.first_line); }
 ;
 
-ExtDefList : ExtDef ExtDefList { $$ = newExtDefList($1, $2); }
-    | %empty { $$ = newExtDefList(NULL, NULL); }
+ExtDefList : ExtDef ExtDefList 
+        { $$ = newExtDefList($1, $2, @$.first_line); }
+    | %empty 
+        { $$ = newExtDefList(NULL, NULL, @$.first_line); }
 ;
 
 ExtDef : Specifier ExtDecList SEMI 
-        { $$ = newExtDef_var($1, $2); }
-    | Specifier SEMI { $$ = newExtDef_struct($1); }
-    | Specifier FunDec CompSt { $$ = newExtDef_fun($1, $2, $3); }
+        { $$ = newExtDef_var($1, $2, @$.first_line); }
+    | Specifier SEMI 
+        { $$ = newExtDef_struct($1, @$.first_line); }
+    | Specifier FunDec CompSt 
+        { $$ = newExtDef_fun($1, $2, $3, @$.first_line); }
 ;
 
-ExtDecList : VarDec { $$ = newExtDecList($1, NULL); }
-    | VarDec COMMA ExtDecList { $$ = newExtDecList($1, $3); }
+ExtDecList : VarDec 
+        { $$ = newExtDecList($1, NULL, @$.first_line); }
+    | VarDec COMMA ExtDecList 
+        { $$ = newExtDecList($1, $3, @$.first_line); }
 ;
 
-Specifier : TYPE { $$ = newSpecifier_TYPE($1); }
-    | StructSpecifier { $$ = newSpecifier_struct($1); }
+Specifier : TYPE 
+        { $$ = newSpecifier_TYPE($1, @$.first_line); }
+    | StructSpecifier 
+        { $$ = newSpecifier_struct($1, @$.first_line); }
 ;
 
 StructSpecifier : STRUCT OptTag LC DefList RC
-        { $$ = newStructSpecifier_def($2, $4); }
-    | STRUCT Tag { $$ = newStructSpecifier_dec($2); }
+        { $$ = newStructSpecifier_def($2, $4, @$.first_line); }
+    | STRUCT Tag 
+        { $$ = newStructSpecifier_dec($2, @$.first_line); }
 ;
 
-OptTag : ID { $$ = newOptTag($1); }
-    | %empty { $$ = newOptTag_empty(); }
+OptTag : ID 
+        { $$ = newOptTag($1, @$.first_line); }
+    | %empty 
+        { $$ = newOptTag(-1, @$.first_line); }
 ;
 
-Tag : ID { $$ = newTag($1); }
+Tag : ID 
+        { $$ = newTag($1, @$.first_line); }
 ;
 
-VarDec : ID { $$ = newVarDec_ID($1); }
-    | VarDec LB INT RB { $$ = newVarDec_dim($1, $3); }
+VarDec : ID 
+        { $$ = newVarDec_ID($1, @$.first_line); }
+    | VarDec LB INT RB 
+        { $$ = newVarDec_dim($1, $3, @$.first_line); }
 ;
 
-FunDec : ID LP VarList RP { $$ = newFunDec($1, $3); }
-    | ID LP RP { $$ = newFunDec($1, NULL); }
+FunDec : ID LP VarList RP 
+        { $$ = newFunDec($1, $3, @$.first_line); }
+    | ID LP RP 
+        { $$ = newFunDec($1, NULL, @$.first_line); }
 ;
 
-VarList : ParamDec COMMA VarList { $$ = newVarList($1, $3); }
-    | ParamDec { $$ = newVarList($1, NULL); }
+VarList : ParamDec COMMA VarList 
+        { $$ = newVarList($1, $3, @$.first_line); }
+    | ParamDec 
+        { $$ = newVarList($1, NULL, @$.first_line); }
 ;
 
-ParamDec : Specifier VarDec { $$ = newParamDec($1, $2); }
+ParamDec : Specifier VarDec 
+        { $$ = newParamDec($1, $2, @$.first_line); }
 ;
 
-CompSt : LC DefList StmtList RC { $$ = newCompSt($2, $3); }
+CompSt : LC DefList StmtList RC 
+        { $$ = newCompSt($2, $3, @$.first_line); }
 ;
 
-StmtList : Stmt StmtList { $$ = newStmtList($1, $2); }
-    | %empty { $$ = newStmtList(NULL, NULL); }
+StmtList : Stmt StmtList 
+        { $$ = newStmtList($1, $2, @$.first_line); }
+    | %empty 
+        { $$ = newStmtList(NULL, NULL, @$.first_line); }
 ;
 
-Stmt : Exp SEMI { $$ = newStmt_exp($1); }
-    | CompSt { $$ = newStmt_COMP_ST($1); }
-    | RETURN Exp SEMI { $$ = newStmt_RETURN($2); }
+Stmt : Exp SEMI 
+        { $$ = newStmt_exp($1, @$.first_line); }
+    | CompSt 
+        { $$ = newStmt_COMP_ST($1, @$.first_line); }
+    | RETURN Exp SEMI 
+        { $$ = newStmt_RETURN($2, @$.first_line); }
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE 
-        { $$ = newStmt_if($3, $5); }
+        { $$ = newStmt_if($3, $5, @$.first_line); }
     | IF LP Exp RP Stmt ELSE Stmt
-        { $$ = newStmt_ifelse($3, $5, $7); }
-    | WHILE LP Exp RP Stmt { $$ = newStmt_WHILE($3, $5); }
+        { $$ = newStmt_ifelse($3, $5, $7, @$.first_line); }
+    | WHILE LP Exp RP Stmt 
+        { $$ = newStmt_WHILE($3, $5, @$.first_line); }
 ;
 
-DefList : Def DefList { $$ = newDefList($1, $2); }
-    | %empty { $$ = newDefList(NULL, NULL); }
+DefList : Def DefList 
+        { $$ = newDefList($1, $2, @$.first_line); }
+    | %empty 
+        { $$ = newDefList(NULL, NULL, @$.first_line); }
 ;
 
-Def : Specifier DecList SEMI { $$ = newDef($1, $2); }
+Def : Specifier DecList SEMI 
+        { $$ = newDef($1, $2, @$.first_line); }
 ;
 
-DecList : Dec { $$ = newDecList($1, NULL); }
-    | Dec COMMA DecList { $$ = newDecList($1, $3); }
+DecList : Dec 
+        { $$ = newDecList($1, NULL, @$.first_line); }
+    | Dec COMMA DecList 
+        { $$ = newDecList($1, $3, @$.first_line); }
 ;
 
-Dec : VarDec { $$ = newDec($1, NULL); }
-    | VarDec ASSIGNOP Exp { $$ = newDec($1, $3); }
+Dec : VarDec 
+        { $$ = newDec($1, NULL, @$.first_line); }
+    | VarDec ASSIGNOP Exp 
+        { $$ = newDec($1, $3, @$.first_line); }
 ;
 
-Exp : LP Exp RP { $$ = newExp_paren($2); }
-    | ID LP Args RP { $$ = newExp_call($1, $3); }
-    | ID LP RP { $$ = newExp_call($1, NULL); }
-    | Exp LB Exp RB { $$ = newExp_subscript($1, $3); }
-    | Exp DOT ID { $$ = newExp_DOT($1, $3); }
+Exp : LP Exp RP 
+        { $$ = newExp_paren($2, @$.first_line); }
+    | ID LP Args RP 
+        { $$ = newExp_call($1, $3, @$.first_line); }
+    | ID LP RP 
+        { $$ = newExp_call($1, NULL, @$.first_line); }
+    | Exp LB Exp RB 
+        { $$ = newExp_subscript($1, $3, @$.first_line); }
+    | Exp DOT ID 
+        { $$ = newExp_DOT($1, $3, @$.first_line); }
 
-    | MINUS %prec NEG Exp { $$ = newExp_unary(MINUS, $2); }
-    | NOT Exp { $$ = newExp_unary(NOT, $2); }
+    | MINUS %prec NEG Exp 
+        { $$ = newExp_unary(MINUS, $2, @$.first_line); }
+    | NOT Exp 
+        { $$ = newExp_unary(NOT, $2, @$.first_line); }
 
-    | Exp STAR Exp { $$ = newExp_infix(STAR, $1, $2, $3); } 
-    | Exp DIV Exp { $$ = newExp_infix(DIV, $1, $2, $3); } 
+    | Exp STAR Exp 
+        { $$ = newExp_infix(STAR, $1, $2, $3, @$.first_line); } 
+    | Exp DIV Exp 
+        { $$ = newExp_infix(DIV, $1, $2, $3, @$.first_line); } 
 
-    | Exp PLUS Exp { $$ = newExp_infix(PLUS, $1, $2, $3); }
-    | Exp MINUS Exp { $$ = newExp_infix(MINUS, $1, $2, $3); } 
+    | Exp PLUS Exp 
+        { $$ = newExp_infix(PLUS, $1, $2, $3, @$.first_line); }
+    | Exp MINUS Exp 
+        { $$ = newExp_infix(MINUS, $1, $2, $3, @$.first_line); } 
 
-    | Exp RELOP Exp { $$ = newExp_infix(RELOP, $1, $2, $3); } 
+    | Exp RELOP Exp 
+        { $$ = newExp_infix(RELOP, $1, $2, $3, @$.first_line); } 
 
-    | Exp AND Exp { $$ = newExp_infix(AND, $1, $2, $3); } 
+    | Exp AND Exp 
+        { $$ = newExp_infix(AND, $1, $2, $3, @$.first_line); } 
 
-    | Exp OR Exp { $$ = newExp_infix(OR, $1, $2, $3); } 
+    | Exp OR Exp 
+        { $$ = newExp_infix(OR, $1, $2, $3, @$.first_line); } 
 
-    | Exp ASSIGNOP Exp { $$ = newExp_infix(ASSIGNOP, $1, $2, $3); }
+    | Exp ASSIGNOP Exp 
+        { $$ = newExp_infix(ASSIGNOP, $1, $2, $3, @$.first_line); }
 
-    | ID { $$ = newExp_ID($1); }
-    | INT { $$ = newExp_INT($1); }
-    | FLOAT { $$ = newExp_FLOAT($1); }
+    | ID 
+        { $$ = newExp_ID($1, @$.first_line); }
+    | INT 
+        { $$ = newExp_INT($1, @$.first_line); }
+    | FLOAT 
+        { $$ = newExp_FLOAT($1, @$.first_line); }
 ;
 
-Args : Exp COMMA Args { $$ = newArgs($1, $3); }
-    | Exp { $$ = newArgs($1, NULL); }
+Args : Exp COMMA Args 
+        { $$ = newArgs($1, $3, @$.first_line); }
+    | Exp 
+        { $$ = newArgs($1, NULL, @$.first_line); }
 ;
 
 
