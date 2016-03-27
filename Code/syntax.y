@@ -188,6 +188,8 @@ Dec : VarDec
 
 Exp : LP Exp RP 
         { $$ = newExp_paren($2, @$.first_line); }
+    | LP error RP
+        { pse("Broken expression in `()'"); } 
     | ID LP Args RP 
         { $$ = newExp_call($1, $3, @$.first_line); }
     | ID LP RP 
@@ -195,7 +197,7 @@ Exp : LP Exp RP
     | Exp LB Exp RB 
         { $$ = newExp_subscript($1, $3, @$.first_line); }
     | Exp LB error RB
-        { pse("Broken array subscript"); }
+        { pse("Broken array subscript in `[]'"); }
     | Exp DOT ID 
         { $$ = newExp_DOT($1, $3, @$.first_line); }
 
