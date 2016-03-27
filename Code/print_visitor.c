@@ -84,7 +84,7 @@ static int indent = -1;
 #define print(...) { \
     int i; \
     for (i = 0; i < indent; i++) { \
-        printf("| "); \
+        printf("  "); \
     } \
     printf(__VA_ARGS__); \
     printf("\n"); \
@@ -506,6 +506,5 @@ void visit(void *node) {
 }
 
 void print_ast() {
-    print_symbol_table();
     visit(root);
 }

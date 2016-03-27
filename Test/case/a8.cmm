@@ -1,0 +1,11 @@
+struct Vector {
+    float x, y;
+    int a, b;
+};
+
+int m()
+{
+    Vector v;
+    v.x = v.y = 1.0;
+    v.a = v.b = 1;
+}

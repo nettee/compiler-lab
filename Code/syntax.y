@@ -8,8 +8,12 @@
 int nr_syntax_error = 0;
 
 #define pse(text) \
-    printf("Error type B at Line %d, Column %d: %s\n", \
-                yylineno, yycolumn, text)
+    printf("Error type B at Line %d: %s\n", \
+                yylineno, text)
+
+#define psel(text, lineno) \
+    printf("Error type B at Line %d: %s\n", \
+                lineno, text)
 
 %}
 
@@ -83,6 +87,8 @@ ExtDef : Specifier ExtDecList SEMI
         { $$ = newExtDef_var($1, $2, @$.first_line); }
     | Specifier SEMI 
         { $$ = newExtDef_struct($1, @$.first_line); }
+    | Specifier error
+        { pse("Missing ';'"); }
     | Specifier FunDec CompSt 
         { $$ = newExtDef_fun($1, $2, $3, @$.first_line); }
 ;
@@ -119,12 +125,16 @@ VarDec : ID
         { $$ = newVarDec_ID($1, @$.first_line); }
     | VarDec LB INT RB 
         { $$ = newVarDec_dim($1, $3, @$.first_line); }
+    | VarDec LB error RB
+        { pse("Invalid variable dimension"); }
 ;
 
 FunDec : ID LP VarList RP 
         { $$ = newFunDec($1, $3, @$.first_line); }
     | ID LP RP 
         { $$ = newFunDec($1, NULL, @$.first_line); }
+    | ID error
+        { pse("syntax error"); }
 ;
 
 VarList : ParamDec COMMA VarList 
@@ -149,18 +159,22 @@ StmtList : Stmt StmtList
 
 Stmt : Exp SEMI 
         { $$ = newStmt_exp($1, @$.first_line); }
+    | error SEMI
+        { pse("Invalid statement"); }
     | CompSt 
         { $$ = newStmt_COMP_ST($1, @$.first_line); }
     | RETURN Exp SEMI 
         { $$ = newStmt_RETURN($2, @$.first_line); }
+    | RETURN error SEMI
+        { pse("Invalid return statement"); }
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE 
         { $$ = newStmt_if($3, $5, @$.first_line); }
     | IF LP Exp RP Stmt ELSE Stmt
         { $$ = newStmt_ifelse($3, $5, $7, @$.first_line); }
     | WHILE LP Exp RP Stmt 
         { $$ = newStmt_WHILE($3, $5, @$.first_line); }
-    | error SEMI 
-        { pse("Broken expression"); }
+    | WHILE error Stmt
+        { psel("Invalid expression after 'while'", @$.first_line); }
 
 ;
 
@@ -172,6 +186,8 @@ DefList : Def DefList
 
 Def : Specifier DecList SEMI 
         { $$ = newDef($1, $2, @$.first_line); }
+    | Specifier error SEMI
+        { pse("Invalid definition"); }
 ;
 
 DecList : Dec 
@@ -188,8 +204,6 @@ Dec : VarDec
 
 Exp : LP Exp RP 
         { $$ = newExp_paren($2, @$.first_line); }
-    | LP error RP
-        { pse("Broken expression in `()'"); } 
     | ID LP Args RP 
         { $$ = newExp_call($1, $3, @$.first_line); }
     | ID LP RP 
@@ -197,7 +211,7 @@ Exp : LP Exp RP
     | Exp LB Exp RB 
         { $$ = newExp_subscript($1, $3, @$.first_line); }
     | Exp LB error RB
-        { pse("Broken array subscript in `[]'"); }
+        { pse("Invalid array subscript"); }
     | Exp DOT ID 
         { $$ = newExp_DOT($1, $3, @$.first_line); }
 
@@ -246,5 +260,6 @@ Args : Exp COMMA Args
 %%
 
 int yyerror(char *s) {
+    //printf("error at line %d\n", yylineno);
     nr_syntax_error++;
 }

@@ -1,0 +1,12 @@
+int method(int arg)
+{
+    int a;
+    a = arg;
+    return a;
+}
+
+int main()
+{
+    int b = 2, c;
+    c = method(b));
+}

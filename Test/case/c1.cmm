@@ -1,0 +1,11 @@
+struct Vector {
+    float x;
+    float y;
+};
+
+int main()
+{
+    struct Vector v_v;
+    v_v.x = -0.1;
+    v_v.y = v_v.x;
+}
