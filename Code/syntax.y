@@ -3,7 +3,14 @@
 #include <stdlib.h>
 
 #include "lex.yy.c"
-#include "ast.h"
+#include "pt.h"
+
+int nr_syntax_error = 0;
+
+#define pse(text) \
+    printf("Error type B at Line %d, Column %d: %s\n", \
+                yylineno, yycolumn, text)
+
 %}
 
 /* declared types */
@@ -152,6 +159,9 @@ Stmt : Exp SEMI
         { $$ = newStmt_ifelse($3, $5, $7, @$.first_line); }
     | WHILE LP Exp RP Stmt 
         { $$ = newStmt_WHILE($3, $5, @$.first_line); }
+    | error SEMI 
+        { pse("Broken expression"); }
+
 ;
 
 DefList : Def DefList 
@@ -184,6 +194,8 @@ Exp : LP Exp RP
         { $$ = newExp_call($1, NULL, @$.first_line); }
     | Exp LB Exp RB 
         { $$ = newExp_subscript($1, $3, @$.first_line); }
+    | Exp LB error RB
+        { pse("Broken array subscript"); }
     | Exp DOT ID 
         { $$ = newExp_DOT($1, $3, @$.first_line); }
 
@@ -231,3 +243,6 @@ Args : Exp COMMA Args
 
 %%
 
+int yyerror(char *s) {
+    nr_syntax_error++;
+}

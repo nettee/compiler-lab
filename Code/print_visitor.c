@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "common.h"
-#include "ast.h"
+#include "pt.h"
 #include "syntax.tab.h"
 
 typedef void (*funcptr)(void *);

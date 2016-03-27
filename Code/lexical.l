@@ -14,6 +14,8 @@ int install_float(float);
 
 void error();
 
+int nr_lexical_error = 0;
+
 int yycolumn = 1;
 #define YY_USER_ACTION \
     yylloc.first_line = yylloc.last_line = yylineno; \
@@ -23,7 +25,8 @@ int yycolumn = 1;
 
 %}
 
-delim [ \t\n]
+newline [\n]
+delim [ \t]
 ws {delim}+
 
 letter [A-Za-z]
@@ -45,6 +48,7 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 
 %%
 
+{newline} { yycolumn = 1; }
 {ws} { /* do nothing */ }
 
 {integer} {
@@ -63,8 +67,10 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 
 {inv_oct} {
     /* invalid oct number */
-    printf("Error type A at Line %d: Invalid OCT '%s'\n", yylineno, yytext);
+    printf("Error type A at Line %d: Illegal octal number '%s'\n", yylineno, yytext);
     error();
+    yylval.type_int = 0;
+    return INT;
 }
 
 {hex} {
@@ -75,9 +81,11 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 }
 
 {inv_hex} {
-    printf("Error type A at Line %d: Invalid HEX '%s'\n",
+    printf("Error type A at Line %d: Illegal hexadecimal number '%s'\n",
             yylineno, yytext);
     error();
+    yylval.type_int = 0;
+    return INT;
 }
 
 {float} {
@@ -149,5 +157,6 @@ while { return WHILE; }
 %%
 
 void error() {
-    exit(1);   
+    nr_lexical_error++;
+    //exit(1);   
 }

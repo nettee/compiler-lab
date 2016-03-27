@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ast.h"
+#include "pt.h"
 #include "common.h"
 
 void *root;
