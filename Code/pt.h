@@ -64,16 +64,6 @@ enum NonterminalType {
     ARGS = 420,
 };
 
-typedef struct ListNode_ {
-    struct ListNode_ *next;
-    void *child;
-} ListNode;
-
-typedef struct IntListNode_ {
-    struct IntListNode_ *next;
-    int value;
-} IntListNode;
-
 struct Program_;
 struct ExtDefList_;
 struct ExtDef_;
