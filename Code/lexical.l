@@ -39,9 +39,7 @@ inv_oct 0{digit}+
 hex 0[Xx][0-9A-Fa-f]+
 inv_hex 0[Xx]({digit}|{letter})+
 
-com_float {integer}[.]{digit}+
-exp_float (({digit}+[.]{digit}*)|([.]{digit}+))([Ee][+-]?{digit}+)
-float {com_float}|{exp_float}
+float {integer}[.]{digit}+
 
 id {letter_}({letter_}|{digit})*
 inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*

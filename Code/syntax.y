@@ -7,13 +7,18 @@
 
 int nr_syntax_error = 0;
 
-#define pse(text) \
-    printf("Error type B at Line %d: %s\n", \
-                yylineno, text)
-
 #define psel(text, lineno) \
     printf("Error type B at Line %d: %s\n", \
                 lineno, text)
+
+#define psev(...) psevl(yylineno, __VA_ARGS__)
+
+#define psevl(lineno, ...) { \
+    printf("Error type B at Line %d: ", lineno); \
+    printf(__VA_ARGS__); \
+    printf(" [%d]", __LINE__); \
+    printf("\n"); \
+}
 
 %}
 
@@ -58,8 +63,8 @@ int nr_syntax_error = 0;
 %type <type_node> Exp
 %type <type_node> Args
 
-%precedence LOWER_THAN_ELSE
-%precedence ELSE
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %right ASSIGNOP
 %left OR
@@ -67,8 +72,8 @@ int nr_syntax_error = 0;
 %left RELOP
 %left PLUS MINUS
 %left STAR DIV
-%precedence NEG NOT
-%precedence DOT LB
+%right NEG NOT
+%right DOT LB
 
 
 %%
@@ -79,7 +84,7 @@ Program : ExtDefList
 
 ExtDefList : ExtDef ExtDefList 
         { $$ = newExtDefList($1, $2, @$.first_line); }
-    | %empty 
+    |  
         { $$ = newExtDefList(NULL, NULL, @$.first_line); }
 ;
 
@@ -87,10 +92,10 @@ ExtDef : Specifier ExtDecList SEMI
         { $$ = newExtDef_var($1, $2, @$.first_line); }
     | Specifier SEMI 
         { $$ = newExtDef_struct($1, @$.first_line); }
-    | Specifier error
-        { pse("Missing ';'"); }
     | Specifier FunDec CompSt 
         { $$ = newExtDef_fun($1, $2, $3, @$.first_line); }
+    | Specifier error
+        { psev("syntax error, near `%s'", yytext); }
 ;
 
 ExtDecList : VarDec 
@@ -113,7 +118,7 @@ StructSpecifier : STRUCT OptTag LC DefList RC
 
 OptTag : ID 
         { $$ = newOptTag($1, @$.first_line); }
-    | %empty 
+    |  
         { $$ = newOptTag(-1, @$.first_line); }
 ;
 
@@ -126,7 +131,7 @@ VarDec : ID
     | VarDec LB INT RB 
         { $$ = newVarDec_dim($1, $3, @$.first_line); }
     | VarDec LB error RB
-        { pse("Invalid variable dimension"); }
+        { psev("Invalid variable dimension"); }
 ;
 
 FunDec : ID LP VarList RP 
@@ -134,7 +139,7 @@ FunDec : ID LP VarList RP
     | ID LP RP 
         { $$ = newFunDec($1, NULL, @$.first_line); }
     | ID error
-        { pse("syntax error"); }
+        { psev("syntax error"); }
 ;
 
 VarList : ParamDec COMMA VarList 
@@ -149,28 +154,38 @@ ParamDec : Specifier VarDec
 
 CompSt : LC DefList StmtList RC 
         { $$ = newCompSt($2, $3, @$.first_line); }
+    | error RC
+        { psev("syntax error, near `%s'", yytext); }
 ;
 
 StmtList : Stmt StmtList 
         { $$ = newStmtList($1, $2, @$.first_line); }
-    | %empty 
+    |  
         { $$ = newStmtList(NULL, NULL, @$.first_line); }
 ;
 
 Stmt : Exp SEMI 
         { $$ = newStmt_exp($1, @$.first_line); }
     | error SEMI
-        { pse("Invalid statement"); }
+        { psev("Invalid expression"); }
+    | error '\n'
+        { psev("syntax error, near `%s'", yytext); }
     | CompSt 
         { $$ = newStmt_COMP_ST($1, @$.first_line); }
     | RETURN Exp SEMI 
         { $$ = newStmt_RETURN($2, @$.first_line); }
     | RETURN error SEMI
-        { pse("Invalid return statement"); }
+        { psev("Invalid expression"); }
+    | RETURN Exp error
+        { psev("syntax error, near `%s'", yytext); }
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE 
         { $$ = newStmt_if($3, $5, @$.first_line); }
+    | IF error Stmt %prec LOWER_THAN_ELSE
+        { psel("Invalid expression after 'if'", @$.first_line); }
     | IF LP Exp RP Stmt ELSE Stmt
         { $$ = newStmt_ifelse($3, $5, $7, @$.first_line); }
+    | IF error Stmt ELSE Stmt
+        { psel("Invalid expression after 'if'", @$.first_line); }
     | WHILE LP Exp RP Stmt 
         { $$ = newStmt_WHILE($3, $5, @$.first_line); }
     | WHILE error Stmt
@@ -180,14 +195,16 @@ Stmt : Exp SEMI
 
 DefList : Def DefList 
         { $$ = newDefList($1, $2, @$.first_line); }
-    | %empty 
+    |  
         { $$ = newDefList(NULL, NULL, @$.first_line); }
 ;
 
 Def : Specifier DecList SEMI 
         { $$ = newDef($1, $2, @$.first_line); }
     | Specifier error SEMI
-        { pse("Invalid definition"); }
+        { psev("Invalid definition"); }
+    | Specifier DecList error
+        { psev("syntax error, near `%s'", yytext); }
 ;
 
 DecList : Dec 
@@ -206,12 +223,14 @@ Exp : LP Exp RP
         { $$ = newExp_paren($2, @$.first_line); }
     | ID LP Args RP 
         { $$ = newExp_call($1, $3, @$.first_line); }
+    | ID LP error RP
+        { psev("Invalid arguments"); }
     | ID LP RP 
         { $$ = newExp_call($1, NULL, @$.first_line); }
     | Exp LB Exp RB 
         { $$ = newExp_subscript($1, $3, @$.first_line); }
     | Exp LB error RB
-        { pse("Invalid array subscript"); }
+        { psev("Invalid array subscript"); }
     | Exp DOT ID 
         { $$ = newExp_DOT($1, $3, @$.first_line); }
 
@@ -254,6 +273,8 @@ Args : Exp COMMA Args
         { $$ = newArgs($1, $3, @$.first_line); }
     | Exp 
         { $$ = newArgs($1, NULL, @$.first_line); }
+    | Exp error
+        { psev("syntax error, near `%s'", yytext); }
 ;
 
 
