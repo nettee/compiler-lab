@@ -10,7 +10,7 @@ Program *newProgram(void *arg0, int lineno) {
     ExtDefList *extDefList = (ExtDefList *) arg0;
 
     Program *program = malloc(sizeof(Program));
-    program->type = PROGRAM;
+    program->kind = PROGRAM;
     program->lineno = lineno;
     program->extDefList = extDefList;
     
@@ -22,7 +22,7 @@ ExtDefList *newExtDefList(void *arg0, void *arg1, int lineno) {
     ExtDefList *extDefList0 = (ExtDefList *) arg1;
 
     ExtDefList *extDefList = malloc(sizeof(ExtDefList));
-    extDefList->type = EXT_DEF_LIST;
+    extDefList->kind = EXT_DEF_LIST;
     extDefList->lineno = lineno;
     extDefList->extDef = extDef;
     extDefList->extDefList = extDefList0;
@@ -35,9 +35,9 @@ ExtDef *newExtDef_var(void *arg0, void *arg1, int lineno) {
     ExtDecList *extDecList = (ExtDecList *) arg1;
 
     ExtDef *extDef = malloc(sizeof(ExtDef));
-    extDef->type = EXT_DEF;
+    extDef->kind = EXT_DEF;
     extDef->lineno = lineno;
-    extDef->extdef_type = EXT_DEF_T_VAR;
+    extDef->extdef_kind = EXT_DEF_T_VAR;
     extDef->var.specifier = specifier;
     extDef->var.extDecList = extDecList;
 
@@ -49,9 +49,9 @@ ExtDef *newExtDef_struct(void *arg0, int lineno) {
     Specifier *specifier = (Specifier *) arg0;
 
     ExtDef *extDef = malloc(sizeof(ExtDef));
-    extDef->type = EXT_DEF;
+    extDef->kind = EXT_DEF;
     extDef->lineno = lineno;
-    extDef->extdef_type = EXT_DEF_T_STRUCT;
+    extDef->extdef_kind = EXT_DEF_T_STRUCT;
     extDef->struct_.specifier = specifier;
 
     return extDef;
@@ -63,9 +63,9 @@ ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2, int lineno) {
     CompSt *compSt = (CompSt *) arg2;
 
     ExtDef *extDef = malloc(sizeof(ExtDef));
-    extDef->type = EXT_DEF;
+    extDef->kind = EXT_DEF;
     extDef->lineno = lineno;
-    extDef->extdef_type = EXT_DEF_T_FUN;
+    extDef->extdef_kind = EXT_DEF_T_FUN;
     extDef->fun.specifier = specifier;
     extDef->fun.funDec = funDec;
     extDef->fun.compSt = compSt;
@@ -78,7 +78,7 @@ ExtDecList *newExtDecList(void *arg0, void *arg1, int lineno) {
     ExtDecList *extDecList0 = (ExtDecList *) arg1;
 
     ExtDecList *extDecList = malloc(sizeof(ExtDecList));
-    extDecList->type = EXT_DEC_LIST;
+    extDecList->kind = EXT_DEC_LIST;
     extDecList->lineno = lineno;
     extDecList->varDec = varDec;
     extDecList->extDecList = extDecList0;
@@ -86,11 +86,11 @@ ExtDecList *newExtDecList(void *arg0, void *arg1, int lineno) {
     return extDecList;
 }
 
-Specifier *newSpecifier_TYPE(int type_index, int lineno) {
+Specifier *newSpecifier_basic(int type_index, int lineno) {
     Specifier *specifier = malloc(sizeof(Specifier));
-    specifier->type = SPECIFIER;
+    specifier->kind = SPECIFIER;
     specifier->lineno = lineno;
-    specifier->specifier_type = SPECIFIER_T_TYPE;
+    specifier->specifier_kind = SPECIFIER_T_BASIC;
     specifier->type_index = type_index;
 
     return specifier;
@@ -100,9 +100,9 @@ Specifier *newSpecifier_struct(void *arg0, int lineno) {
     StructSpecifier *structSpecifier = (StructSpecifier *) arg0;
 
     Specifier *specifier = malloc(sizeof(Specifier));
-    specifier->type = SPECIFIER;
+    specifier->kind = SPECIFIER;
     specifier->lineno = lineno;
-    specifier->specifier_type = SPECIFIER_T_STRUCT;
+    specifier->specifier_kind = SPECIFIER_T_STRUCT;
     specifier->structSpecifier = structSpecifier;
 
     return specifier;
@@ -112,9 +112,9 @@ StructSpecifier *newStructSpecifier_dec(void *arg0, int lineno) {
     Tag *tag = (Tag *) arg0;
 
     StructSpecifier *structSpecifier = malloc(sizeof(StructSpecifier));
-    structSpecifier->type = STRUCT_SPECIFIER;
+    structSpecifier->kind = STRUCT_SPECIFIER;
     structSpecifier->lineno = lineno;
-    structSpecifier->structspecifier_type = STRUCT_SPECIFIER_T_DEC;
+    structSpecifier->structspecifier_kind = STRUCT_SPECIFIER_T_DEC;
     structSpecifier->dec.tag = tag;
 
     return structSpecifier;
@@ -125,63 +125,63 @@ StructSpecifier *newStructSpecifier_def(void *arg0, void *arg1, int lineno) {
     DefList *defList = (DefList *) arg1;
 
     StructSpecifier *structSpecifier = malloc(sizeof(StructSpecifier));
-    structSpecifier->type = STRUCT_SPECIFIER;
+    structSpecifier->kind = STRUCT_SPECIFIER;
     structSpecifier->lineno = lineno;
-    structSpecifier->structspecifier_type = STRUCT_SPECIFIER_T_DEF;
+    structSpecifier->structspecifier_kind = STRUCT_SPECIFIER_T_DEF;
     structSpecifier->def.optTag = optTag;
     structSpecifier->def.defList = defList;
 
     return structSpecifier;
 }
 
-OptTag *newOptTag(int id_index, int lineno) {
+OptTag *newOptTag(char *id_text, int lineno) {
     OptTag *optTag = malloc(sizeof(OptTag));
-    optTag->type = OPT_TAG;
+    optTag->kind = OPT_TAG;
     optTag->lineno = lineno;
-    optTag->id_index = id_index;
+    optTag->id_text = id_text;
 
     return optTag;
 }
 
-Tag *newTag(int id_index, int lineno) {
+Tag *newTag(char *id_text, int lineno) {
     Tag *tag = malloc(sizeof(Tag));
-    tag->type = TAG;
+    tag->kind = TAG;
     tag->lineno = lineno;
-    tag->id_index = id_index;
+    tag->id_text = id_text;
 
     return tag;
 }
 
-VarDec *newVarDec_ID(int id_index, int lineno) {
+VarDec *newVarDec_ID(char *id_text, int lineno) {
     VarDec *varDec = malloc(sizeof(VarDec));
-    varDec->type = VAR_DEC;
+    varDec->kind = VAR_DEC;
     varDec->lineno = lineno;
-    varDec->vardec_type = VAR_DEC_T_ID;
-    varDec->id_index = id_index;
+    varDec->vardec_kind = VAR_DEC_T_ID;
+    varDec->id_text = id_text;
 
     return varDec;
 }
 
-VarDec *newVarDec_dim(void *arg0, int int_index, int lineno) {
+VarDec *newVarDec_dim(void *arg0, int int_value, int lineno) {
     VarDec *varDec0 = (VarDec *) arg0;
 
     VarDec *varDec = malloc(sizeof(VarDec));
-    varDec->type = VAR_DEC;
+    varDec->kind = VAR_DEC;
     varDec->lineno = lineno;
-    varDec->vardec_type = VAR_DEC_T_DIM;
+    varDec->vardec_kind = VAR_DEC_T_DIM;
     varDec->dim.varDec = varDec0;
-    varDec->dim.int_index = int_index;
+    varDec->dim.int_value = int_value;
 
     return varDec;
 }
 
-FunDec *newFunDec(int id_index, void *arg0, int lineno) {
+FunDec *newFunDec(char *id_text, void *arg0, int lineno) {
     VarList *varList = (VarList *) arg0;
 
     FunDec *funDec = malloc(sizeof(FunDec));
-    funDec->type = FUN_DEC;
+    funDec->kind = FUN_DEC;
     funDec->lineno = lineno;
-    funDec->id_index = id_index;
+    funDec->id_text = id_text;
     funDec->varList = varList;
 
     return funDec;
@@ -192,7 +192,7 @@ VarList *newVarList(void *arg0, void *arg1, int lineno) {
     VarList *varList0 = (VarList *) arg1;
 
     VarList *varList = malloc(sizeof(VarList));
-    varList->type = VAR_LIST;
+    varList->kind = VAR_LIST;
     varList->lineno = lineno;
     varList->paramDec = paramDec;
     varList->varList = varList0;
@@ -205,7 +205,7 @@ ParamDec *newParamDec(void *arg0, void *arg1, int lineno) {
     VarDec *varDec = (VarDec *) arg1;
 
     ParamDec *paramDec = malloc(sizeof(ParamDec));
-    paramDec->type = PARAM_DEC;
+    paramDec->kind = PARAM_DEC;
     paramDec->lineno = lineno;
     paramDec->specifier = specifier;
     paramDec->varDec = varDec;
@@ -218,7 +218,7 @@ CompSt *newCompSt(void *arg0, void *arg1, int lineno) {
     StmtList *stmtList = (StmtList *) arg1;
 
     CompSt *compSt = malloc(sizeof(CompSt));
-    compSt->type = COMP_ST;
+    compSt->kind = COMP_ST;
     compSt->lineno = lineno;
     compSt->defList = defList;
     compSt->stmtList = stmtList;
@@ -231,7 +231,7 @@ StmtList *newStmtList(void *arg0, void *arg1, int lineno) {
     StmtList *stmtList0 = (StmtList *) arg1;
 
     StmtList *stmtList = malloc(sizeof(StmtList));
-    stmtList->type = STMT_LIST;
+    stmtList->kind = STMT_LIST;
     stmtList->lineno = lineno;
     stmtList->stmt = stmt;
     stmtList->stmtList = stmtList0;
@@ -243,9 +243,9 @@ Stmt *newStmt_exp(void *arg0, int lineno) {
     Exp *exp = (Exp *) arg0;
 
     Stmt *stmt = malloc(sizeof(Stmt));
-    stmt->type = STMT;
+    stmt->kind = STMT;
     stmt->lineno = lineno;
-    stmt->stmt_type = STMT_T_EXP;
+    stmt->stmt_kind = STMT_T_EXP;
     stmt->exp.exp = exp;
 
     return stmt;
@@ -255,9 +255,9 @@ Stmt *newStmt_COMP_ST(void *arg0, int lineno) {
     CompSt *compSt = (CompSt *) arg0;
 
     Stmt *stmt = malloc(sizeof(Stmt));
-    stmt->type = STMT;
+    stmt->kind = STMT;
     stmt->lineno = lineno;
-    stmt->stmt_type = STMT_T_COMP_ST;
+    stmt->stmt_kind = STMT_T_COMP_ST;
     stmt->compst.compSt = compSt;
 
     return stmt;
@@ -267,9 +267,9 @@ Stmt *newStmt_RETURN(void *arg0, int lineno) {
     Exp *exp = (Exp *) arg0;
 
     Stmt *stmt = malloc(sizeof(Stmt));
-    stmt->type = STMT;
+    stmt->kind = STMT;
     stmt->lineno = lineno;
-    stmt->stmt_type = STMT_T_RETURN;
+    stmt->stmt_kind = STMT_T_RETURN;
     stmt->return_.exp = exp;
 
     return stmt;
@@ -280,9 +280,9 @@ Stmt *newStmt_if(void *arg0, void *arg1, int lineno) {
     Stmt *then_stmt = (Stmt *) arg1;
 
     Stmt *stmt = malloc(sizeof(Stmt));
-    stmt->type = STMT;
+    stmt->kind = STMT;
     stmt->lineno = lineno;
-    stmt->stmt_type = STMT_T_IF;
+    stmt->stmt_kind = STMT_T_IF;
     stmt->if_.exp = exp;
     stmt->if_.then_stmt = then_stmt;
 
@@ -295,9 +295,9 @@ Stmt *newStmt_ifelse(void *arg0, void *arg1, void *arg2, int lineno) {
     Stmt *else_stmt = (Stmt *) arg2;
 
     Stmt *stmt = malloc(sizeof(Stmt));
-    stmt->type = STMT;
+    stmt->kind = STMT;
     stmt->lineno = lineno;
-    stmt->stmt_type = STMT_T_IF_ELSE;
+    stmt->stmt_kind = STMT_T_IF_ELSE;
     stmt->ifelse.exp = exp;
     stmt->ifelse.then_stmt = then_stmt;
     stmt->ifelse.else_stmt = else_stmt;
@@ -310,9 +310,9 @@ Stmt *newStmt_WHILE(void *arg0, void *arg1, int lineno) {
     Stmt *body_stmt = (Stmt *) arg1;
 
     Stmt *stmt = malloc(sizeof(Stmt));
-    stmt->type = STMT;
+    stmt->kind = STMT;
     stmt->lineno = lineno;
-    stmt->stmt_type = STMT_T_WHILE;
+    stmt->stmt_kind = STMT_T_WHILE;
     stmt->while_.exp = exp;
     stmt->while_.stmt = body_stmt;
 
@@ -324,7 +324,7 @@ DefList *newDefList(void *arg0, void *arg1, int lineno) {
     DefList *defList0 = (DefList *) arg1;
 
     DefList *defList = malloc(sizeof(DefList));
-    defList->type = DEF_LIST;
+    defList->kind = DEF_LIST;
     defList->lineno = lineno;
     defList->def = def;
     defList->defList = defList0;
@@ -337,7 +337,7 @@ Def *newDef(void *arg0, void *arg1, int lineno) {
     DecList *decList = (DecList *) arg1;
 
     Def *def = malloc(sizeof(Def));
-    def->type = DEF;
+    def->kind = DEF;
     def->lineno = lineno;
     def->specifier = specifier;
     def->decList = decList;
@@ -350,7 +350,7 @@ DecList *newDecList(void *arg0, void *arg1, int lineno) {
     DecList *decList0 = (DecList *) arg1;
 
     DecList *decList = malloc(sizeof(DecList));
-    decList->type = DEC_LIST;
+    decList->kind = DEC_LIST;
     decList->lineno = lineno;
     decList->dec = dec;
     decList->decList = decList0;
@@ -363,7 +363,7 @@ Dec *newDec(void *arg0, void *arg1, int lineno) {
     Exp *exp = (Exp *) arg1;
     
     Dec *dec = malloc(sizeof(Dec));
-    dec->type = DEC;
+    dec->kind = DEC;
     dec->lineno = lineno;
     dec->varDec = varDec;
     dec->exp = exp;
@@ -376,9 +376,9 @@ Exp *newExp_infix(int op, void *arg0, int op_yylval, void *arg1, int lineno) {
     Exp *exp_right = (Exp *) arg1;
 
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_INFIX;
+    exp->exp_kind = EXP_T_INFIX;
     exp->infix.op = op;
     exp->infix.op_yylval = op_yylval;
     exp->infix.exp_left = exp_left;
@@ -391,9 +391,9 @@ Exp *newExp_paren(void *arg0, int lineno) {
     Exp *parened_exp = (Exp *) arg0;
 
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_PAREN;
+    exp->exp_kind = EXP_T_PAREN;
     exp->paren.exp = parened_exp;
 
     return exp;
@@ -403,23 +403,23 @@ Exp *newExp_unary(int op, void *arg0, int lineno) {
     Exp *unary_exp = (Exp *) arg0;
 
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_UNARY;
+    exp->exp_kind = EXP_T_UNARY;
     exp->unary.op = op;
     exp->unary.exp = unary_exp;
     
     return exp;
 }
 
-Exp *newExp_call(int id_index, void *arg0, int lineno) {
+Exp *newExp_call(char *id_text, void *arg0, int lineno) {
     Args *args = (Args *) arg0;
 
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_CALL;
-    exp->call.id_index = id_index;
+    exp->exp_kind = EXP_T_CALL;
+    exp->call.id_text = id_text;
     exp->call.args = args;
 
     return exp;
@@ -430,54 +430,54 @@ Exp *newExp_subscript(void *arg0, void *arg1, int lineno) {
     Exp *index = (Exp *) arg1;
 
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_SUBSCRIPT;
+    exp->exp_kind = EXP_T_SUBSCRIPT;
     exp->subscript.array = array;
     exp->subscript.index = index;
 
     return exp;
 }
 
-Exp *newExp_DOT(void *arg0, int id_index, int lineno) {
+Exp *newExp_DOT(void *arg0, char *id_text, int lineno) {
     Exp *dotted_exp = (Exp *) arg0;
 
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_DOT;
+    exp->exp_kind = EXP_T_DOT;
     exp->dot.exp = dotted_exp;
-    exp->dot.id_index = id_index;
+    exp->dot.id_text = id_text;
 
     return exp;
 }
 
-Exp *newExp_ID(int id_index, int lineno) {
+Exp *newExp_ID(char *id_text, int lineno) {
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_ID;
-    exp->id_index = id_index;
+    exp->exp_kind = EXP_T_ID;
+    exp->id_text = id_text;
 
     return exp;
 }
 
-Exp *newExp_INT(int int_index, int lineno) {
+Exp *newExp_INT(int int_value, int lineno) {
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_INT;
-    exp->int_index = int_index;
+    exp->exp_kind = EXP_T_INT;
+    exp->int_value = int_value;
 
     return exp;
 }
 
-Exp *newExp_FLOAT(int float_index, int lineno) {
+Exp *newExp_FLOAT(float float_value, int lineno) {
     Exp *exp = malloc(sizeof(Exp));
-    exp->type = EXP;
+    exp->kind = EXP;
     exp->lineno = lineno;
-    exp->exp_type = EXP_T_FLOAT;
-    exp->float_index = float_index;
+    exp->exp_kind = EXP_T_FLOAT;
+    exp->float_value = float_value;
 
     return exp;
 }
@@ -487,10 +487,11 @@ Args *newArgs(void *arg0, void *arg1, int lineno) {
     Args *args0 = (Args *) arg1;
 
     Args *args = malloc(sizeof(Args));
-    args->type = ARGS;
+    args->kind = ARGS;
     args->lineno = lineno;
     args->exp = exp;
     args->args = args0;
 
     return args;
 }
+

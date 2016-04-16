@@ -1,5 +1,8 @@
 #include <stdio.h>
 
+#define PRINT_AST
+//#define SEMANTICS_ANALYSIS
+
 extern int nr_lexical_error;
 extern int nr_syntax_error;
 extern int nr_semantics_error;
@@ -27,11 +30,17 @@ int main(int argc, char **argv)
         return 1;
     }
 
+#ifdef PRINT_AST
+    print_ast();
+#endif
+
+#ifdef SEMANTICS_ANALYSIS
     semantics_analysis();
 
     if (nr_semantics_error > 0) {
         return 2;
     }
+#endif
 
 
     return 0;

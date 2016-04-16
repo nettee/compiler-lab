@@ -11,4 +11,6 @@
 #define RELOP_EQ 1095
 #define RELOP_NE 1096
 
+char *strdup_(char *);
+
 #endif

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "common.h"
 #include "pt.h"
@@ -12,41 +11,29 @@ typedef void (*funcptr)(void *);
 
 static void visit(void *node);
 
-char *resolve_id(int);
-int resolve_int(int);
-float resolve_float(int);
-
-void print_symbol_table();
-
 char *terminal_str(int token_enum);
 char *nonterminal_str(int nonterminal_enum);
 
 static int indent = -1;
 
 #define print(...) { \
-    int i; \
-    for (i = 0; i < indent; i++) { \
-        printf("  "); \
-    } \
-    printf(__VA_ARGS__); \
-    printf("\n"); \
 }
 
-static void print_id(int id_index) {
+static void print_id(char *id_text) {
     indent++;
-    print("ID: %s", resolve_id(id_index));
+    print("ID: %s", id_text);
     indent--;
 }
 
-static void print_int(int int_index) {
+static void print_int(int int_value) {
     indent++;
-    print("INT: %d", resolve_int(int_index));
+    print("INT: %d", int_value);
     indent--;
 }
 
-static void print_float(int float_index) {
+static void print_float(float float_value) {
     indent++;
-    print("FLOAT: %f", resolve_float(float_index));
+    print("FLOAT: %f", float_value);
     indent--;
 }
 
@@ -97,14 +84,14 @@ static void print_relop(int yylval) {
     }
 }
 
-static void pre_visit(void *node) {
+static void print_this(void *node) {
     int type = *(int *)node;
     int lineno = ((int *)node)[1];
     print("%s (%d)", nonterminal_str(type), lineno);
 }
 
 static void visitProgram(void *node) {
-    pre_visit(node);
+    print_this(node);
     Program *program = (Program *)node;
     visit(program->extDefList);
 }
@@ -113,16 +100,16 @@ static void visitExtDefList(void *node) {
     /* may produce epsilon */
     ExtDefList *extDefList = (ExtDefList *)node;
     if (extDefList->extDef != NULL) {
-        pre_visit(node);
+        print_this(node);
         visit(extDefList->extDef);
         visit(extDefList->extDefList);
     }
 }
 
 static void visitExtDef(void *node) {
-    pre_visit(node);
+    print_this(node);
     ExtDef *extDef = (ExtDef *)node;
-    switch (extDef->extdef_type) {
+    switch (extDef->extdef_kind) {
     case EXT_DEF_T_VAR:
         visit(extDef->var.specifier);
         visit(extDef->var.extDecList);
@@ -143,7 +130,7 @@ static void visitExtDef(void *node) {
 }
 
 static void visitExtDecList(void *node) {
-    pre_visit(node);
+    print_this(node);
     ExtDecList *extDecList = (ExtDecList *)node;
     visit(extDecList->varDec);
     if (extDecList->extDecList != NULL) {
@@ -153,10 +140,10 @@ static void visitExtDecList(void *node) {
 }
 
 static void visitSpecifier(void *node) {
-    pre_visit(node);
+    print_this(node);
     Specifier *specifier = (Specifier *)node;
-    switch (specifier->specifier_type) {
-    case SPECIFIER_T_TYPE:
+    switch (specifier->specifier_kind) {
+    case SPECIFIER_T_BASIC:
         print_type(specifier->type_index); 
         break;
     case SPECIFIER_T_STRUCT:
@@ -168,9 +155,9 @@ static void visitSpecifier(void *node) {
 }
 
 static void visitStructSpecifier(void *node) {
-    pre_visit(node);
+    print_this(node);
     StructSpecifier *structSpecifier = (StructSpecifier *)node;
-    switch (structSpecifier->structspecifier_type) {
+    switch (structSpecifier->structspecifier_kind) {
     case STRUCT_SPECIFIER_T_DEC:
         print_terminal(STRUCT);
         visit(structSpecifier->dec.tag);
@@ -190,29 +177,29 @@ static void visitStructSpecifier(void *node) {
 static void visitOptTag(void *node) {
     /* may produce epsilon */
     OptTag *optTag = (OptTag *)node;
-    if (optTag->id_index != -1) {
-        pre_visit(node);
-        print_id(optTag->id_index);
+    if (optTag->id_text != NULL) {
+        print_this(node);
+        print_id(optTag->id_text);
     }
 }
 
 static void visitTag(void *node) {
-    pre_visit(node);
+    print_this(node);
     Tag *tag = (Tag *)node;
-    print_id(tag->id_index);
+    print_id(tag->id_text);
 }
 
 static void visitVarDec(void *node) {
-    pre_visit(node);
+    print_this(node);
     VarDec *varDec = (VarDec *)node;
-    switch (varDec->vardec_type) {
+    switch (varDec->vardec_kind) {
     case VAR_DEC_T_ID:
-        print_id(varDec->id_index);
+        print_id(varDec->id_text);
         break;
     case VAR_DEC_T_DIM:
         visit(varDec->dim.varDec);
         print_terminal(LB);
-        print_int(varDec->dim.int_index);
+        print_int(varDec->dim.int_value);
         print_terminal(RB);
         break;
     default:
@@ -221,9 +208,9 @@ static void visitVarDec(void *node) {
 }
 
 static void visitFunDec(void *node) {
-    pre_visit(node);
+    print_this(node);
     FunDec *funDec = (FunDec *)node;
-    print_id(funDec->id_index);
+    print_id(funDec->id_text);
     print_terminal(LP);
     if (funDec->varList != NULL) {
         visit(funDec->varList);
@@ -232,7 +219,7 @@ static void visitFunDec(void *node) {
 }
 
 static void visitVarList(void *node) {
-    pre_visit(node);
+    print_this(node);
     VarList *varList = (VarList *)node;
     visit(varList->paramDec);
     if (varList->varList != NULL) {
@@ -242,14 +229,14 @@ static void visitVarList(void *node) {
 }
 
 static void visitParamDec(void *node) {
-    pre_visit(node);
+    print_this(node);
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
     visit(paramDec->varDec);
 }
 
 static void visitCompSt(void *node) {
-    pre_visit(node);
+    print_this(node);
     CompSt *compSt = (CompSt *)node;
     print_terminal(LC);
     visit(compSt->defList);
@@ -261,16 +248,16 @@ static void visitStmtList(void *node) {
     /* may produce epsilon */
     StmtList *stmtList = (StmtList *)node;
     if (stmtList->stmt != NULL) {
-        pre_visit(node);
+        print_this(node);
         visit(stmtList->stmt);
         visit(stmtList->stmtList);
     }
 }
 
 static void visitStmt(void *node) {
-    pre_visit(node);
+    print_this(node);
     Stmt *stmt = (Stmt *)node;
-    switch (stmt->stmt_type) {
+    switch (stmt->stmt_kind) {
     case STMT_T_EXP:
         visit(stmt->exp.exp);
         print_terminal(SEMI);
@@ -315,14 +302,14 @@ static void visitDefList(void *node) {
     /* may produce epsilon */
     DefList *defList = (DefList *)node;
     if (defList->def != NULL) {
-        pre_visit(node);
+        print_this(node);
         visit(defList->def);
         visit(defList->defList);
     }
 }
 
 static void visitDef(void *node) {
-    pre_visit(node);
+    print_this(node);
     Def *def = (Def *)node;
     visit(def->specifier);
     visit(def->decList);
@@ -330,7 +317,7 @@ static void visitDef(void *node) {
 }
 
 static void visitDecList(void *node) {
-    pre_visit(node);
+    print_this(node);
     DecList *decList = (DecList *)node;
     visit(decList->dec);
     if (decList->decList != NULL) {
@@ -340,7 +327,7 @@ static void visitDecList(void *node) {
 }
 
 static void visitDec(void *node) {
-    pre_visit(node);
+    print_this(node);
     Dec *dec = (Dec *)node;
     visit(dec->varDec);
     if (dec->exp != NULL) {
@@ -350,9 +337,9 @@ static void visitDec(void *node) {
 }
 
 static void visitExp(void *node) {
-    pre_visit(node);
+    print_this(node);
     Exp *exp = (Exp *)node;
-    switch (exp->exp_type) {
+    switch (exp->exp_kind) {
     case EXP_T_INFIX:
         visit(exp->infix.exp_left);
         if (exp->infix.op == RELOP) {
@@ -372,7 +359,7 @@ static void visitExp(void *node) {
         visit(exp->unary.exp);
         break;
     case EXP_T_CALL:
-        print_id(exp->call.id_index);
+        print_id(exp->call.id_text);
         print_terminal(LP);
         if (exp->call.args != NULL) {
             visit(exp->call.args);
@@ -388,16 +375,16 @@ static void visitExp(void *node) {
     case EXP_T_DOT:
         visit(exp->dot.exp);
         print_terminal(DOT);
-        print_id(exp->dot.id_index);
+        print_id(exp->dot.id_text);
         break;
     case EXP_T_ID:
-        print_id(exp->id_index);
+        print_id(exp->id_text);
         break;
     case EXP_T_INT:
-        print_int(exp->int_index);
+        print_int(exp->int_value);
         break;
     case EXP_T_FLOAT:
-        print_float(exp->float_index);
+        print_float(exp->float_value);
         break;
     default:
         printf("fatal: unknown exp_type\n");
@@ -405,7 +392,7 @@ static void visitExp(void *node) {
 }
 
 static void visitArgs(void *node) {
-    pre_visit(node);
+    print_this(node);
     Args *args = (Args *)node;
     visit(args->exp);
     if (args->args != NULL) {
@@ -450,4 +437,3 @@ static void visit(void *node) {
 void semantics_analysis() {
     visit(root);
 }
-

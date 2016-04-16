@@ -25,13 +25,16 @@ int nr_syntax_error = 0;
 /* declared types */
 %union {
     int type_int;
+    float type_float;
+    char *type_id;
     void *type_node;
 }
 
 /* declared tokens */
+%token <type_id> ID
+%token <type_int> INT
+%token <type_float> FLOAT
 %token <type_int> TYPE
-%token <type_int> ID
-%token <type_int> INT FLOAT
 %token <type_int> STRUCT RETURN IF ELSE WHILE
 %token <type_int> SEMI COMMA ASSIGNOP RELOP
 %token <type_int> PLUS MINUS STAR DIV
@@ -105,7 +108,7 @@ ExtDecList : VarDec
 ;
 
 Specifier : TYPE 
-        { $$ = newSpecifier_TYPE($1, @$.first_line); }
+        { $$ = newSpecifier_basic($1, @$.first_line); }
     | StructSpecifier 
         { $$ = newSpecifier_struct($1, @$.first_line); }
 ;
@@ -119,7 +122,7 @@ StructSpecifier : STRUCT OptTag LC DefList RC
 OptTag : ID 
         { $$ = newOptTag($1, @$.first_line); }
     |  
-        { $$ = newOptTag(-1, @$.first_line); }
+        { $$ = newOptTag(NULL, @$.first_line); }
 ;
 
 Tag : ID 

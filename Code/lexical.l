@@ -50,16 +50,14 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 {ws} { /* do nothing */ }
 
 {integer} {
-    int num = atoi(yytext);
-    int index = install_int(num);
-    yylval.type_int = index;
+    int int_value = atoi(yytext);
+    yylval.type_int = int_value;
     return INT;
 }
 
 {oct} {
-    int num = (int)strtol(yytext, NULL, 8);
-    int index = install_int(num);
-    yylval.type_int = index;
+    int int_value = (int)strtol(yytext, NULL, 8);
+    yylval.type_int = int_value;
     return INT;
 }
 
@@ -72,9 +70,8 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 }
 
 {hex} {
-    int num = (int)strtol(yytext, NULL, 16);
-    int index = install_int(num);
-    yylval.type_int = index;
+    int int_value = (int)strtol(yytext, NULL, 16);
+    yylval.type_int = int_value;
     return INT;
 }
 
@@ -87,9 +84,8 @@ inv_id {digit}({letter_}|{digit})*{letter_}({letter_}|{digit})*
 }
 
 {float} {
-    float num = atof(yytext);
-    int index = install_float(num);
-    yylval.type_int = index;
+    float float_value = atof(yytext);
+    yylval.type_float = float_value;
     return FLOAT;
 }
 
@@ -110,8 +106,7 @@ else { return ELSE; }
 while { return WHILE; }
 
 {id} { 
-    int index = install_id(yytext);
-    yylval.type_int = index;
+    yylval.type_id = strdup_(yytext);
     return ID;
 }
 
