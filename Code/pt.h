@@ -1,3 +1,8 @@
+#ifndef __PT_H__
+#define __PT_H__
+
+#include "common.h"
+
 enum ExpKind {
     EXP_T_INFIX = 2100,
     EXP_T_PAREN,
@@ -147,6 +152,7 @@ typedef struct Dec_ {
     int lineno;
     struct VarDec_ *varDec;
     struct Exp_ *exp; // can be NULL
+    Type *attr_type;
 } Dec;
 
 typedef struct DecList_ {
@@ -154,6 +160,7 @@ typedef struct DecList_ {
     int lineno;
     struct Dec_ *dec;
     struct DecList_ *decList; // may be NULL
+    Type *attr_type;
 } DecList;
 
 typedef struct Def_ {
@@ -255,6 +262,7 @@ typedef struct VarDec_ {
             int int_value;
         } dim;
     };
+    Type *attr_type;
 } VarDec;
 
 typedef struct Tag_ {
@@ -294,6 +302,7 @@ typedef struct Specifier_ {
         int type_index;
         struct StructSpecifier_ *structSpecifier;
     };
+    Type *attr_type;
 } Specifier;
 
 typedef struct ExtDecList_ {
@@ -380,3 +389,5 @@ Exp *newExp_ID(char *id_text, int lineno);
 Exp *newExp_INT(int int_value, int lineno);
 Exp *newExp_FLOAT(float float_value, int lineno);
 Args *newArgs(void *arg0, void *arg1, int lineno);
+
+#endif

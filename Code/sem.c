@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "syntax.tab.h"
 #include "common.h"
 #include "pt.h"
-#include "syntax.tab.h"
+#include "st.h"
 
 int nr_semantics_error = 0;
 
@@ -18,6 +19,20 @@ static int indent = -1;
 
 #define print(...) { \
 }
+
+#define error(error_id, node, ...) { \
+    int lineno = ((int *)node)[1]; \
+    printf("Error type %d at Line %d: ", error_id, lineno); \
+    printf(__VA_ARGS__); \
+    printf("\n"); \
+}
+
+static void check_redefine_variable(void *node, char *name) {
+    if (contains_variable(name)) {
+        error(3, node, "Redefined variable '%s'", name);
+    }
+}
+
 
 static void print_id(char *id_text) {
     indent++;
@@ -144,7 +159,7 @@ static void visitSpecifier(void *node) {
     Specifier *specifier = (Specifier *)node;
     switch (specifier->specifier_kind) {
     case SPECIFIER_T_BASIC:
-        print_type(specifier->type_index); 
+        specifier->attr_type = newBasicType(specifier->type_index);
         break;
     case SPECIFIER_T_STRUCT:
         visit(specifier->structSpecifier);
@@ -194,7 +209,8 @@ static void visitVarDec(void *node) {
     VarDec *varDec = (VarDec *)node;
     switch (varDec->vardec_kind) {
     case VAR_DEC_T_ID:
-        print_id(varDec->id_text);
+        check_redefine_variable(varDec, varDec->id_text);
+        install_variable(varDec->id_text, varDec->attr_type);
         break;
     case VAR_DEC_T_DIM:
         visit(varDec->dim.varDec);
@@ -312,6 +328,7 @@ static void visitDef(void *node) {
     print_this(node);
     Def *def = (Def *)node;
     visit(def->specifier);
+    def->decList->attr_type = def->specifier->attr_type;
     visit(def->decList);
     print_terminal(SEMI);
 }
@@ -319,9 +336,10 @@ static void visitDef(void *node) {
 static void visitDecList(void *node) {
     print_this(node);
     DecList *decList = (DecList *)node;
+    decList->dec->attr_type = decList->attr_type;
     visit(decList->dec);
     if (decList->decList != NULL) {
-        print_terminal(COMMA);
+        decList->decList->attr_type = decList->attr_type;
         visit(decList->decList);
     }
 }
@@ -329,6 +347,7 @@ static void visitDecList(void *node) {
 static void visitDec(void *node) {
     print_this(node);
     Dec *dec = (Dec *)node;
+    dec->varDec->attr_type = dec->attr_type;
     visit(dec->varDec);
     if (dec->exp != NULL) {
         print_terminal(ASSIGNOP);

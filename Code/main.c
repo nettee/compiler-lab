@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#define PRINT_AST
-//#define SEMANTICS_ANALYSIS
+//#define PRINT_AST
+#define SEMANTICS_ANALYSIS
 
 extern int nr_lexical_error;
 extern int nr_syntax_error;
@@ -12,6 +12,7 @@ int yyparse(void);
 
 void print_ast();
 void semantics_analysis();
+void print_symbol_table();
 
 int main(int argc, char **argv)
 {
@@ -36,10 +37,12 @@ int main(int argc, char **argv)
 
 #ifdef SEMANTICS_ANALYSIS
     semantics_analysis();
+    print_symbol_table();
 
     if (nr_semantics_error > 0) {
         return 2;
     }
+
 #endif
 
 
