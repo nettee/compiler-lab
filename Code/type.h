@@ -21,6 +21,11 @@ typedef struct Type_ {
     };
 } Type;
 
+typedef struct TypeNode_ {
+    struct TypeNode_ *next;
+    Type *type;
+} TypeNode;
+
 bool isBasicIntType(Type *t);
 bool isBasicType(Type *t);
 bool isEqvType(Type *t1, Type *t2);
@@ -30,7 +35,7 @@ Type *newBasicFloat();
 Type *newBasicType(int type_index);
 Type *newArrayType(Type *elementType, int length);
 
-void printType(Type *type);
+char *typeListRepr(TypeNode *typeList);
 char *typeRepr(Type *type);
 
 #endif

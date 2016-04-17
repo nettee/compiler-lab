@@ -19,6 +19,17 @@ bool isEqvType(Type *t1, Type *t2) {
     return false;
 }
 
+bool isEqvTypeList(TypeNode *t1, TypeNode *t2) {
+    while (t1 != NULL && t2 != NULL) {
+        if (!isEqvType(t1->type, t2->type)) {
+            return false;
+        }
+        t1 = t1->next;
+        t2 = t2->next;
+    }
+    return t1 == NULL && t2 == NULL;
+}
+
 Type *newBasicInt() {
      Type *p = newBasicType(T_INT);
      return p;
@@ -45,37 +56,6 @@ Type *newArrayType(Type *elementType, int length) {
     return type;
 }
 
-static void printBasicType(int type_index) {
-    switch (type_index) {
-    case T_INT:
-        printf("int");
-        break;
-    case T_FLOAT:
-        printf("float");
-        break;
-    default:
-        printf("\nFatal: Unknown specifier->type_value\n");
-    }
-}
-
-void printType(Type *type) {
-    printf("Type{");
-    switch (type->kind) {
-    case BASIC:
-        printBasicType(type->basic);
-        break;
-    case ARRAY:
-        printf("array");
-        break;
-    case STRUCTURE:
-        printf("structure");
-        break;
-    default:
-        printf("\nFatal: unknown type kind\n");
-    }
-    printf("}");
-}
-
 char *typeRepr(Type *type) {
     char *str = malloc(100);
     memset(str, 0, 100);
@@ -95,6 +75,21 @@ char *typeRepr(Type *type) {
     } else {
         fatal("Unknown type kind");
     }
+    return str;
+}
+
+char *typeListRepr(TypeNode *typeList) {
+    char *str = malloc(100);
+    memset(str, 0, 100);
+    int off = 0;
+    off += sprintf(str + off, "(");
+    for (TypeNode *q = typeList; q != NULL; q = q->next) {
+        off += sprintf(str + off, "%s", typeRepr(q->type));
+        if (q->next != NULL) {
+            off += sprintf(str + off, ", ");
+        }
+    }
+    off += sprintf(str + off, ")");
     return str;
 }
 

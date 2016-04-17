@@ -97,6 +97,7 @@ typedef struct Args_ {
     int lineno;
     struct Exp_ *exp;
     struct Args_ *args; // may be NULL
+    TypeNode *attr_argTypeListTail;
 } Args;
 
 typedef struct Exp_ {

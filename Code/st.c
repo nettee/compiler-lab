@@ -97,14 +97,7 @@ void print_symbol_table() {
             printf(" (function) ");
             printf("%s", st[i].name);
             printf(" : ");
-            printf("(");
-            for (TypeNode *q = st[i].function.paramTypeList; q != NULL; q = q->next) {
-                printf(typeRepr(q->type));
-                if (q->next != NULL) {
-                    printf(", ");
-                }
-            }
-            printf(")");
+            printf("%s", typeListRepr(st[i].function.paramTypeList));
             printf(" -> %s", typeRepr(st[i].function.returnType));
         } else {
             fatal("unknown symbol kind");

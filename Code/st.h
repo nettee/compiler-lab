@@ -1,10 +1,7 @@
 #ifndef __ST_H__
 #define __ST_H__
 
-typedef struct TypeNode_ {
-    struct TypeNode_ *next;
-    Type *type;
-} TypeNode;
+#include "common.h"
 
 void install_variable(char *text, Type *type);
 void install_function(char *name, Type *returnType, TypeNode *paramTypeList);

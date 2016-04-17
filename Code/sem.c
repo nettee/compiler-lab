@@ -308,7 +308,6 @@ static void visitParamDec(void *node) {
     print_this(node);
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
-    printType(paramDec->specifier->attr_type);
     paramDec->varDec->attr_type = paramDec->specifier->attr_type;
     visit(paramDec->varDec);
     paramDec->attr_paramType = paramDec->specifier->attr_type;
@@ -486,6 +485,7 @@ static void visitExp(void *node) {
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
+        info("args = %s", typeListRepr(exp->call.args->attr_argTypeListTail));
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
@@ -524,10 +524,15 @@ static void visitArgs(void *node) {
     print_this(node);
     Args *args = (Args *)node;
     visit(args->exp);
+    TypeNode *argTypeListTail = NULL;
     if (args->args != NULL) {
-        print_terminal(COMMA);
         visit(args->args);
+        argTypeListTail = args->args->attr_argTypeListTail;
     }
+    TypeNode *typeNode = malloc(sizeof(TypeNode));
+    typeNode->next = argTypeListTail;
+    typeNode->type = args->exp->attr_type;
+    args->attr_argTypeListTail = typeNode;
 }
 
 static funcptr visitor_table[] = {
