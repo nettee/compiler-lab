@@ -33,9 +33,23 @@ static void check_undefine_variable(void *node, char *name) {
     }
 }
 
+static void check_function_name(void *node, char *name) {
+    if (contains_variable(name)) {
+        error(11, node, "'%s' is not a function", name);
+    } else if (!contains_function(name)) {
+        error(2, node, "Undefined function '%s'", name);
+    }
+}
+
 static void check_redefine_variable(void *node, char *name) {
     if (contains_variable(name)) {
         error(3, node, "Redefined variable '%s'", name);
+    }
+}
+
+static void check_redefine_function(void *node, char *name) {
+    if (contains_function(name)) {
+        error(4, node, "Redefined function '%s'", name);
     }
 }
 
@@ -60,6 +74,12 @@ static void check_infix_type(void *node, Type *t1, Type *t2) {
 static void check_logic_type(void *node, Type *t) {
     if (!isBasicIntType(t)) {
         error(7, node, "Type 'int' expected for logic expression");
+    }
+}
+
+static void check_array_index_type(void *node, Type *t) {
+    if (!isBasicIntType(t)) {
+        error(12, node, "Type 'int' expected for array index");
     }
 }
 
@@ -153,32 +173,37 @@ static void visitExtDefList(void *node) {
 static void visitExtDef(void *node) {
     print_this(node);
     ExtDef *extDef = (ExtDef *)node;
-    switch (extDef->extdef_kind) {
-    case EXT_DEF_T_VAR:
+
+    if (extDef->extdef_kind == EXT_DEF_T_VAR) {
         visit(extDef->var.specifier);
+        extDef->var.extDecList->attr_type 
+                = extDef->var.specifier->attr_type;
         visit(extDef->var.extDecList);
-        print_terminal(SEMI);
-        break;
-    case EXT_DEF_T_STRUCT:
+
+    } else if (extDef->extdef_kind == EXT_DEF_T_STRUCT) {
         visit(extDef->struct_.specifier);
         print_terminal(SEMI);
-        break;
-    case EXT_DEF_T_FUN:
+
+    } else if (extDef->extdef_kind == EXT_DEF_T_FUN) {
         visit(extDef->fun.specifier);
+        extDef->fun.funDec->attr_return_type
+                = extDef->fun.specifier->attr_type;
         visit(extDef->fun.funDec);
         visit(extDef->fun.compSt);
-        break;
-    default:
-        printf("fatal: unknown extdef_type\n");
+
+    } else {
+        fatal("unknown extdef_type");
     }
 }
 
 static void visitExtDecList(void *node) {
     print_this(node);
     ExtDecList *extDecList = (ExtDecList *)node;
+    extDecList->varDec->attr_type = extDecList->attr_type;
     visit(extDecList->varDec);
     if (extDecList->extDecList != NULL) {
-        print_terminal(COMMA);
+        extDecList->extDecList->attr_type 
+                = extDecList->attr_type;
         visit(extDecList->extDecList);
     }
 }
@@ -236,19 +261,16 @@ static void visitTag(void *node) {
 static void visitVarDec(void *node) {
     print_this(node);
     VarDec *varDec = (VarDec *)node;
-    switch (varDec->vardec_kind) {
-    case VAR_DEC_T_ID:
+    if (varDec->vardec_kind == VAR_DEC_T_ID) {
         check_redefine_variable(varDec, varDec->id_text);
         install_variable(varDec->id_text, varDec->attr_type);
-        break;
-    case VAR_DEC_T_DIM:
+    } else if (varDec->vardec_kind == VAR_DEC_T_DIM) {
         visit(varDec->dim.varDec);
         print_terminal(LB);
         print_int(varDec->dim.int_value);
         print_terminal(RB);
-        break;
-    default:
-        printf("fatal: unknown vardec_type\n");
+    } else {
+        fatal("unknown vardec_type");
     }
 }
 
@@ -260,24 +282,36 @@ static void visitFunDec(void *node) {
     if (funDec->varList != NULL) {
         visit(funDec->varList);
     }
-    print_terminal(RP);
+    check_redefine_function(funDec, funDec->id_text);
+
+    install_function(funDec->id_text,
+            funDec->attr_return_type,
+            (funDec->varList == NULL) ? NULL : funDec->varList->attr_paramTypeListTail);
 }
 
 static void visitVarList(void *node) {
     print_this(node);
     VarList *varList = (VarList *)node;
     visit(varList->paramDec);
+    TypeNode *paramTypeListTail = NULL;
     if (varList->varList != NULL) {
-        print_terminal(COMMA);
         visit(varList->varList);
+        paramTypeListTail = varList->varList->attr_paramTypeListTail;
     }
+    TypeNode *typeNode = malloc(sizeof(TypeNode));
+    typeNode->next = paramTypeListTail;
+    typeNode->type = varList->paramDec->attr_paramType;
+    varList->attr_paramTypeListTail = typeNode;
 }
 
 static void visitParamDec(void *node) {
     print_this(node);
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
+    printType(paramDec->specifier->attr_type);
+    paramDec->varDec->attr_type = paramDec->specifier->attr_type;
     visit(paramDec->varDec);
+    paramDec->attr_paramType = paramDec->specifier->attr_type;
 }
 
 static void visitCompSt(void *node) {
@@ -448,19 +482,18 @@ static void visitExp(void *node) {
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_CALL) {
-        print_id(exp->call.id_text);
-        print_terminal(LP);
+        check_function_name(exp, exp->call.id_text); 
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
-        print_terminal(RP);
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
         visit(exp->subscript.array);
-        print_terminal(LB);
         visit(exp->subscript.index);
-        print_terminal(RB);
+        check_array_index_type(exp,
+                exp->subscript.index->attr_type);
+        exp->attr_type = NULL; // TODO
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_DOT) {
@@ -472,17 +505,14 @@ static void visitExp(void *node) {
     } else if (exp->exp_kind == EXP_T_ID) {
         check_undefine_variable(exp, exp->id_text);
         exp->attr_type = retrieve_variable_type(exp->id_text);
-        debug("exp->attr_type = %p", exp->attr_type);
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_INT) {
         exp->attr_type = newBasicInt();
-        debug("exp->attr_type = %p", exp->attr_type);
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_FLOAT) {
         exp->attr_type = newBasicFloat();
-        debug("exp->attr_type = %p", exp->attr_type);
         exp->attr_lvalue = false;
 
     } else {

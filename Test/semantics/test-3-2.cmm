@@ -1,0 +1,9 @@
+int x;
+int y;
+int z;
+int x, y;
+
+int main() 
+{
+    return 0;
+}

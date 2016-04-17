@@ -31,5 +31,6 @@ Type *newBasicType(int type_index);
 Type *newArrayType(Type *elementType, int length);
 
 void printType(Type *type);
+char *typeRepr(Type *type);
 
 #endif

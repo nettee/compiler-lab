@@ -15,7 +15,7 @@ typedef struct {
         } variable;
         struct {
             Type *returnType;
-            void *paramList;
+            TypeNode *paramTypeList;
         } function;
     };
 } Symbol;
@@ -24,11 +24,26 @@ static Symbol st[NR_ST];
 static int top = 1; // reserve st[0]
 
 void install_variable(char *text, Type *type) {
-    printf("install variable '%s'\n", text);
+    if (contains_variable(text)) {
+        return;
+    }
     st[top].kind = VARIABLE;
     st[top].name = text;
     st[top].variable.type = type;
     top++;
+    info("install variable '%s'", text);
+}
+
+void install_function(char *name, Type *returnType, TypeNode *paramTypeList) {
+    if (contains_function(name)) {
+        return;
+    }
+    st[top].kind = FUNCTION;
+    st[top].name = name;
+    st[top].function.returnType = returnType;
+    st[top].function.paramTypeList = paramTypeList;
+    top++;
+    info("install function '%s'", name);
 }
 
 int contains_symbol(char *name) {
@@ -73,17 +88,27 @@ Type *retrieve_variable_type(char *name) {
 void print_symbol_table() {
     for (int i = 1; i < top; i++) {
         printf("[%d]", i);
-        switch (st[i].kind) {
-        case VARIABLE:
+        if (st[i].kind == VARIABLE) {
             printf(" (variable) ");
-            break;
-        case FUNCTION:
+            printf("%s", st[i].name);
+            printf(" : ");
+            printf("%s", typeRepr(st[i].variable.type));
+        } else if (st[i].kind == FUNCTION) {
             printf(" (function) ");
-            break;
-        default:
-            printf("\nFatal: unknown symbol kind\n");
+            printf("%s", st[i].name);
+            printf(" : ");
+            printf("(");
+            for (TypeNode *q = st[i].function.paramTypeList; q != NULL; q = q->next) {
+                printf(typeRepr(q->type));
+                if (q->next != NULL) {
+                    printf(", ");
+                }
+            }
+            printf(")");
+            printf(" -> %s", typeRepr(st[i].function.returnType));
+        } else {
+            fatal("unknown symbol kind");
         }
-        printf("%s", st[i].name);
         printf("\n");
     }
 }

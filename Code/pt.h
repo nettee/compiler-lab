@@ -2,6 +2,7 @@
 #define __PT_H__
 
 #include "common.h"
+#include "st.h"
 
 enum ExpKind {
     EXP_T_INFIX = 2100,
@@ -236,6 +237,7 @@ typedef struct ParamDec_ {
     int lineno;
     struct Specifier_ *specifier;
     struct VarDec_ *varDec;
+    Type *attr_paramType;
 } ParamDec;
 
 typedef struct VarList_ {
@@ -243,6 +245,7 @@ typedef struct VarList_ {
     int lineno;
     struct ParamDec_ *paramDec;
     struct VarList_ *varList; // may be NULL
+    TypeNode *attr_paramTypeListTail;
 } VarList;
 
 typedef struct FunDec_ {
@@ -250,6 +253,7 @@ typedef struct FunDec_ {
     int lineno;
     char *id_text;
     struct VarList_ *varList;
+    Type *attr_return_type;
 } FunDec;
 
 typedef struct VarDec_ {
@@ -313,6 +317,7 @@ typedef struct ExtDecList_ {
     int lineno;
     struct VarDec_ *varDec;
     struct ExtDecList_ *extDecList; // may be NULL
+    Type *attr_type;
 } ExtDecList;
 
 typedef struct ExtDef_ {

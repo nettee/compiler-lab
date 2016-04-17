@@ -21,7 +21,6 @@ bool isEqvType(Type *t1, Type *t2) {
 
 Type *newBasicInt() {
      Type *p = newBasicType(T_INT);
-     debug("p = %p", p);
      return p;
 }
 
@@ -74,6 +73,28 @@ void printType(Type *type) {
     default:
         printf("\nFatal: unknown type kind\n");
     }
-    printf("}\n");
+    printf("}");
+}
+
+char *typeRepr(Type *type) {
+    char *str = malloc(100);
+    memset(str, 0, 100);
+    int off = 0;
+    if (type->kind == BASIC) {
+        if (type->basic == T_INT) {
+            off += sprintf(str + off, "int");
+        } else if (type->basic == T_FLOAT) {
+            off += sprintf(str + off, "float");
+        } else {
+            fatal("unknown type_index");
+        }
+    } else if (type->kind == ARRAY) {
+        off += sprintf(str + off, "array");
+    } else if (type->kind == STRUCTURE) {
+        off += sprintf(str + off, "structure");
+    } else {
+        fatal("Unknown type kind");
+    }
+    return str;
 }
 
