@@ -15,6 +15,10 @@ typedef struct Type_ {
     };
 } Type;
 
+int isEqvType(Type *t1, Type *t2);
+
+Type *newBasicInt();
+Type *newBasicFloat();
 Type *newBasicType(int type_index);
 Type *newArrayType(Type *elementType, int length);
 

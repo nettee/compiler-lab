@@ -145,6 +145,9 @@ typedef struct Exp_ {
         int int_value; // for Exp : INT
         int float_value; // for Exp : FLOAT
     };
+
+    Type *attr_type;
+    bool attr_lvalue;
 } Exp;
 
 typedef struct Dec_ {

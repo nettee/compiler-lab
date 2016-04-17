@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "type.h"
+#include "common.h"
 #include "st.h"
 
 #define NR_ST 40
@@ -58,6 +58,16 @@ int contains_function(char *name) {
         }
     }
     return 0;
+}
+
+Type *retrieve_variable_type(char *name) {
+    for (int i = 1; i < top; i++) {
+        if (st[i].kind == VARIABLE
+                && strcmp(st[i].name, name) == 0) {
+            return st[i].variable.type;
+        }
+    }
+    fatal("cannot retrive variable '%s'", name);
 }
 
 void print_symbol_table() {

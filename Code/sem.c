@@ -39,6 +39,17 @@ static void check_redefine_variable(void *node, char *name) {
     }
 }
 
+static void check_assignment_type(void *node, Type *t1, Type *t2) {
+    if (!isEqvType(t1, t2)) {
+        error(5, node, "Type mismatched for assignment");
+    }
+}
+
+static void check_assignment_lvalue(void *node, bool is_lvalue) {
+    if (!is_lvalue) {
+        error(6, node, "The left-hand side of assignment must be lvalue");
+    }
+}
 
 static void print_id(char *id_text) {
     indent++;
@@ -356,16 +367,19 @@ static void visitDec(void *node) {
     dec->varDec->attr_type = dec->attr_type;
     visit(dec->varDec);
     if (dec->exp != NULL) {
-        print_terminal(ASSIGNOP);
         visit(dec->exp);
+        check_assignment_type(dec,
+                dec->varDec->attr_type,
+                dec->exp->attr_type);
     }
 }
 
 static void visitExp(void *node) {
     print_this(node);
     Exp *exp = (Exp *)node;
-    switch (exp->exp_kind) {
-    case EXP_T_INFIX:
+
+    if (exp->exp_kind == EXP_T_INFIX) {
+
         visit(exp->infix.exp_left);
         if (exp->infix.op == RELOP) {
             print_relop(exp->infix.op_yylval);
@@ -373,46 +387,67 @@ static void visitExp(void *node) {
             print_terminal(exp->infix.op);
         }
         visit(exp->infix.exp_right);
-        break;
-    case EXP_T_PAREN:
+
+        if (exp->infix.op == ASSIGNOP) {
+            check_assignment_type(exp,
+                    exp->infix.exp_left->attr_type,
+                    exp->infix.exp_right->attr_type);
+            check_assignment_lvalue(exp,
+                    exp->infix.exp_left->attr_lvalue);
+        }
+        exp->attr_lvalue = false;
+
+    } else if (exp->exp_kind == EXP_T_PAREN) {
         print_terminal(LP);
         visit(exp->paren.exp);
         print_terminal(RP);
-        break;
-    case EXP_T_UNARY:
+        exp->attr_lvalue = false;
+
+    } else if (exp->exp_kind == EXP_T_UNARY) {
         print_terminal(exp->unary.op);
         visit(exp->unary.exp);
-        break;
-    case EXP_T_CALL:
+        exp->attr_lvalue = false;
+
+    } else if (exp->exp_kind == EXP_T_CALL) {
         print_id(exp->call.id_text);
         print_terminal(LP);
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
         print_terminal(RP);
-        break;
-    case EXP_T_SUBSCRIPT:
+        exp->attr_lvalue = false;
+
+    } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
         visit(exp->subscript.array);
         print_terminal(LB);
         visit(exp->subscript.index);
         print_terminal(RB);
-        break;
-    case EXP_T_DOT:
+        exp->attr_lvalue = true;
+
+    } else if (exp->exp_kind == EXP_T_DOT) {
         visit(exp->dot.exp);
         print_terminal(DOT);
         print_id(exp->dot.id_text);
-        break;
-    case EXP_T_ID:
+        exp->attr_lvalue = true;
+
+    } else if (exp->exp_kind == EXP_T_ID) {
         check_undefine_variable(exp, exp->id_text);
-        break;
-    case EXP_T_INT:
-        print_int(exp->int_value);
-        break;
-    case EXP_T_FLOAT:
-        print_float(exp->float_value);
-        break;
-    default:
-        printf("fatal: unknown exp_type\n");
+        exp->attr_type = retrieve_variable_type(exp->id_text);
+        debug("exp->attr_type = %p", exp->attr_type);
+        exp->attr_lvalue = true;
+
+    } else if (exp->exp_kind == EXP_T_INT) {
+        exp->attr_type = newBasicInt();
+        debug("exp->attr_type = %p", exp->attr_type);
+        exp->attr_lvalue = false;
+
+    } else if (exp->exp_kind == EXP_T_FLOAT) {
+        exp->attr_type = newBasicFloat();
+        debug("exp->attr_type = %p", exp->attr_type);
+        exp->attr_lvalue = false;
+
+    } else {
+        fatal("unknown exp_type");
     }
 }
 

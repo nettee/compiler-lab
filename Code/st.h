@@ -6,4 +6,6 @@ int contains_symbol(char *name);
 int contains_variable(char *name);
 int contains_function(char *name);
 
+Type *retrieve_variable_type(char *name);
+
 #endif

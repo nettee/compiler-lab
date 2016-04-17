@@ -1,7 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "type.h"
+#include "common.h"
+
+bool isEqvType(Type *t1, Type *t2) {
+    if (t1->kind == BASIC && t2->kind == BASIC) {
+        return t1->basic == t2->basic;
+    }
+    return false;
+}
+
+Type *newBasicInt() {
+     Type *p = newBasicType(T_INT);
+     debug("p = %p", p);
+     return p;
+}
+
+Type *newBasicFloat() {
+    return newBasicType(T_FLOAT);
+}
 
 Type *newBasicType(int type_index) {
     Type *type = malloc(sizeof(Type));
