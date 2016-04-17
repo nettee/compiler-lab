@@ -1,6 +1,12 @@
 #ifndef __TYPE_H__
 #define __TYPE_H__
 
+#include "common.h"
+
+typedef int bool;
+#define true 1
+#define false 0
+
 enum { T_INT, T_FLOAT };
 
 typedef struct Type_ {
@@ -15,7 +21,9 @@ typedef struct Type_ {
     };
 } Type;
 
-int isEqvType(Type *t1, Type *t2);
+bool isBasicIntType(Type *t);
+bool isBasicType(Type *t);
+bool isEqvType(Type *t1, Type *t2);
 
 Type *newBasicInt();
 Type *newBasicFloat();

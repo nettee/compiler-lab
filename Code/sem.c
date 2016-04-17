@@ -51,6 +51,18 @@ static void check_assignment_lvalue(void *node, bool is_lvalue) {
     }
 }
 
+static void check_infix_type(void *node, Type *t1, Type *t2) {
+    if (!isEqvType(t1, t2)) {
+        error(7, node, "Type mismatched for infix expression operands");
+    }
+}
+
+static void check_logic_type(void *node, Type *t) {
+    if (!isBasicIntType(t)) {
+        error(7, node, "Type 'int' expected for logic expression");
+    }
+}
+
 static void print_id(char *id_text) {
     indent++;
     print("ID: %s", id_text);
@@ -388,12 +400,39 @@ static void visitExp(void *node) {
         }
         visit(exp->infix.exp_right);
 
-        if (exp->infix.op == ASSIGNOP) {
+        if (exp->infix.op == PLUS
+                || exp->infix.op == MINUS
+                || exp->infix.op == STAR
+                || exp->infix.op == DIV) {
+            check_infix_type(exp,
+                    exp->infix.exp_left->attr_type,
+                    exp->infix.exp_right->attr_type);
+            exp->attr_type = exp->infix.exp_left->attr_type;
+
+        } else if (exp->infix.op == RELOP) {
+            check_infix_type(exp,
+                    exp->infix.exp_left->attr_type,
+                    exp->infix.exp_right->attr_type);
+            exp->attr_type = exp->infix.exp_left->attr_type;
+
+        } else if (exp->infix.op == AND
+                || exp->infix.op == OR) {
+            check_logic_type(exp,
+                    exp->infix.exp_left->attr_type);
+            check_logic_type(exp,
+                    exp->infix.exp_right->attr_type);
+            exp->attr_type = newBasicInt();
+
+        } else if (exp->infix.op == ASSIGNOP) {
             check_assignment_type(exp,
                     exp->infix.exp_left->attr_type,
                     exp->infix.exp_right->attr_type);
             check_assignment_lvalue(exp,
                     exp->infix.exp_left->attr_lvalue);
+            exp->attr_type = exp->infix.exp_left->attr_type;
+
+        } else {
+            fatal("unknown exp->infix.op");
         }
         exp->attr_lvalue = false;
 

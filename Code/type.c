@@ -2,6 +2,15 @@
 #include <stdlib.h>
 
 #include "common.h"
+#include "type.h"
+
+bool isBasicIntType(Type *t) {
+    return t->kind == BASIC && t->basic == T_INT;
+}
+
+bool isBasicType(Type *t) {
+    return t->kind == BASIC;
+}
 
 bool isEqvType(Type *t1, Type *t2) {
     if (t1->kind == BASIC && t2->kind == BASIC) {
