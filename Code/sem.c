@@ -27,6 +27,12 @@ static int indent = -1;
     printf("\n"); \
 }
 
+static void check_undefine_variable(void *node, char *name) {
+    if (!contains_variable(name)) {
+        error(1, node, "Undefined variable '%s'", name);
+    }
+}
+
 static void check_redefine_variable(void *node, char *name) {
     if (contains_variable(name)) {
         error(3, node, "Redefined variable '%s'", name);
@@ -397,7 +403,7 @@ static void visitExp(void *node) {
         print_id(exp->dot.id_text);
         break;
     case EXP_T_ID:
-        print_id(exp->id_text);
+        check_undefine_variable(exp, exp->id_text);
         break;
     case EXP_T_INT:
         print_int(exp->int_value);
