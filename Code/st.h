@@ -10,5 +10,7 @@ int contains_variable(char *name);
 int contains_function(char *name);
 
 Type *retrieve_variable_type(char *name);
+Type *retrieve_function_returnType(char *name);
+TypeNode *retrieve_function_paramTypeList(char *name);
 
 #endif

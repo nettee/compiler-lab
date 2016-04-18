@@ -217,6 +217,7 @@ typedef struct Stmt_ {
             struct Stmt_ *stmt;
         } while_;
     };
+    Type *attr_func_returnType;
 } Stmt;
 
 typedef struct StmtList_ {
@@ -224,6 +225,7 @@ typedef struct StmtList_ {
     int lineno;
     struct Stmt_ *stmt;
     struct StmtList_ *stmtList;
+    Type *attr_func_returnType;
 } StmtList;
 
 typedef struct CompSt_ {
@@ -231,6 +233,7 @@ typedef struct CompSt_ {
     int lineno;
     DefList *defList;
     StmtList *stmtList;
+    Type *attr_func_returnType;
 } CompSt;
 
 typedef struct ParamDec_ {
@@ -254,7 +257,7 @@ typedef struct FunDec_ {
     int lineno;
     char *id_text;
     struct VarList_ *varList;
-    Type *attr_return_type;
+    Type *attr_returnType;
 } FunDec;
 
 typedef struct VarDec_ {

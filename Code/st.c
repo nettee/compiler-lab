@@ -82,7 +82,27 @@ Type *retrieve_variable_type(char *name) {
             return st[i].variable.type;
         }
     }
-    fatal("cannot retrive variable '%s'", name);
+    fatal("cannot retrieve variable '%s'", name);
+}
+
+Type *retrieve_function_returnType(char *name) {
+    for (int i = 1; i < top; i++) {
+        if (st[i].kind == FUNCTION
+                && strcmp(st[i].name, name) == 0) {
+            return st[i].function.returnType;
+        }
+    }
+    fatal("cannot retrieve function '%s'", name);
+}
+
+TypeNode *retrieve_function_paramTypeList(char *name) {
+    for (int i = 1; i < top; i++) {
+        if (st[i].kind == FUNCTION
+                && strcmp(st[i].name, name) == 0) {
+            return st[i].function.paramTypeList;
+        }
+    }
+    fatal("cannot retrieve function '%s'", name);
 }
 
 void print_symbol_table() {

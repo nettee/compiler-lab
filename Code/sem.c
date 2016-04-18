@@ -77,6 +77,20 @@ static void check_logic_type(void *node, Type *t) {
     }
 }
 
+static void check_function_return(void *node,
+        Type *returnType, Type *expType) {
+    if (!isEqvType(returnType, expType)) {
+        error(8, node, "Type mismatched for return");
+    }
+}
+
+static void check_function_call_typeList(void *node,
+        TypeNode *paramTypeList, TypeNode *argTypeList) {
+    if (!isEqvTypeList(paramTypeList, argTypeList)) {
+        error(9, node, "Function '%s' is not applicable for arguments '%s'", typeListRepr(paramTypeList), typeListRepr(argTypeList));
+    }
+}
+
 static void check_array_index_type(void *node, Type *t) {
     if (!isBasicIntType(t)) {
         error(12, node, "Type 'int' expected for array index");
@@ -186,11 +200,12 @@ static void visitExtDef(void *node) {
 
     } else if (extDef->extdef_kind == EXT_DEF_T_FUN) {
         visit(extDef->fun.specifier);
-        extDef->fun.funDec->attr_return_type
+        extDef->fun.funDec->attr_returnType
                 = extDef->fun.specifier->attr_type;
         visit(extDef->fun.funDec);
+        extDef->fun.compSt->attr_func_returnType
+                = extDef->fun.funDec->attr_returnType;
         visit(extDef->fun.compSt);
-
     } else {
         fatal("unknown extdef_type");
     }
@@ -277,15 +292,13 @@ static void visitVarDec(void *node) {
 static void visitFunDec(void *node) {
     print_this(node);
     FunDec *funDec = (FunDec *)node;
-    print_id(funDec->id_text);
-    print_terminal(LP);
     if (funDec->varList != NULL) {
         visit(funDec->varList);
     }
     check_redefine_function(funDec, funDec->id_text);
 
     install_function(funDec->id_text,
-            funDec->attr_return_type,
+            funDec->attr_returnType,
             (funDec->varList == NULL) ? NULL : funDec->varList->attr_paramTypeListTail);
 }
 
@@ -316,18 +329,20 @@ static void visitParamDec(void *node) {
 static void visitCompSt(void *node) {
     print_this(node);
     CompSt *compSt = (CompSt *)node;
-    print_terminal(LC);
     visit(compSt->defList);
+    compSt->stmtList->attr_func_returnType = compSt->attr_func_returnType;
     visit(compSt->stmtList);
-    print_terminal(RC);
 }
 
 static void visitStmtList(void *node) {
     /* may produce epsilon */
     StmtList *stmtList = (StmtList *)node;
     if (stmtList->stmt != NULL) {
-        print_this(node);
+        stmtList->stmt->attr_func_returnType 
+                = stmtList->attr_func_returnType;
         visit(stmtList->stmt);
+        stmtList->stmtList->attr_func_returnType 
+                = stmtList->attr_func_returnType;
         visit(stmtList->stmtList);
     }
 }
@@ -335,27 +350,27 @@ static void visitStmtList(void *node) {
 static void visitStmt(void *node) {
     print_this(node);
     Stmt *stmt = (Stmt *)node;
-    switch (stmt->stmt_kind) {
-    case STMT_T_EXP:
+    if (stmt->stmt_kind == STMT_T_EXP) {
         visit(stmt->exp.exp);
         print_terminal(SEMI);
-        break;
-    case STMT_T_COMP_ST:
+
+    } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
         visit(stmt->compst.compSt);
-        break;
-    case STMT_T_RETURN:
-        print_terminal(RETURN);
+
+    } else if (stmt->stmt_kind == STMT_T_RETURN) {
         visit(stmt->return_.exp);
-        print_terminal(SEMI);
-        break;
-    case STMT_T_IF:
+        check_function_return(stmt,
+                stmt->attr_func_returnType,
+                stmt->return_.exp->attr_type);
+
+    } else if (stmt->stmt_kind == STMT_T_IF) {
         print_terminal(IF);
         print_terminal(LP);
         visit(stmt->if_.exp);
         print_terminal(RP);
         visit(stmt->if_.then_stmt);
-        break;
-    case STMT_T_IF_ELSE:
+
+    } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
         print_terminal(IF);
         print_terminal(LP);
         visit(stmt->ifelse.exp);
@@ -363,16 +378,16 @@ static void visitStmt(void *node) {
         visit(stmt->ifelse.then_stmt);
         print_terminal(ELSE);
         visit(stmt->ifelse.else_stmt);
-        break;
-    case STMT_T_WHILE:
+
+    } else if (stmt->stmt_kind == STMT_T_WHILE) {
         print_terminal(WHILE);
         print_terminal(LP);
         visit(stmt->while_.exp);
         print_terminal(RP);
         visit(stmt->while_.stmt);
-        break;
-    default:
-        printf("fatal: unknown stmt_type\n");
+
+    } else {
+        fatal("unknown stmt_type");
     }
 }
 
@@ -485,7 +500,10 @@ static void visitExp(void *node) {
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
-        info("args = %s", typeListRepr(exp->call.args->attr_argTypeListTail));
+        check_function_call_typeList(exp,
+                retrieve_function_paramTypeList(exp->call.id_text),
+                exp->call.args->attr_argTypeListTail);
+        exp->attr_type = retrieve_function_returnType(exp->call.id_text);
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
