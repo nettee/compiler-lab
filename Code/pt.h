@@ -33,6 +33,7 @@ enum SpecifierKind {
 enum ExtDefKind {
     EXT_DEF_T_VAR = 2400,
     EXT_DEF_T_FUN,
+    EXT_DEF_T_FUN_DEC,
     EXT_DEF_T_STRUCT,
 };
 
@@ -335,6 +336,11 @@ typedef struct ExtDef_ {
             struct FunDec_ *funDec;
             struct CompSt_ *compSt;
         } fun;
+        // for ExtDef : Specifier FunDec SEMI
+        struct {
+            struct Specifier_ *specifier;
+            struct FunDec_ *funDec;
+        } fun_dec;
         // for ExtDef : Specifier ;
         struct {
             struct Specifier_ *specifier;
@@ -367,6 +373,7 @@ ExtDefList *newExtDefList(void *arg0, void *arg1, int lineno);
 ExtDef *newExtDef_var(void *arg0, void *arg1, int lineno);
 ExtDef *newExtDef_struct(void *arg0, int lineno);
 ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2, int lineno);
+ExtDef *newExtDef_fun_dec(void *arg0, void *arg1, int lineno);
 ExtDecList *newExtDecList(void *arg0, void *arg1, int lineno);
 Specifier *newSpecifier_basic(int type_index, int lineno);
 Specifier *newSpecifier_struct(void *arg0, int lineno);

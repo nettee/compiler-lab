@@ -97,6 +97,8 @@ ExtDef : Specifier ExtDecList SEMI
         { $$ = newExtDef_struct($1, @$.first_line); }
     | Specifier FunDec CompSt 
         { $$ = newExtDef_fun($1, $2, $3, @$.first_line); }
+    | Specifier FunDec SEMI
+        { $$ = newExtDef_fun_dec($1, $2, @$.first_line); }
     | Specifier error
         { psev("syntax error, near `%s'", yytext); }
 ;

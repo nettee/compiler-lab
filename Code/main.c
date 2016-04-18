@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-//#define PRINT_AST
-#define SEMANTICS_ANALYSIS
+#define PRINT_AST
+//#define SEMANTICS_ANALYSIS
 
 extern int nr_lexical_error;
 extern int nr_syntax_error;

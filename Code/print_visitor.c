@@ -189,6 +189,10 @@ static void visitExtDef(void *node) {
         visit(extDef->fun.funDec);
         visit(extDef->fun.compSt);
         break;
+    case EXT_DEF_T_FUN_DEC:
+        visit(extDef->fun.specifier);
+        visit(extDef->fun.funDec);
+        break;
     default:
         printf("fatal: unknown extdef_type\n");
     }

@@ -1,0 +1,10 @@
+int inc(int i);
+
+int inc(int i) {
+    return i;
+}
+
+int main() {
+    int x = 1;
+    inc(x);
+}

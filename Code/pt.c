@@ -73,6 +73,20 @@ ExtDef *newExtDef_fun(void *arg0, void *arg1, void *arg2, int lineno) {
     return extDef;
 }
 
+ExtDef *newExtDef_fun_dec(void *arg0, void *arg1, int lineno) {
+    Specifier *specifier = (Specifier *) arg0;
+    FunDec *funDec = (FunDec *) arg1;
+
+    ExtDef *extDef = malloc(sizeof(ExtDef));
+    extDef->kind = EXT_DEF;
+    extDef->lineno = lineno;
+    extDef->extdef_kind = EXT_DEF_T_FUN_DEC;
+    extDef->fun_dec.specifier = specifier;
+    extDef->fun_dec.funDec = funDec;
+
+    return extDef;
+}
+
 ExtDecList *newExtDecList(void *arg0, void *arg1, int lineno) {
     VarDec *varDec = (VarDec *) arg0;
     ExtDecList *extDecList0 = (ExtDecList *) arg1;
