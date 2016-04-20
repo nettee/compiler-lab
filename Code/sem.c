@@ -100,6 +100,12 @@ static void check_array_subscript_type(void *node, Type *baseType, Type *indexTy
     }
 }
 
+// ====== structure related check ========
+
+static void check_structure_reference(void *node, char *name) {
+
+}
+
 static void print_id(char *id_text) {
     indent++;
     print("ID: %s", id_text);
@@ -244,20 +250,22 @@ static void visitSpecifier(void *node) {
 static void visitStructSpecifier(void *node) {
     print_this(node);
     StructSpecifier *structSpecifier = (StructSpecifier *)node;
-    switch (structSpecifier->structspecifier_kind) {
-    case STRUCT_SPECIFIER_T_DEC:
-        print_terminal(STRUCT);
+    int kind = structSpecifier->structspecifier_kind;
+    if (kind == STRUCT_SPECIFIER_T_DEC) {
         visit(structSpecifier->dec.tag);
-        break;
-    case STRUCT_SPECIFIER_T_DEF:
+        check_structure_reference(structSpecifier, 
+                structSpecifier->dec.tag->attr_name);
+        structSpecifier->attr_type = newArbitType();
+        debug("structSpecifier->attr_type = '%s'",
+                typeRepr(structSpecifier->attr_type));
+    } else if (kind == STRUCT_SPECIFIER_T_DEF) {
         print_terminal(STRUCT);
         visit(structSpecifier->def.optTag);
         print_terminal(LC);
         visit(structSpecifier->def.defList);
         print_terminal(RC);
-        break;
-    default:
-        printf("fatal: unknown structspecifier_type\n");
+    } else {
+        fatal("unknown structspecifier_type");
     }
 }
 
@@ -273,7 +281,7 @@ static void visitOptTag(void *node) {
 static void visitTag(void *node) {
     print_this(node);
     Tag *tag = (Tag *)node;
-    print_id(tag->id_text);
+    tag->attr_name = tag->id_text;
 }
 
 static void visitVarDec(void *node) {

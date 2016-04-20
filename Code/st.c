@@ -20,34 +20,46 @@ typedef struct {
     };
 } Symbol;
 
-static Symbol st[NR_ST];
-static int top = 1; // reserve st[0]
+typedef struct {
+    Symbol st[NR_ST];
+    int top;
+} Env;
+
+static Env env0;
+static Env *cenv = &env0;
+
+void init_env() {
+    env0.top = 1;
+}
 
 void install_variable(char *text, Type *type) {
+    Symbol *st = cenv->st;
     if (contains_variable(text)) {
         return;
     }
-    st[top].kind = VARIABLE;
-    st[top].name = text;
-    st[top].variable.type = type;
-    top++;
+    st[cenv->top].kind = VARIABLE;
+    st[cenv->top].name = text;
+    st[cenv->top].variable.type = type;
+    cenv->top++;
     info("install variable '%s'", text);
 }
 
 void install_function(char *name, Type *returnType, TypeNode *paramTypeList) {
+    Symbol *st = cenv->st;
     if (contains_function(name)) {
         return;
     }
-    st[top].kind = FUNCTION;
-    st[top].name = name;
-    st[top].function.returnType = returnType;
-    st[top].function.paramTypeList = paramTypeList;
-    top++;
+    st[cenv->top].kind = FUNCTION;
+    st[cenv->top].name = name;
+    st[cenv->top].function.returnType = returnType;
+    st[cenv->top].function.paramTypeList = paramTypeList;
+    cenv->top++;
     info("install function '%s'", name);
 }
 
 int contains_symbol(char *name) {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         if (strcmp(st[i].name, name) == 0) {
             return 1;
         }
@@ -56,7 +68,8 @@ int contains_symbol(char *name) {
 }
 
 int contains_variable(char *name) {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == VARIABLE 
                 && strcmp(st[i].name, name) == 0) {
             return 1;
@@ -66,7 +79,8 @@ int contains_variable(char *name) {
 }
 
 int contains_function(char *name) {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == FUNCTION 
                 && strcmp(st[i].name, name) == 0) {
             return 1;
@@ -76,7 +90,8 @@ int contains_function(char *name) {
 }
 
 Type *retrieve_variable_type(char *name) {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == VARIABLE
                 && strcmp(st[i].name, name) == 0) {
             return st[i].variable.type;
@@ -86,7 +101,8 @@ Type *retrieve_variable_type(char *name) {
 }
 
 Type *retrieve_function_returnType(char *name) {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == FUNCTION
                 && strcmp(st[i].name, name) == 0) {
             return st[i].function.returnType;
@@ -96,7 +112,8 @@ Type *retrieve_function_returnType(char *name) {
 }
 
 TypeNode *retrieve_function_paramTypeList(char *name) {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == FUNCTION
                 && strcmp(st[i].name, name) == 0) {
             return st[i].function.paramTypeList;
@@ -106,7 +123,8 @@ TypeNode *retrieve_function_paramTypeList(char *name) {
 }
 
 void print_symbol_table() {
-    for (int i = 1; i < top; i++) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
         printf("[%d]", i);
         if (st[i].kind == VARIABLE) {
             printf(" (variable) ");

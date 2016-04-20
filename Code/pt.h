@@ -281,6 +281,7 @@ typedef struct Tag_ {
     int kind;
     int lineno;
     char *id_text;
+    char *attr_name;
 } Tag;
 
 typedef struct OptTag_ {
@@ -304,6 +305,7 @@ typedef struct StructSpecifier_ {
             struct DefList_ *defList;
         } def;
     };
+    Type *attr_type;
 } StructSpecifier;
 
 typedef struct Specifier_ {

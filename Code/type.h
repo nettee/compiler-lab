@@ -9,17 +9,29 @@ typedef int bool;
 
 enum { T_INT, T_FLOAT };
 
-typedef struct Type_ {
+typedef struct FieldNode_ FieldNode;
+typedef struct Type_ Type;
+
+struct Type_ {
     enum { BASIC, ARRAY, STRUCTURE, ARBIT } kind;
     union {
         int basic;
         struct {
-            struct Type_ *elementType;
+            Type *elementType;
             int length;
         } array;
-        int structure; // TODO
+        struct {
+            bool isAnony;
+            FieldNode *fields;
+        } structure;
     };
-} Type;
+};
+
+struct FieldNode_ {
+    FieldNode *next;
+    char *name;
+    Type *type;
+};
 
 typedef struct TypeNode_ {
     struct TypeNode_ *next;

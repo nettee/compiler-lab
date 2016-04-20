@@ -11,6 +11,7 @@ void yyrestart(FILE *);
 int yyparse(void);
 
 void print_ast();
+void init_env();
 void semantics_analysis();
 void print_symbol_table();
 
@@ -36,6 +37,7 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef SEMANTICS_ANALYSIS
+    init_env();
     semantics_analysis();
     print_symbol_table();
 
