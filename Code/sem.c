@@ -27,13 +27,19 @@ static int indent = -1;
     printf("\n"); \
 }
 
-static void check_undefine_variable(void *node, char *name) {
+static void check_variable_reference(void *node, char *name) {
     if (!contains_variable(name)) {
         error(1, node, "Undefined variable '%s'", name);
     }
 }
 
-static void check_function_name(void *node, char *name) {
+static void check_variable_definition(void *node, char *name) {
+    if (contains_variable(name)) {
+        error(3, node, "Redefined variable '%s'", name);
+    }
+}
+
+static void check_function_call(void *node, char *name) {
     if (contains_variable(name)) {
         error(11, node, "'%s' is not a function", name);
     } else if (!contains_function(name)) {
@@ -41,13 +47,7 @@ static void check_function_name(void *node, char *name) {
     }
 }
 
-static void check_redefine_variable(void *node, char *name) {
-    if (contains_variable(name)) {
-        error(3, node, "Redefined variable '%s'", name);
-    }
-}
-
-static void check_redefine_function(void *node, char *name) {
+static void check_function_definition(void *node, char *name) {
     if (contains_function(name)) {
         error(4, node, "Redefined function '%s'", name);
     }
@@ -55,7 +55,7 @@ static void check_redefine_function(void *node, char *name) {
 
 static void check_assignment_type(void *node, Type *t1, Type *t2) {
     if (!isEqvType(t1, t2)) {
-        error(5, node, "Type mismatched for assignment");
+        error(5, node, "Type mismatched for assignment: cannot assign '%s' to '%s'", typeRepr(t2), typeRepr(t1));
     }
 }
 
@@ -91,8 +91,11 @@ static void check_function_call_typeList(void *node,
     }
 }
 
-static void check_array_index_type(void *node, Type *t) {
-    if (!isBasicIntType(t)) {
+static void check_array_subscript_type(void *node, Type *baseType, Type *indexType) {
+    if (!isArrayType(baseType)) {
+        error(10, node, "Expected array, actual %s", typeRepr(baseType));
+    }
+    if (!isBasicIntType(indexType)) {
         error(12, node, "Type 'int' expected for array index");
     }
 }
@@ -277,13 +280,12 @@ static void visitVarDec(void *node) {
     print_this(node);
     VarDec *varDec = (VarDec *)node;
     if (varDec->vardec_kind == VAR_DEC_T_ID) {
-        check_redefine_variable(varDec, varDec->id_text);
+        check_variable_definition(varDec, varDec->id_text);
         install_variable(varDec->id_text, varDec->attr_type);
     } else if (varDec->vardec_kind == VAR_DEC_T_DIM) {
+        varDec->dim.varDec->attr_type = newArrayType(
+                varDec->attr_type, varDec->dim.int_value);
         visit(varDec->dim.varDec);
-        print_terminal(LB);
-        print_int(varDec->dim.int_value);
-        print_terminal(RB);
     } else {
         fatal("unknown vardec_type");
     }
@@ -295,7 +297,7 @@ static void visitFunDec(void *node) {
     if (funDec->varList != NULL) {
         visit(funDec->varList);
     }
-    check_redefine_function(funDec, funDec->id_text);
+    check_function_definition(funDec, funDec->id_text);
 
     install_function(funDec->id_text,
             funDec->attr_returnType,
@@ -496,7 +498,7 @@ static void visitExp(void *node) {
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_CALL) {
-        check_function_name(exp, exp->call.id_text); 
+        check_function_call(exp, exp->call.id_text); 
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
@@ -509,9 +511,12 @@ static void visitExp(void *node) {
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
         visit(exp->subscript.array);
         visit(exp->subscript.index);
-        check_array_index_type(exp,
-                exp->subscript.index->attr_type);
-        exp->attr_type = NULL; // TODO
+        Type *baseType = exp->subscript.array->attr_type;
+        Type *indexType = exp->subscript.index->attr_type;
+        check_array_subscript_type(exp, baseType, indexType);
+        exp->attr_type = isArrayType(baseType)
+            ? getElementType(baseType)
+            : newArbitType();
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_DOT) {
@@ -521,7 +526,7 @@ static void visitExp(void *node) {
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_ID) {
-        check_undefine_variable(exp, exp->id_text);
+        check_variable_reference(exp, exp->id_text);
         exp->attr_type = retrieve_variable_type(exp->id_text);
         exp->attr_lvalue = true;
 

@@ -10,7 +10,7 @@ typedef int bool;
 enum { T_INT, T_FLOAT };
 
 typedef struct Type_ {
-    enum { BASIC, ARRAY, STRUCTURE } kind;
+    enum { BASIC, ARRAY, STRUCTURE, ARBIT } kind;
     union {
         int basic;
         struct {
@@ -28,13 +28,16 @@ typedef struct TypeNode_ {
 
 bool isBasicIntType(Type *t);
 bool isBasicType(Type *t);
+bool isArrayType(Type *t);
 bool isEqvType(Type *t1, Type *t2);
 bool isEqvTypeList(TypeNode *t1, TypeNode *t2);
 
+Type *newArbitType();
 Type *newBasicInt();
 Type *newBasicFloat();
 Type *newBasicType(int type_index);
 Type *newArrayType(Type *elementType, int length);
+Type *getElementType(Type *arrayType);
 
 char *typeRepr(Type *type);
 char *typeListRepr(TypeNode *typeList);
