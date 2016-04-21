@@ -1,0 +1,11 @@
+struct point {
+    float x, y;
+};
+
+int main()
+{
+    struct point p;
+    float f;
+    f = p.x + p.y - p.z;
+    return 0;
+}

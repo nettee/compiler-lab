@@ -1,0 +1,10 @@
+struct point {
+    int x, y;
+    float x, z;
+};
+
+int main()
+{
+    struct point p;
+    p.x = 1;
+}

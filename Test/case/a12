@@ -1,0 +1,15 @@
+struct point {
+    float x, y, z;
+};
+
+int main()
+{
+    int a[10];
+    int i = 0;
+    int sum = 0;
+    struct point p;
+    while (i < 10) {
+        sum = sum + a[p.x];
+        i = i + 1;
+    }
+}

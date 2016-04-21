@@ -116,7 +116,7 @@ static bool check_logic_type(void *node, Type *t) {
 static bool check_function_returnType(void *node,
         Type *returnType, Type *expType) {
     if (!isEqvType(returnType, expType)) {
-        error(8, node, "Type mismatched for return");
+        error(8, node, "Incompatible return type, expected '%s', actual '%s'", typeRepr(expType), typeRepr(returnType));
         return false;
     }
     return true;
@@ -124,7 +124,7 @@ static bool check_function_returnType(void *node,
 
 static bool check_array_subscript_type(void *node, Type *baseType, Type *indexType) {
     if (!isArrayType(baseType)) {
-        error(10, node, "Expected array, actual %s", typeRepr(baseType));
+        error(10, node, "Type '%s' cannot be subscripted", typeRepr(baseType));
         return false;
     }
     if (!isBasicIntType(indexType)) {
@@ -478,7 +478,6 @@ static void visitDef(void *node) {
     print_this(node);
     Def *def = (Def *)node;
     visit(def->specifier);
-    info("specifier.type = %s", typeRepr(def->specifier->attr_type));
     def->decList->attr_type = def->specifier->attr_type;
     visit(def->decList);
 }
@@ -525,10 +524,12 @@ static void visitExp(void *node) {
                 || exp->infix.op == MINUS
                 || exp->infix.op == STAR
                 || exp->infix.op == DIV) {
-            check_infix_type(exp,
+            bool compatible = check_infix_type(exp,
                     exp->infix.exp_left->attr_type,
                     exp->infix.exp_right->attr_type);
-            exp->attr_type = exp->infix.exp_left->attr_type;
+            exp->attr_type = compatible 
+                    ? exp->infix.exp_left->attr_type
+                    : getArbitType();
 
         } else if (exp->infix.op == RELOP) {
             check_infix_type(exp,

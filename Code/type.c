@@ -32,6 +32,13 @@ bool isEqvType(Type *t1, Type *t2) {
     if (isBasicType(t1) && isBasicType(t2)) {
         return t1->basic == t2->basic;
     }
+    if (isArrayType(t1) && isArrayType(t2)) {
+        return isEqvType(t1->array.elementType, t2->array.elementType);
+    }
+    if (isStructureType(t1) && isStructureType(t2)) {
+        // name equivalence
+        return strcmp(t1->structure.name, t2->structure.name) == 0;
+    }
     return false;
 }
 
@@ -115,24 +122,27 @@ FieldNode *newFieldNode(char *name, Type *type) {
 }
 
 bool hasField(Type *structType, char *fieldName) {
-     for (FieldNode *q = structType->structure.fieldList;
-             q != NULL; q = q->next) {
-         if (strcmp(q->name, fieldName) == 0) {
-             return true;
-         }
-     }
-     return false;
+    for (FieldNode *q = structType->structure.fieldList;
+            q != NULL; q = q->next) {
+        if (strcmp(q->name, fieldName) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 Type *getFieldType(Type *structType, char *fieldName) {
-     for (FieldNode *q = structType->structure.fieldList;
-             q != NULL; q = q->next) {
-         if (strcmp(q->name, fieldName) == 0) {
-             return q->type;
-         }
-     }
-     warn("cannot get field type '%s'", fieldName);
-     return getArbitType();
+    if (!isStructureType(structType)) {
+        return getArbitType();
+    }
+    for (FieldNode *q = structType->structure.fieldList;
+            q != NULL; q = q->next) {
+        if (strcmp(q->name, fieldName) == 0) {
+            return q->type;
+        }
+    }
+    warn("cannot get field type '%s'", fieldName);
+    return getArbitType();
 }
 
 char *typeRepr(Type *type) {

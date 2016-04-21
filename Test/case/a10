@@ -1,0 +1,15 @@
+struct point {
+    int x, y;
+};
+
+int square(int a1)
+{
+    return a1 * a1;
+}
+
+int main()
+{
+    struct point p1, p2;
+    square(p1[0]);
+    return 0;
+}

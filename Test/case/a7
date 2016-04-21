@@ -1,0 +1,12 @@
+struct point {
+    float x, y;
+};
+
+int main()
+{
+    struct point A;
+    int b;
+    A.x = 0.0;
+    A.y = 1.0;
+    b = 2.0 * A;
+}

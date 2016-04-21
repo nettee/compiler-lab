@@ -91,9 +91,6 @@ FieldNode *generateFieldList(Env *cenv) {
     Symbol *st = cenv->st;
     for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == VARIABLE) {
-            info("name = %s, type = %s",
-                    st[i].name,
-                    typeRepr(st[i].variable.type));
             FieldNode *field = newFieldNode(
                     st[i].name,
                     st[i].variable.type);

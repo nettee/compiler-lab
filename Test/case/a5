@@ -1,0 +1,16 @@
+struct A {
+    int x;
+    float y;
+};
+
+struct B {
+    int xx[10];
+    float yy[10];
+};
+
+int main()
+{
+    struct A a;
+    struct B b;
+    a = b;
+}
