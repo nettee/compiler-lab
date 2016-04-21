@@ -27,83 +27,113 @@ static int indent = -1;
     printf("\n"); \
 }
 
-static void check_variable_reference(void *node, char *name) {
+// ===== check variable error =====
+
+static bool check_variable_reference(void *node, char *name) {
     if (!contains_variable(name)) {
         error(1, node, "Undefined variable '%s'", name);
+        return false;
     }
+    return true;
 }
 
-static void check_variable_definition(void *node, char *name) {
+static bool check_variable_definition(void *node, char *name) {
     if (contains_variable(name)) {
         error(3, node, "Redefined variable '%s'", name);
+        return false;
     }
+    return true;
 }
 
-static void check_function_call(void *node, char *name) {
+// ===== check function error =====
+
+static bool check_function_call(void *node, char *name, Args *args) {
     if (contains_variable(name)) {
         error(11, node, "'%s' is not a function", name);
+        return false;
     } else if (!contains_function(name)) {
         error(2, node, "Undefined function '%s'", name);
+        return false;
+    } else {
+        TypeNode *paramTypeList = retrieve_function_paramTypeList(name);
+        TypeNode *argTypeList = args->attr_argTypeListTail;
+        if (!isEqvTypeList(paramTypeList, argTypeList)) {
+            error(9, node, "Function '%s' is not applicable for arguments '%s'",
+                    typeListRepr(paramTypeList), typeListRepr(argTypeList));
+            return false;
+        }
     }
+    return true;
 }
 
-static void check_function_definition(void *node, char *name) {
+static bool check_function_definition(void *node, char *name) {
     if (contains_function(name)) {
         error(4, node, "Redefined function '%s'", name);
+        return false;
     }
+    return true;
 }
 
-static void check_assignment_type(void *node, Type *t1, Type *t2) {
-    if (!isEqvType(t1, t2)) {
-        error(5, node, "Type mismatched for assignment: cannot assign '%s' to '%s'", typeRepr(t2), typeRepr(t1));
-    }
-}
+// ===== check lvalue error =====
 
-static void check_assignment_lvalue(void *node, bool is_lvalue) {
+static bool check_assignment_lvalue(void *node, bool is_lvalue) {
     if (!is_lvalue) {
         error(6, node, "The left-hand side of assignment must be lvalue");
     }
+    return true;
 }
 
-static void check_infix_type(void *node, Type *t1, Type *t2) {
+// ===== check expression type error =====
+
+static bool check_assignment_type(void *node, Type *t1, Type *t2) {
+    if (!isEqvType(t1, t2)) {
+        error(5, node, "Type mismatched for assignment: cannot assign '%s' to '%s'", typeRepr(t2), typeRepr(t1));
+        return false;
+    }
+    return true;
+}
+
+static bool check_infix_type(void *node, Type *t1, Type *t2) {
     if (!isEqvType(t1, t2)) {
         error(7, node, "Type mismatched for infix expression operands");
+        return false;
     }
+    return true;
 }
 
-static void check_logic_type(void *node, Type *t) {
+static bool check_logic_type(void *node, Type *t) {
     if (!isBasicIntType(t)) {
         error(7, node, "Type 'int' expected for logic expression");
+        return false;
     }
+    return true;
 }
 
-static void check_function_return(void *node,
+static bool check_function_returnType(void *node,
         Type *returnType, Type *expType) {
     if (!isEqvType(returnType, expType)) {
         error(8, node, "Type mismatched for return");
+        return false;
     }
+    return true;
 }
 
-static void check_function_call_typeList(void *node,
-        TypeNode *paramTypeList, TypeNode *argTypeList) {
-    if (!isEqvTypeList(paramTypeList, argTypeList)) {
-        error(9, node, "Function '%s' is not applicable for arguments '%s'", typeListRepr(paramTypeList), typeListRepr(argTypeList));
-    }
-}
-
-static void check_array_subscript_type(void *node, Type *baseType, Type *indexType) {
+static bool check_array_subscript_type(void *node, Type *baseType, Type *indexType) {
     if (!isArrayType(baseType)) {
         error(10, node, "Expected array, actual %s", typeRepr(baseType));
+        return false;
     }
     if (!isBasicIntType(indexType)) {
         error(12, node, "Type 'int' expected for array index");
+        return false;
     }
+    return true;
 }
 
-// ====== structure related check ========
+// ===== check structure error =====
 
-static void check_structure_reference(void *node, char *name) {
-
+static bool check_structure_reference(void *node, char *name) {
+    return true;
 }
 
 static void print_id(char *id_text) {
@@ -365,35 +395,34 @@ static void visitStmt(void *node) {
         print_terminal(SEMI);
 
     } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
+        stmt->compst.compSt->attr_func_returnType
+                = stmt->attr_func_returnType;
         visit(stmt->compst.compSt);
 
     } else if (stmt->stmt_kind == STMT_T_RETURN) {
         visit(stmt->return_.exp);
-        check_function_return(stmt,
+        check_function_returnType(stmt,
                 stmt->attr_func_returnType,
                 stmt->return_.exp->attr_type);
 
     } else if (stmt->stmt_kind == STMT_T_IF) {
-        print_terminal(IF);
-        print_terminal(LP);
         visit(stmt->if_.exp);
-        print_terminal(RP);
+        stmt->if_.then_stmt->attr_func_returnType 
+                = stmt->attr_func_returnType;
         visit(stmt->if_.then_stmt);
 
     } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
-        print_terminal(IF);
-        print_terminal(LP);
         visit(stmt->ifelse.exp);
-        print_terminal(RP);
+        stmt->ifelse.then_stmt->attr_func_returnType 
+                = stmt->attr_func_returnType;
         visit(stmt->ifelse.then_stmt);
-        print_terminal(ELSE);
+        stmt->ifelse.else_stmt->attr_func_returnType 
+                = stmt->attr_func_returnType;
         visit(stmt->ifelse.else_stmt);
-
     } else if (stmt->stmt_kind == STMT_T_WHILE) {
-        print_terminal(WHILE);
-        print_terminal(LP);
         visit(stmt->while_.exp);
-        print_terminal(RP);
+        stmt->while_.stmt->attr_func_returnType
+                = stmt->attr_func_returnType;
         visit(stmt->while_.stmt);
 
     } else {
@@ -495,24 +524,30 @@ static void visitExp(void *node) {
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_PAREN) {
-        print_terminal(LP);
         visit(exp->paren.exp);
-        print_terminal(RP);
-        exp->attr_lvalue = false;
+        exp->attr_type = exp->paren.exp->attr_type;
+        exp->attr_lvalue = exp->paren.exp->attr_lvalue;
 
     } else if (exp->exp_kind == EXP_T_UNARY) {
-        print_terminal(exp->unary.op);
         visit(exp->unary.exp);
+
+        if (exp->unary.op == MINUS) {
+            exp->attr_type = exp->unary.exp->attr_type;
+        } else if (exp->unary.op == NOT) {
+            check_logic_type(exp,
+                    exp->unary.exp->attr_type);
+            exp->attr_type = newBasicInt();
+        } else {
+            fatal("unknown exp->unary.op");
+        }
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_CALL) {
-        check_function_call(exp, exp->call.id_text); 
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
-        check_function_call_typeList(exp,
-                retrieve_function_paramTypeList(exp->call.id_text),
-                exp->call.args->attr_argTypeListTail);
+        check_function_call(exp, exp->call.id_text,
+                exp->call.args); 
         exp->attr_type = retrieve_function_returnType(exp->call.id_text);
         exp->attr_lvalue = false;
 

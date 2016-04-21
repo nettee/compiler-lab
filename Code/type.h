@@ -38,6 +38,7 @@ typedef struct TypeNode_ {
     Type *type;
 } TypeNode;
 
+bool isArbitType(Type *t);
 bool isBasicIntType(Type *t);
 bool isBasicType(Type *t);
 bool isArrayType(Type *t);
@@ -45,6 +46,7 @@ bool isEqvType(Type *t1, Type *t2);
 bool isEqvTypeList(TypeNode *t1, TypeNode *t2);
 
 Type *newArbitType();
+Type *getArbitType();
 Type *newBasicInt();
 Type *newBasicFloat();
 Type *newBasicType(int type_index);

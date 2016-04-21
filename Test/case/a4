@@ -1,0 +1,17 @@
+int duplicated_function(int x, int y)
+{
+    if (x > y) return x;
+    else return y;
+}
+
+int main()
+{
+    int a = 1, b = -1;
+    return duplicated_function(a, b);
+}
+
+int duplicated_function(int u, int v)
+{
+    if (u < v) return u;
+    else return v;
+}

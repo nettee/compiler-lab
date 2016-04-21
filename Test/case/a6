@@ -1,0 +1,24 @@
+int max(int m)
+{
+    int a[6];
+    int i = 0;
+    int ret;
+    while (i < 6) {
+        a[i] = 6 - 2 * i + i * i;
+    }
+
+    if (m == 0) return 0;
+    ret = a[0];
+    i = 1;
+    while (i < m) {
+        if (ret < a[i])
+            ret = a[i];
+        i = i + 1;
+    }
+    return ret;
+}
+
+int main()
+{
+    max(6) = 0;
+}

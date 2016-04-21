@@ -4,23 +4,28 @@
 #include "common.h"
 #include "type.h"
 
-bool isBasicIntType(Type *t) {
-    return t->kind == BASIC && t->basic == T_INT;
+bool isArbitType(Type *t) {
+    return t->kind == ARBIT;
 }
 
 bool isBasicType(Type *t) {
     return t->kind == BASIC;
 }
 
+bool isBasicIntType(Type *t) {
+    return isArbitType(t) ||
+        (isBasicType(t) && t->basic == T_INT);
+}
+
 bool isArrayType(Type *t) {
-    return t->kind == ARRAY;
+    return isArbitType(t) || t->kind == ARRAY;
 }
 
 bool isEqvType(Type *t1, Type *t2) {
-    if (t1->kind == ARBIT || t2->kind == ARBIT) {
+    if (isArbitType(t1) || isArbitType(t2)) {
         return true;
     }
-    if (t1->kind == BASIC && t2->kind == BASIC) {
+    if (isBasicType(t1) && isBasicType(t2)) {
         return t1->basic == t2->basic;
     }
     return false;
@@ -40,6 +45,16 @@ bool isEqvTypeList(TypeNode *t1, TypeNode *t2) {
 Type *newArbitType() {
     Type *type = malloc(sizeof(type));
     type->kind = ARBIT;
+
+    return type;
+}
+
+Type *getArbitType() {
+    static Type *type;
+    if (type == NULL) {
+        type = malloc(sizeof(type));
+        type->kind = ARBIT;
+    }
 
     return type;
 }
@@ -70,6 +85,9 @@ Type *newArrayType(Type *elementType, int length) {
 }
 
 Type *getElementType(Type *arrayType) {
+    if (isArbitType(arrayType)) {
+        return getArbitType();
+    }
     if (arrayType->kind != ARRAY) {
         fatal("not an array type");
     }

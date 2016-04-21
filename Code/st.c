@@ -97,7 +97,8 @@ Type *retrieve_variable_type(char *name) {
             return st[i].variable.type;
         }
     }
-    fatal("cannot retrieve variable '%s'", name);
+    warn("cannot retrieve variable '%s'", name);
+    return getArbitType();
 }
 
 Type *retrieve_function_returnType(char *name) {
@@ -108,7 +109,8 @@ Type *retrieve_function_returnType(char *name) {
             return st[i].function.returnType;
         }
     }
-    fatal("cannot retrieve function '%s'", name);
+    warn("cannot retrieve function '%s'", name);
+    return getArbitType();
 }
 
 TypeNode *retrieve_function_paramTypeList(char *name) {
