@@ -21,8 +21,8 @@ struct Type_ {
             int length;
         } array;
         struct {
-            bool isAnony;
-            FieldNode *fields;
+            char *name;
+            FieldNode *fieldList;
         } structure;
     };
 };
@@ -47,11 +47,16 @@ bool isEqvTypeList(TypeNode *t1, TypeNode *t2);
 
 Type *newArbitType();
 Type *getArbitType();
+
 Type *newBasicInt();
 Type *newBasicFloat();
 Type *newBasicType(int type_index);
+
 Type *newArrayType(Type *elementType, int length);
 Type *getElementType(Type *arrayType);
+
+Type *newStructureType(char *name, FieldNode *fieldList);
+FieldNode *newFieldNode(char *name, Type *type);
 
 char *typeRepr(Type *type);
 char *typeListRepr(TypeNode *typeList);

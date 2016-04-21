@@ -94,6 +94,22 @@ Type *getElementType(Type *arrayType) {
     return arrayType->array.elementType;
 }
 
+Type *newStructureType(char *name, FieldNode *fieldList) {
+    Type *type = malloc(sizeof(Type));
+    type->kind = STRUCTURE;
+    type->structure.name = name;
+    type->structure.fieldList = fieldList;
+
+    return type;
+}
+
+FieldNode *newFieldNode(char *name, Type *type) {
+    FieldNode *field = malloc(sizeof(FieldNode));
+    field->next = NULL;
+    field->name = name;
+    field->type = type;
+}
+
 char *typeRepr(Type *type) {
     char *str = malloc(100);
     memset(str, 0, 100);
@@ -118,7 +134,20 @@ char *typeRepr(Type *type) {
             t = t->array.elementType;
         }
     } else if (type->kind == STRUCTURE) {
-        off += sprintf(str + off, "structure");
+        off += sprintf(str + off, "%s", 
+                (type->structure.name == NULL)
+                ? "<anonymous>"
+                : type->structure.name);
+        off += sprintf(str + off, "{");
+        for (FieldNode *q = type->structure.fieldList;
+                q != NULL; q = q->next) {
+            off += sprintf(str + off, "%s : %s",
+                    q->name, typeRepr(q->type));
+            if (q->next != NULL) {
+                off += sprintf(str + off, ", ");
+            }
+        }
+        off += sprintf(str + off, "}");
     } else {
         fatal("Unknown type kind");
     }

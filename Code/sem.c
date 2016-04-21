@@ -271,6 +271,7 @@ static void visitSpecifier(void *node) {
         break;
     case SPECIFIER_T_STRUCT:
         visit(specifier->structSpecifier);
+        specifier->attr_type = specifier->structSpecifier->attr_type;
         break;
     default:
         printf("fatal: unknown specifier_type\n");
@@ -289,11 +290,15 @@ static void visitStructSpecifier(void *node) {
         debug("structSpecifier->attr_type = '%s'",
                 typeRepr(structSpecifier->attr_type));
     } else if (kind == STRUCT_SPECIFIER_T_DEF) {
-        print_terminal(STRUCT);
         visit(structSpecifier->def.optTag);
-        print_terminal(LC);
+        enter_new_env();
         visit(structSpecifier->def.defList);
-        print_terminal(RC);
+        FieldNode *fieldList = exit_current_env();
+        structSpecifier->attr_type = newStructureType(
+                structSpecifier->def.optTag->id_text,
+                fieldList);
+        info("type: %s", typeRepr(
+                    structSpecifier->attr_type));
     } else {
         fatal("unknown structspecifier_type");
     }

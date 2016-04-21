@@ -20,16 +20,57 @@ typedef struct {
     };
 } Symbol;
 
-typedef struct {
+typedef struct Env_ {
+    struct Env_ *next;
     Symbol st[NR_ST];
     int top;
 } Env;
 
-static Env env0;
-static Env *cenv = &env0;
+static Env *cenv;
 
 void init_env() {
-    env0.top = 1;
+    cenv = malloc(sizeof(Env));
+    cenv->next = NULL;
+    cenv->top = 1;
+}
+
+void enter_new_env() {
+    Env *env = malloc(sizeof(Env));
+    env->next = cenv;
+    env->top = 1;
+    cenv = env;
+}
+
+FieldNode *generateFieldList(Env *cenv) {
+    FieldNode *head = NULL;
+    FieldNode *tail = NULL;
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
+        if (st[i].kind == VARIABLE) {
+            info("name = %s, type = %s",
+                    st[i].name,
+                    typeRepr(st[i].variable.type));
+            FieldNode *field = newFieldNode(
+                    st[i].name,
+                    st[i].variable.type);
+            if (head == NULL) {
+                head = field;
+                tail = field;
+            } else {
+                tail->next = field;
+                tail = tail->next;
+            }
+        }
+    }
+    return head;
+}
+
+FieldNode *exit_current_env() {
+    FieldNode *t = generateFieldList(cenv);
+    Env *temp = cenv;
+    cenv = cenv->next;
+    free(temp);
+    return t;
 }
 
 void install_variable(char *text, Type *type) {
