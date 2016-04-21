@@ -21,6 +21,10 @@ bool isArrayType(Type *t) {
     return isArbitType(t) || t->kind == ARRAY;
 }
 
+bool isStructureType(Type *t) {
+    return isArbitType(t) || t->kind == STRUCTURE;
+}
+
 bool isEqvType(Type *t1, Type *t2) {
     if (isArbitType(t1) || isArbitType(t2)) {
         return true;
@@ -110,6 +114,27 @@ FieldNode *newFieldNode(char *name, Type *type) {
     field->type = type;
 }
 
+bool hasField(Type *structType, char *fieldName) {
+     for (FieldNode *q = structType->structure.fieldList;
+             q != NULL; q = q->next) {
+         if (strcmp(q->name, fieldName) == 0) {
+             return true;
+         }
+     }
+     return false;
+}
+
+Type *getFieldType(Type *structType, char *fieldName) {
+     for (FieldNode *q = structType->structure.fieldList;
+             q != NULL; q = q->next) {
+         if (strcmp(q->name, fieldName) == 0) {
+             return q->type;
+         }
+     }
+     warn("cannot get field type '%s'", fieldName);
+     return getArbitType();
+}
+
 char *typeRepr(Type *type) {
     char *str = malloc(100);
     memset(str, 0, 100);
@@ -148,6 +173,8 @@ char *typeRepr(Type *type) {
             }
         }
         off += sprintf(str + off, "}");
+    } else if (type->kind == ARBIT) {
+        off += sprintf(str + off, "<arbitrary>");
     } else {
         fatal("Unknown type kind");
     }

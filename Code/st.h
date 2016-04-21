@@ -3,6 +3,11 @@
 
 #include "common.h"
 
+void install_struct(Type *type);
+bool contains_struct__type(Type *type);
+bool contains_struct__name(char *name);
+Type *retrieve_struct(char *name);
+
 void install_variable(char *text, Type *type);
 void install_function(char *name, Type *returnType, TypeNode *paramTypeList);
 int contains_symbol(char *name);
@@ -15,5 +20,6 @@ TypeNode *retrieve_function_paramTypeList(char *name);
 
 void enter_new_env();
 FieldNode *exit_current_env();
+bool in_nested_env();
 
 #endif

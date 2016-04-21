@@ -39,7 +39,11 @@ static bool check_variable_reference(void *node, char *name) {
 
 static bool check_variable_definition(void *node, char *name) {
     if (contains_variable(name)) {
-        error(3, node, "Redefined variable '%s'", name);
+        if (in_nested_env()) {
+            error(15, node, "Redefined field '%s'", name);
+        } else {
+            error(3, node, "Redefined variable '%s'", name);
+        }
         return false;
     }
     return true;
@@ -132,7 +136,32 @@ static bool check_array_subscript_type(void *node, Type *baseType, Type *indexTy
 
 // ===== check structure error =====
 
+static bool check_structure_definition(void *node, Type *type) {
+    if (contains_struct__type(type)) {
+        error(16, node, "Redefined structure '%s'", type->structure.name);
+        return false;
+    }
+    return true;
+}
+
 static bool check_structure_reference(void *node, char *name) {
+    if (!contains_struct__name(name)) {
+        error(17, node, "Undefined structure '%s'", name);
+        return false;
+    }
+    return true;
+}
+
+static bool check_structure_field_access(void *node, 
+        Type *structType, char *fieldName) {
+    if (!isStructureType(structType)) {
+        error(13, node, "Illegal use of '.' on non-struct");
+        return false;
+    } else if (!hasField(structType, fieldName)) {
+        error(14, node, "Structure '%s' has no field '%s'",
+                structType->structure.name, fieldName);
+        return false;
+    }
     return true;
 }
 
@@ -235,7 +264,11 @@ static void visitExtDef(void *node) {
 
     } else if (extDef->extdef_kind == EXT_DEF_T_STRUCT) {
         visit(extDef->struct_.specifier);
-        print_terminal(SEMI);
+        Type *t = extDef->struct_.specifier->attr_type;
+        if (isStructureType(t)) {
+            check_structure_definition(extDef, t);
+            install_struct(t);
+        }
 
     } else if (extDef->extdef_kind == EXT_DEF_T_FUN) {
         visit(extDef->fun.specifier);
@@ -284,11 +317,9 @@ static void visitStructSpecifier(void *node) {
     int kind = structSpecifier->structspecifier_kind;
     if (kind == STRUCT_SPECIFIER_T_DEC) {
         visit(structSpecifier->dec.tag);
-        check_structure_reference(structSpecifier, 
-                structSpecifier->dec.tag->attr_name);
-        structSpecifier->attr_type = newArbitType();
-        debug("structSpecifier->attr_type = '%s'",
-                typeRepr(structSpecifier->attr_type));
+        char *name = structSpecifier->dec.tag->attr_name;
+        check_structure_reference(structSpecifier, name);
+        structSpecifier->attr_type = retrieve_struct(name);
     } else if (kind == STRUCT_SPECIFIER_T_DEF) {
         visit(structSpecifier->def.optTag);
         enter_new_env();
@@ -297,8 +328,6 @@ static void visitStructSpecifier(void *node) {
         structSpecifier->attr_type = newStructureType(
                 structSpecifier->def.optTag->id_text,
                 fieldList);
-        info("type: %s", typeRepr(
-                    structSpecifier->attr_type));
     } else {
         fatal("unknown structspecifier_type");
     }
@@ -449,9 +478,9 @@ static void visitDef(void *node) {
     print_this(node);
     Def *def = (Def *)node;
     visit(def->specifier);
+    info("specifier.type = %s", typeRepr(def->specifier->attr_type));
     def->decList->attr_type = def->specifier->attr_type;
     visit(def->decList);
-    print_terminal(SEMI);
 }
 
 static void visitDecList(void *node) {
@@ -569,8 +598,10 @@ static void visitExp(void *node) {
 
     } else if (exp->exp_kind == EXP_T_DOT) {
         visit(exp->dot.exp);
-        print_terminal(DOT);
-        print_id(exp->dot.id_text);
+        Type *structType = exp->dot.exp->attr_type;
+        char *fieldName = exp->dot.id_text;
+        check_structure_field_access(exp, structType, fieldName);
+        exp->attr_type = getFieldType(structType, fieldName);
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_ID) {

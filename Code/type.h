@@ -42,6 +42,7 @@ bool isArbitType(Type *t);
 bool isBasicIntType(Type *t);
 bool isBasicType(Type *t);
 bool isArrayType(Type *t);
+bool isStructureType(Type *t);
 bool isEqvType(Type *t1, Type *t2);
 bool isEqvTypeList(TypeNode *t1, TypeNode *t2);
 
@@ -57,6 +58,8 @@ Type *getElementType(Type *arrayType);
 
 Type *newStructureType(char *name, FieldNode *fieldList);
 FieldNode *newFieldNode(char *name, Type *type);
+bool hasField(Type *structType, char *fieldName);
+Type *getFieldType(Type *structType, char *fieldName);
 
 char *typeRepr(Type *type);
 char *typeListRepr(TypeNode *typeList);

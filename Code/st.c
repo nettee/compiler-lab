@@ -6,6 +6,46 @@
 
 #define NR_ST 40
 
+static TypeNode *structList = NULL;
+
+void install_struct(Type *type) {
+    if (contains_struct__type(type)) {
+        return;
+    }
+    TypeNode *typeNode = malloc(sizeof(TypeNode));
+    typeNode->type = type;
+    typeNode->next = structList;
+    structList = typeNode;
+    info("install type '%s'", typeRepr(type));
+}
+
+bool contains_struct__type(Type *type) {
+    return isStructureType(type)
+            && contains_struct__name(type->structure.name);
+}
+
+
+bool contains_struct__name(char *name) {
+    for (TypeNode *q = structList; q != NULL; q = q->next) {
+        if (q->type->kind == STRUCTURE
+                && strcmp(q->type->structure.name, name) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Type *retrieve_struct(char *name) {
+    for (TypeNode *q = structList; q != NULL; q = q->next) {
+        if (q->type->kind == STRUCTURE
+                && strcmp(q->type->structure.name, name) == 0) {
+            return q->type;
+        }
+    }
+    warn("cannot retrieve struct '%s'", name);
+    return getArbitType();
+}
+
 typedef struct {
     enum { VARIABLE, FUNCTION } kind;
     char *name;
@@ -27,6 +67,10 @@ typedef struct Env_ {
 } Env;
 
 static Env *cenv;
+
+bool in_nested_env() {
+    return cenv->next != NULL;
+}
 
 void init_env() {
     cenv = malloc(sizeof(Env));

@@ -1,14 +1,12 @@
-struct Point
-{
+struct {
     int x, y[10];
-    struct {
-        int z;
-    } t;
-};
+} p;
 
 int a;
 
 int main()
 {
-
+    int i;
+    p.a;
+    i.a;
 }
