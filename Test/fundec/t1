@@ -1,0 +1,10 @@
+int inc(int a);
+
+int inc(int x, int y) {
+    return x;
+}
+
+int main()
+{
+
+}

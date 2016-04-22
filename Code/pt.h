@@ -259,6 +259,7 @@ typedef struct FunDec_ {
     char *id_text;
     struct VarList_ *varList;
     Type *attr_returnType;
+    TypeNode *attr_paramTypeList;
 } FunDec;
 
 typedef struct VarDec_ {

@@ -55,7 +55,7 @@ static bool check_function_call(void *node, char *name, Args *args) {
     if (contains_variable(name)) {
         error(11, node, "'%s' is not a function", name);
         return false;
-    } else if (!contains_function(name)) {
+    } else if (!contains_function_defined(name)) {
         error(2, node, "Undefined function '%s'", name);
         return false;
     } else {
@@ -70,10 +70,34 @@ static bool check_function_call(void *node, char *name, Args *args) {
     return true;
 }
 
-static bool check_function_definition(void *node, char *name) {
-    if (contains_function(name)) {
+static bool check_function_definition(void *node, char *name,
+        Type *returnType, TypeNode *paramTypeList) {
+    if (contains_function_defined(name)) {
         error(4, node, "Redefined function '%s'", name);
         return false;
+    } else if (contains_function_declared(name)) {
+        Type *returnType0 = retrieve_function_returnType(name);
+        TypeNode *paramTypeList0 = retrieve_function_paramTypeList(name);
+        if (!isEqvType(returnType, returnType0)
+                || !isEqvTypeList(paramTypeList, paramTypeList0)) {
+            error(19, node, "Incompatible declaration for function '%s'", name);
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool check_function_declaration(void *node, char *name,
+        Type *returnType, TypeNode *paramTypeList) {
+    if (contains_function_declared(name)
+            || contains_function_defined(name)) {
+        Type *returnType0 = retrieve_function_returnType(name);
+        TypeNode *paramTypeList0 = retrieve_function_paramTypeList(name);
+        if (!isEqvType(returnType, returnType0)
+                || !isEqvTypeList(paramTypeList, paramTypeList0)) {
+            error(19, node, "Incompatible declaration for function '%s'", name);
+            return false;
+        }
     }
     return true;
 }
@@ -166,78 +190,24 @@ static bool check_structure_field_access(void *node,
 }
 
 static void print_id(char *id_text) {
-    indent++;
-    print("ID: %s", id_text);
-    indent--;
 }
 
 static void print_int(int int_value) {
-    indent++;
-    print("INT: %d", int_value);
-    indent--;
 }
 
 static void print_float(float float_value) {
-    indent++;
-    print("FLOAT: %f", float_value);
-    indent--;
 }
 
 static void print_type(int type_index) {
-    indent++;
-    switch (type_index) {
-    case T_INT:
-        print("TYPE: int");
-        break;
-    case T_FLOAT:
-        print("TYPE: float");
-        break;
-    default:
-        printf("Fatal: Unknown specifier->type_value\n");
-    }
-    indent--;
 }
 
 static void print_terminal(int terminal) {
-    indent++;
-    print("%s", terminal_str(terminal));
-    indent--;
 }
 
 static void print_relop(int yylval) {
-    indent++;
-    switch (yylval) {
-    case RELOP_LT:
-        print("RELOP: <");
-        break;
-    case RELOP_LE:
-        print("RELOP: <=");
-        break;
-    case RELOP_GT:
-        print("RELOP: >");
-        break;
-    case RELOP_GE:
-        print("RELOP: >=");
-        break;
-    case RELOP_EQ:
-        print("RELOP: ==");
-        break;
-    case RELOP_NE:
-        print("RELOP: !=");
-        break;
-    default:
-        printf("fatal: unknown relop yylval\n");
-    }
-}
-
-static void print_this(void *node) {
-    int type = *(int *)node;
-    int lineno = ((int *)node)[1];
-    print("%s (%d)", nonterminal_str(type), lineno);
 }
 
 static void visitProgram(void *node) {
-    print_this(node);
     Program *program = (Program *)node;
     visit(program->extDefList);
 }
@@ -246,14 +216,12 @@ static void visitExtDefList(void *node) {
     /* may produce epsilon */
     ExtDefList *extDefList = (ExtDefList *)node;
     if (extDefList->extDef != NULL) {
-        print_this(node);
         visit(extDefList->extDef);
         visit(extDefList->extDefList);
     }
 }
 
 static void visitExtDef(void *node) {
-    print_this(node);
     ExtDef *extDef = (ExtDef *)node;
 
     if (extDef->extdef_kind == EXT_DEF_T_VAR) {
@@ -278,13 +246,35 @@ static void visitExtDef(void *node) {
         extDef->fun.compSt->attr_func_returnType
                 = extDef->fun.funDec->attr_returnType;
         visit(extDef->fun.compSt);
+
+        check_function_definition(extDef,
+                extDef->fun.funDec->id_text,
+                extDef->fun.funDec->attr_returnType,
+                extDef->fun.funDec->attr_paramTypeList);
+        install_function_defined(extDef->fun.funDec->id_text,
+            extDef->fun.funDec->attr_returnType,
+            extDef->fun.funDec->attr_paramTypeList);
+
+    } else if (extDef->extdef_kind == EXT_DEF_T_FUN_DEC) {
+        visit(extDef->fun.specifier);
+        extDef->fun.funDec->attr_returnType
+                = extDef->fun.specifier->attr_type;
+        visit(extDef->fun.funDec);
+
+        check_function_declaration(extDef,
+                extDef->fun.funDec->id_text,
+                extDef->fun.funDec->attr_returnType,
+                extDef->fun.funDec->attr_paramTypeList);
+        install_function_declared(extDef->fun.funDec->id_text,
+            extDef->fun.funDec->attr_returnType,
+            extDef->fun.funDec->attr_paramTypeList);
+
     } else {
         fatal("unknown extdef_type");
     }
 }
 
 static void visitExtDecList(void *node) {
-    print_this(node);
     ExtDecList *extDecList = (ExtDecList *)node;
     extDecList->varDec->attr_type = extDecList->attr_type;
     visit(extDecList->varDec);
@@ -296,7 +286,6 @@ static void visitExtDecList(void *node) {
 }
 
 static void visitSpecifier(void *node) {
-    print_this(node);
     Specifier *specifier = (Specifier *)node;
     switch (specifier->specifier_kind) {
     case SPECIFIER_T_BASIC:
@@ -312,7 +301,6 @@ static void visitSpecifier(void *node) {
 }
 
 static void visitStructSpecifier(void *node) {
-    print_this(node);
     StructSpecifier *structSpecifier = (StructSpecifier *)node;
     int kind = structSpecifier->structspecifier_kind;
     if (kind == STRUCT_SPECIFIER_T_DEC) {
@@ -337,19 +325,16 @@ static void visitOptTag(void *node) {
     /* may produce epsilon */
     OptTag *optTag = (OptTag *)node;
     if (optTag->id_text != NULL) {
-        print_this(node);
         print_id(optTag->id_text);
     }
 }
 
 static void visitTag(void *node) {
-    print_this(node);
     Tag *tag = (Tag *)node;
     tag->attr_name = tag->id_text;
 }
 
 static void visitVarDec(void *node) {
-    print_this(node);
     VarDec *varDec = (VarDec *)node;
     if (varDec->vardec_kind == VAR_DEC_T_ID) {
         check_variable_definition(varDec, varDec->id_text);
@@ -364,20 +349,16 @@ static void visitVarDec(void *node) {
 }
 
 static void visitFunDec(void *node) {
-    print_this(node);
     FunDec *funDec = (FunDec *)node;
     if (funDec->varList != NULL) {
         visit(funDec->varList);
     }
-    check_function_definition(funDec, funDec->id_text);
+    funDec->attr_paramTypeList = (funDec->varList == NULL) 
+            ? NULL : funDec->varList->attr_paramTypeListTail;
 
-    install_function(funDec->id_text,
-            funDec->attr_returnType,
-            (funDec->varList == NULL) ? NULL : funDec->varList->attr_paramTypeListTail);
 }
 
 static void visitVarList(void *node) {
-    print_this(node);
     VarList *varList = (VarList *)node;
     visit(varList->paramDec);
     TypeNode *paramTypeListTail = NULL;
@@ -392,7 +373,6 @@ static void visitVarList(void *node) {
 }
 
 static void visitParamDec(void *node) {
-    print_this(node);
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
     paramDec->varDec->attr_type = paramDec->specifier->attr_type;
@@ -401,7 +381,6 @@ static void visitParamDec(void *node) {
 }
 
 static void visitCompSt(void *node) {
-    print_this(node);
     CompSt *compSt = (CompSt *)node;
     visit(compSt->defList);
     compSt->stmtList->attr_func_returnType = compSt->attr_func_returnType;
@@ -422,7 +401,6 @@ static void visitStmtList(void *node) {
 }
 
 static void visitStmt(void *node) {
-    print_this(node);
     Stmt *stmt = (Stmt *)node;
     if (stmt->stmt_kind == STMT_T_EXP) {
         visit(stmt->exp.exp);
@@ -468,14 +446,12 @@ static void visitDefList(void *node) {
     /* may produce epsilon */
     DefList *defList = (DefList *)node;
     if (defList->def != NULL) {
-        print_this(node);
         visit(defList->def);
         visit(defList->defList);
     }
 }
 
 static void visitDef(void *node) {
-    print_this(node);
     Def *def = (Def *)node;
     visit(def->specifier);
     def->decList->attr_type = def->specifier->attr_type;
@@ -483,7 +459,6 @@ static void visitDef(void *node) {
 }
 
 static void visitDecList(void *node) {
-    print_this(node);
     DecList *decList = (DecList *)node;
     decList->dec->attr_type = decList->attr_type;
     visit(decList->dec);
@@ -494,7 +469,6 @@ static void visitDecList(void *node) {
 }
 
 static void visitDec(void *node) {
-    print_this(node);
     Dec *dec = (Dec *)node;
     dec->varDec->attr_type = dec->attr_type;
     visit(dec->varDec);
@@ -507,7 +481,6 @@ static void visitDec(void *node) {
 }
 
 static void visitExp(void *node) {
-    print_this(node);
     Exp *exp = (Exp *)node;
 
     if (exp->exp_kind == EXP_T_INFIX) {
@@ -624,7 +597,6 @@ static void visitExp(void *node) {
 }
 
 static void visitArgs(void *node) {
-    print_this(node);
     Args *args = (Args *)node;
     visit(args->exp);
     TypeNode *argTypeListTail = NULL;
@@ -673,4 +645,5 @@ static void visit(void *node) {
 
 void semantics_analysis() {
     visit(root);
+    check_function_declared_undefined();
 }

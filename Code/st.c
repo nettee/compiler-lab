@@ -54,6 +54,7 @@ typedef struct {
             Type *type;
         } variable;
         struct {
+            enum { DECLARED, DEFINED } state;
             Type *returnType;
             TypeNode *paramTypeList;
         } function;
@@ -126,13 +127,41 @@ void install_variable(char *text, Type *type) {
     info("install variable '%s'", text);
 }
 
-void install_function(char *name, Type *returnType, TypeNode *paramTypeList) {
+void install_function_defined(char *name, Type *returnType, TypeNode *paramTypeList) {
     Symbol *st = cenv->st;
-    if (contains_function(name)) {
+    if (contains_function_defined(name)) {
+        return;
+    }
+    if (contains_function_declared(name)) {
+        for (int i = 1; i < cenv->top; i++) {
+            if (st[i].kind == FUNCTION
+                    && strcmp(st[i].name, name) == 0
+                    && st[i].function.state == DECLARED) {
+                st[i].function.state = DEFINED;
+                info("upgrade function '%s' to defined", name);
+                return;
+            }
+        }
+    }
+
+    st[cenv->top].kind = FUNCTION;
+    st[cenv->top].name = name;
+    st[cenv->top].function.state = DEFINED;
+    st[cenv->top].function.returnType = returnType;
+    st[cenv->top].function.paramTypeList = paramTypeList;
+    cenv->top++;
+    info("install function '%s'", name);
+}
+
+void install_function_declared(char *name, Type *returnType, TypeNode *paramTypeList) {
+    Symbol *st = cenv->st;
+    if (contains_function_defined(name)
+            || contains_function_declared(name)) {
         return;
     }
     st[cenv->top].kind = FUNCTION;
     st[cenv->top].name = name;
+    st[cenv->top].function.state = DECLARED;
     st[cenv->top].function.returnType = returnType;
     st[cenv->top].function.paramTypeList = paramTypeList;
     cenv->top++;
@@ -160,11 +189,24 @@ int contains_variable(char *name) {
     return 0;
 }
 
-int contains_function(char *name) {
+int contains_function_defined(char *name) {
     Symbol *st = cenv->st;
     for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == FUNCTION 
-                && strcmp(st[i].name, name) == 0) {
+                && strcmp(st[i].name, name) == 0
+                && st[i].function.state == DEFINED) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int contains_function_declared(char *name) {
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
+        if (st[i].kind == FUNCTION 
+                && strcmp(st[i].name, name) == 0
+                && st[i].function.state == DECLARED) {
             return 1;
         }
     }
@@ -206,6 +248,20 @@ TypeNode *retrieve_function_paramTypeList(char *name) {
     fatal("cannot retrieve function '%s'", name);
 }
 
+bool check_function_declared_undefined() {
+    bool ret = true;
+    Symbol *st = cenv->st;
+    for (int i = 1; i < cenv->top; i++) {
+        if (st[i].kind == FUNCTION
+                && st[i].function.state == DECLARED) {
+            printf("Error type 18 at Line ??: Function '%s' declared but not defined\n", st[i].name);
+        }
+        ret = false;
+    }
+    return ret;
+}
+
+
 void print_symbol_table() {
     Symbol *st = cenv->st;
     for (int i = 1; i < cenv->top; i++) {
@@ -217,6 +273,9 @@ void print_symbol_table() {
             printf("%s", typeRepr(st[i].variable.type));
         } else if (st[i].kind == FUNCTION) {
             printf(" (function) ");
+            if (st[i].function.state == DECLARED) {
+                printf("_ ");
+            }
             printf("%s", st[i].name);
             printf(" : ");
             printf("%s", typeListRepr(st[i].function.paramTypeList));
