@@ -12,6 +12,15 @@ void install_struct(Type *type) {
     if (contains_struct__type(type)) {
         return;
     }
+    if (!isStructureType(type)) {
+        warn("installing non-struct type '%s'", typeRepr(type));
+        return;
+    }
+    if (type->structure.name == NULL) {
+        info("discard '%s' with no name", typeRepr(type));
+        return;
+    }
+
     TypeNode *typeNode = malloc(sizeof(TypeNode));
     typeNode->type = type;
     typeNode->next = structList;
@@ -26,6 +35,10 @@ bool contains_struct__type(Type *type) {
 
 
 bool contains_struct__name(char *name) {
+    if (name == NULL) {
+        // anonymous struct
+        return false;
+    }
     for (TypeNode *q = structList; q != NULL; q = q->next) {
         if (q->type->kind == STRUCTURE
                 && strcmp(q->type->structure.name, name) == 0) {

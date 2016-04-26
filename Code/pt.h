@@ -141,7 +141,7 @@ typedef struct Exp_ {
         // and Exp : ID ( )
         struct {
             char *id_text;
-            struct Args_ *args;
+            struct Args_ *args; // NULL indicates no args
         } call;
 
         char *id_text; // for Exp : ID

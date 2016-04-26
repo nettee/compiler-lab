@@ -1,0 +1,46 @@
+struct score {
+    int calculus;
+    int algorithm;
+};
+
+int compare(struct score p, struct score q)
+{
+    int p_all = p.calculus + p.algorithm;
+    int q_all = q.calculus + q.algoirthm;
+    if (p_all > q_all)
+        return 1;
+    if (p_all == q_all)
+        return 0;
+    return -1;
+}
+
+struct score2 {
+    int calculus2, algorithm2;
+    int data_struct2, algorithm2;
+};
+
+struct score3 {
+    int algorithm3;
+};
+
+int main()
+{
+    int a[10], b[10];
+    int score3;
+    float d;
+    int i = 0;
+    while (i < 10) {
+        struct score s1;
+        struct score s2;
+        s1.calculus = a[i];
+        s1.algorithm = c;
+        s2.calculus = b[i];
+        s2.algorithm = d;
+        if (compare(s1, s2) < 0.0)
+            i = i + 1;
+        else if (compare(s1, s2) = 0)
+            i = i + 2;
+        else
+            i = i + 3;
+    }
+}

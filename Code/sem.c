@@ -45,6 +45,9 @@ static bool check_variable_definition(void *node, char *name) {
             error(3, node, "Redefined variable '%s'", name);
         }
         return false;
+    } else if (contains_struct__name(name)) {
+        error(3, node, "Variable name '%s' conflicts with type 'struct %s'",
+                name, name);
     }
     return true;
 }
@@ -60,7 +63,8 @@ static bool check_function_call(void *node, char *name, Args *args) {
         return false;
     } else {
         TypeNode *paramTypeList = retrieve_function_paramTypeList(name);
-        TypeNode *argTypeList = args->attr_argTypeListTail;
+        TypeNode *argTypeList = (args == NULL) ? NULL
+                : args->attr_argTypeListTail;
         if (!isEqvTypeList(paramTypeList, argTypeList)) {
             error(9, node, "Function '%s' is not applicable for arguments '%s'",
                     typeListRepr(paramTypeList), typeListRepr(argTypeList));
@@ -232,11 +236,6 @@ static void visitExtDef(void *node) {
 
     } else if (extDef->extdef_kind == EXT_DEF_T_STRUCT) {
         visit(extDef->struct_.specifier);
-        Type *t = extDef->struct_.specifier->attr_type;
-        if (isStructureType(t)) {
-            check_structure_definition(extDef, t);
-            install_struct(t);
-        }
 
     } else if (extDef->extdef_kind == EXT_DEF_T_FUN) {
         visit(extDef->fun.specifier);
@@ -313,9 +312,12 @@ static void visitStructSpecifier(void *node) {
         enter_new_env();
         visit(structSpecifier->def.defList);
         FieldNode *fieldList = exit_current_env();
-        structSpecifier->attr_type = newStructureType(
+        Type *structType = newStructureType(
                 structSpecifier->def.optTag->id_text,
                 fieldList);
+        check_structure_definition(structSpecifier, structType);
+        install_struct(structType);
+        structSpecifier->attr_type = structType;
     } else {
         fatal("unknown structspecifier_type");
     }

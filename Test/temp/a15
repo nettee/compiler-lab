@@ -1,0 +1,8 @@
+struct point {
+    int x, y;
+    float z;
+};
+
+int main()
+{
+}
