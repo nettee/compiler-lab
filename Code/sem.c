@@ -12,13 +12,7 @@ typedef void (*funcptr)(void *);
 
 static void visit(void *node);
 
-char *terminal_str(int token_enum);
-char *nonterminal_str(int nonterminal_enum);
-
 static int indent = -1;
-
-#define print(...) { \
-}
 
 #define error(error_id, node, ...) { \
     int lineno = ((int *)node)[1]; \
@@ -62,6 +56,7 @@ static bool check_function_call(void *node, char *name, Args *args) {
         error(2, node, "Undefined function '%s'", name);
         return false;
     } else {
+        // assert: always able to retrieve
         TypeNode *paramTypeList = retrieve_function_paramTypeList(name);
         TypeNode *argTypeList = (args == NULL) ? NULL
                 : args->attr_argTypeListTail;
@@ -99,7 +94,7 @@ static bool check_function_declaration(void *node, char *name,
         TypeNode *paramTypeList0 = retrieve_function_paramTypeList(name);
         if (!isEqvType(returnType, returnType0)
                 || !isEqvTypeList(paramTypeList, paramTypeList0)) {
-            error(19, node, "Incompatible declaration for function '%s'", name);
+            error(19, node, "Inconsistent declaration of function '%s'", name);
             return false;
         }
     }
@@ -119,7 +114,7 @@ static bool check_assignment_lvalue(void *node, bool is_lvalue) {
 
 static bool check_assignment_type(void *node, Type *t1, Type *t2) {
     if (!isEqvType(t1, t2)) {
-        error(5, node, "Type mismatched for assignment: cannot assign '%s' to '%s'", typeRepr(t2), typeRepr(t1));
+        error(5, node, "Cannot assign '%s' to '%s'", typeRepr(t2), typeRepr(t1));
         return false;
     }
     return true;
@@ -141,6 +136,14 @@ static bool check_logic_type(void *node, Type *t) {
     return true;
 }
 
+static bool check_if_expression_type(void *node, Type *t) {
+    if (!isBasicIntType(t)) {
+        error(7, node, "Type 'int' expected for if/while expression");
+        return false;
+    }
+    return true;
+}
+
 static bool check_function_returnType(void *node,
         Type *returnType, Type *expType) {
     if (!isEqvType(returnType, expType)) {
@@ -150,17 +153,21 @@ static bool check_function_returnType(void *node,
     return true;
 }
 
-static bool check_array_subscript_type(void *node, Type *baseType, Type *indexType) {
-    if (!isArrayType(baseType)) {
-        error(10, node, "Type '%s' cannot be subscripted", typeRepr(baseType));
+static bool check_array_subscript_base_type(void *node, Type *t) {
+    if (!isArrayType(t)) {
+        error(10, node, "Type '%s' cannot be subscripted", typeRepr(t));
         return false;
     }
-    if (!isBasicIntType(indexType)) {
-        error(12, node, "Type 'int' expected for array index");
+}
+
+static bool check_array_subscript_index_type(void *node, Type *t) {
+    if (!isBasicIntType(t)) {
+        error(12, node, "Type '%s' cannot be array index", typeRepr(t));
         return false;
     }
     return true;
 }
+
 
 // ===== check structure error =====
 
@@ -182,7 +189,7 @@ static bool check_structure_reference(void *node, char *name) {
 
 static bool check_structure_field_access(void *node, 
         Type *structType, char *fieldName) {
-    if (!isStructureType(structType)) {
+    if (isArbitType(structType) || !isStructureType(structType)) {
         error(13, node, "Illegal use of '.' on non-struct");
         return false;
     } else if (!hasField(structType, fieldName)) {
@@ -193,22 +200,13 @@ static bool check_structure_field_access(void *node,
     return true;
 }
 
-static void print_id(char *id_text) {
-}
-
-static void print_int(int int_value) {
-}
-
-static void print_float(float float_value) {
-}
-
-static void print_type(int type_index) {
-}
-
-static void print_terminal(int terminal) {
-}
-
-static void print_relop(int yylval) {
+static bool check_structure_field_initialize(void *node, 
+        bool initialized) {
+    if (initialized && in_nested_env()) {
+        error(15, node, "Initialized struct field");
+        return false;
+    }
+    return true;
 }
 
 static void visitProgram(void *node) {
@@ -242,9 +240,6 @@ static void visitExtDef(void *node) {
         extDef->fun.funDec->attr_returnType
                 = extDef->fun.specifier->attr_type;
         visit(extDef->fun.funDec);
-        extDef->fun.compSt->attr_func_returnType
-                = extDef->fun.funDec->attr_returnType;
-        visit(extDef->fun.compSt);
 
         check_function_definition(extDef,
                 extDef->fun.funDec->id_text,
@@ -253,6 +248,10 @@ static void visitExtDef(void *node) {
         install_function_defined(extDef->fun.funDec->id_text,
             extDef->fun.funDec->attr_returnType,
             extDef->fun.funDec->attr_paramTypeList);
+
+        extDef->fun.compSt->attr_func_returnType
+                = extDef->fun.funDec->attr_returnType;
+        visit(extDef->fun.compSt);
 
     } else if (extDef->extdef_kind == EXT_DEF_T_FUN_DEC) {
         visit(extDef->fun.specifier);
@@ -266,7 +265,8 @@ static void visitExtDef(void *node) {
                 extDef->fun.funDec->attr_paramTypeList);
         install_function_declared(extDef->fun.funDec->id_text,
             extDef->fun.funDec->attr_returnType,
-            extDef->fun.funDec->attr_paramTypeList);
+            extDef->fun.funDec->attr_paramTypeList,
+            ((int *)node)[1]);
 
     } else {
         fatal("unknown extdef_type");
@@ -286,16 +286,13 @@ static void visitExtDecList(void *node) {
 
 static void visitSpecifier(void *node) {
     Specifier *specifier = (Specifier *)node;
-    switch (specifier->specifier_kind) {
-    case SPECIFIER_T_BASIC:
+    if (specifier->specifier_kind == SPECIFIER_T_BASIC) {
         specifier->attr_type = newBasicType(specifier->type_index);
-        break;
-    case SPECIFIER_T_STRUCT:
+    } else if (specifier->specifier_kind ==  SPECIFIER_T_STRUCT) {
         visit(specifier->structSpecifier);
         specifier->attr_type = specifier->structSpecifier->attr_type;
-        break;
-    default:
-        printf("fatal: unknown specifier_type\n");
+    } else {
+        fatal("unknown specifier_type");
     }
 }
 
@@ -305,19 +302,23 @@ static void visitStructSpecifier(void *node) {
     if (kind == STRUCT_SPECIFIER_T_DEC) {
         visit(structSpecifier->dec.tag);
         char *name = structSpecifier->dec.tag->attr_name;
-        check_structure_reference(structSpecifier, name);
-        structSpecifier->attr_type = retrieve_struct(name);
+        bool exist = check_structure_reference(structSpecifier, name);
+        structSpecifier->attr_type = exist
+                ? retrieve_struct(name)
+                : getArbitType();
+
     } else if (kind == STRUCT_SPECIFIER_T_DEF) {
         visit(structSpecifier->def.optTag);
         enter_new_env();
         visit(structSpecifier->def.defList);
         FieldNode *fieldList = exit_current_env();
         Type *structType = newStructureType(
-                structSpecifier->def.optTag->id_text,
+                structSpecifier->def.optTag->attr_name,
                 fieldList);
         check_structure_definition(structSpecifier, structType);
         install_struct(structType);
         structSpecifier->attr_type = structType;
+
     } else {
         fatal("unknown structspecifier_type");
     }
@@ -326,9 +327,7 @@ static void visitStructSpecifier(void *node) {
 static void visitOptTag(void *node) {
     /* may produce epsilon */
     OptTag *optTag = (OptTag *)node;
-    if (optTag->id_text != NULL) {
-        print_id(optTag->id_text);
-    }
+    optTag->attr_name = optTag->id_text;
 }
 
 static void visitTag(void *node) {
@@ -341,10 +340,12 @@ static void visitVarDec(void *node) {
     if (varDec->vardec_kind == VAR_DEC_T_ID) {
         check_variable_definition(varDec, varDec->id_text);
         install_variable(varDec->id_text, varDec->attr_type);
+
     } else if (varDec->vardec_kind == VAR_DEC_T_DIM) {
         varDec->dim.varDec->attr_type = newArrayType(
                 varDec->attr_type, varDec->dim.int_value);
         visit(varDec->dim.varDec);
+
     } else {
         fatal("unknown vardec_type");
     }
@@ -393,6 +394,8 @@ static void visitStmtList(void *node) {
     /* may produce epsilon */
     StmtList *stmtList = (StmtList *)node;
     if (stmtList->stmt != NULL) {
+        // stmtList->stmt and stmtList->stmtList
+        // will both be non-null
         stmtList->stmt->attr_func_returnType 
                 = stmtList->attr_func_returnType;
         visit(stmtList->stmt);
@@ -406,7 +409,6 @@ static void visitStmt(void *node) {
     Stmt *stmt = (Stmt *)node;
     if (stmt->stmt_kind == STMT_T_EXP) {
         visit(stmt->exp.exp);
-        print_terminal(SEMI);
 
     } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
         stmt->compst.compSt->attr_func_returnType
@@ -421,20 +423,24 @@ static void visitStmt(void *node) {
 
     } else if (stmt->stmt_kind == STMT_T_IF) {
         visit(stmt->if_.exp);
+        check_if_expression_type(stmt, stmt->if_.exp->attr_type);
         stmt->if_.then_stmt->attr_func_returnType 
                 = stmt->attr_func_returnType;
         visit(stmt->if_.then_stmt);
 
     } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
         visit(stmt->ifelse.exp);
+        check_if_expression_type(stmt, stmt->ifelse.exp->attr_type);
         stmt->ifelse.then_stmt->attr_func_returnType 
                 = stmt->attr_func_returnType;
         visit(stmt->ifelse.then_stmt);
         stmt->ifelse.else_stmt->attr_func_returnType 
                 = stmt->attr_func_returnType;
         visit(stmt->ifelse.else_stmt);
+
     } else if (stmt->stmt_kind == STMT_T_WHILE) {
         visit(stmt->while_.exp);
+        check_if_expression_type(stmt, stmt->while_.exp->attr_type);
         stmt->while_.stmt->attr_func_returnType
                 = stmt->attr_func_returnType;
         visit(stmt->while_.stmt);
@@ -474,12 +480,14 @@ static void visitDec(void *node) {
     Dec *dec = (Dec *)node;
     dec->varDec->attr_type = dec->attr_type;
     visit(dec->varDec);
+    check_structure_field_initialize(dec, dec->exp != NULL);
     if (dec->exp != NULL) {
         visit(dec->exp);
         check_assignment_type(dec,
                 dec->varDec->attr_type,
                 dec->exp->attr_type);
     }
+
 }
 
 static void visitExp(void *node) {
@@ -488,11 +496,6 @@ static void visitExp(void *node) {
     if (exp->exp_kind == EXP_T_INFIX) {
 
         visit(exp->infix.exp_left);
-        if (exp->infix.op == RELOP) {
-            print_relop(exp->infix.op_yylval);
-        } else {
-            print_terminal(exp->infix.op);
-        }
         visit(exp->infix.exp_right);
 
         if (exp->infix.op == PLUS
@@ -510,15 +513,13 @@ static void visitExp(void *node) {
             check_infix_type(exp,
                     exp->infix.exp_left->attr_type,
                     exp->infix.exp_right->attr_type);
-            exp->attr_type = exp->infix.exp_left->attr_type;
+            exp->attr_type = getBasicInt();
 
         } else if (exp->infix.op == AND
                 || exp->infix.op == OR) {
-            check_logic_type(exp,
-                    exp->infix.exp_left->attr_type);
-            check_logic_type(exp,
-                    exp->infix.exp_right->attr_type);
-            exp->attr_type = newBasicInt();
+            check_logic_type(exp, exp->infix.exp_left->attr_type);
+            check_logic_type(exp, exp->infix.exp_right->attr_type);
+            exp->attr_type = getBasicInt();
 
         } else if (exp->infix.op == ASSIGNOP) {
             check_assignment_type(exp,
@@ -546,7 +547,7 @@ static void visitExp(void *node) {
         } else if (exp->unary.op == NOT) {
             check_logic_type(exp,
                     exp->unary.exp->attr_type);
-            exp->attr_type = newBasicInt();
+            exp->attr_type = getBasicInt();
         } else {
             fatal("unknown exp->unary.op");
         }
@@ -556,9 +557,11 @@ static void visitExp(void *node) {
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
-        check_function_call(exp, exp->call.id_text,
+        bool callable = check_function_call(exp, exp->call.id_text,
                 exp->call.args); 
-        exp->attr_type = retrieve_function_returnType(exp->call.id_text);
+        exp->attr_type = callable
+                ? retrieve_function_returnType(exp->call.id_text)
+                : getArbitType();
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
@@ -566,31 +569,36 @@ static void visitExp(void *node) {
         visit(exp->subscript.index);
         Type *baseType = exp->subscript.array->attr_type;
         Type *indexType = exp->subscript.index->attr_type;
-        check_array_subscript_type(exp, baseType, indexType);
-        exp->attr_type = isArrayType(baseType)
-            ? getElementType(baseType)
-            : newArbitType();
+        bool subscriptable = check_array_subscript_base_type(exp, baseType);
+        check_array_subscript_index_type(exp, indexType);
+        exp->attr_type = subscriptable
+                ? getElementType(baseType)
+                : getArbitType();
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_DOT) {
         visit(exp->dot.exp);
         Type *structType = exp->dot.exp->attr_type;
         char *fieldName = exp->dot.id_text;
-        check_structure_field_access(exp, structType, fieldName);
-        exp->attr_type = getFieldType(structType, fieldName);
+        bool legal = check_structure_field_access(exp, structType, fieldName);
+        exp->attr_type = legal
+                ? getFieldType(structType, fieldName)
+                : getArbitType();
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_ID) {
-        check_variable_reference(exp, exp->id_text);
-        exp->attr_type = retrieve_variable_type(exp->id_text);
+        bool exist = check_variable_reference(exp, exp->id_text);
+        exp->attr_type = exist 
+                ? retrieve_variable_type(exp->id_text)
+                : getArbitType();
         exp->attr_lvalue = true;
 
     } else if (exp->exp_kind == EXP_T_INT) {
-        exp->attr_type = newBasicInt();
+        exp->attr_type = getBasicInt();
         exp->attr_lvalue = false;
 
     } else if (exp->exp_kind == EXP_T_FLOAT) {
-        exp->attr_type = newBasicFloat();
+        exp->attr_type = getBasicFloat();
         exp->attr_lvalue = false;
 
     } else {
@@ -637,9 +645,7 @@ static funcptr visitor_table[] = {
 };
 
 static void visit(void *node) {
-    //printf("node = %p\n", node);
     int type = *(int *)node;
-    //printf("type = %d\n", type);
     indent++;
     visitor_table[type-400](node);
     indent--;

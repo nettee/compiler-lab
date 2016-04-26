@@ -8,6 +8,8 @@
 
 #include "type.h"
 
+//#define NETTEE_DEBUG
+
 #define fatal(...) { \
     fprintf(stderr, "\nFatal: "); \
     fprintf(stderr, __VA_ARGS__); \
@@ -15,6 +17,7 @@
     assert(0); \
 }
 
+#ifdef NETTEE_DEBUG
 #define warn(...) { \
     printf("[warning] %s:%d: ", __FILE__, __LINE__); \
     printf(__VA_ARGS__); \
@@ -32,6 +35,11 @@
     printf(__VA_ARGS__); \
     printf("\n"); \
 }
+#else
+#define warn(...)
+#define info(...)
+#define debug(...)
+#endif
 
 #define RELOP_LT 1091
 #define RELOP_LE 1092

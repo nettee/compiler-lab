@@ -53,13 +53,6 @@ bool isEqvTypeList(TypeNode *t1, TypeNode *t2) {
     return t1 == NULL && t2 == NULL;
 }
 
-Type *newArbitType() {
-    Type *type = malloc(sizeof(type));
-    type->kind = ARBIT;
-
-    return type;
-}
-
 Type *getArbitType() {
     static Type *type;
     if (type == NULL) {
@@ -70,12 +63,24 @@ Type *getArbitType() {
     return type;
 }
 
-Type *newBasicInt() {
-    return newBasicType(T_INT);
+Type *getBasicInt() {
+    static Type *type;
+    if (type == NULL) {
+        type = malloc(sizeof(type));
+        type->kind = BASIC;
+        type->basic = T_INT;
+    }
+    return type;
 }
 
-Type *newBasicFloat() {
-    return newBasicType(T_FLOAT);
+Type *getBasicFloat() {
+    static Type *type;
+    if (type == NULL) {
+        type = malloc(sizeof(type));
+        type->kind = BASIC;
+        type->basic = T_FLOAT;
+    }
+    return type;
 }
 
 Type *newBasicType(int type_index) {
@@ -158,16 +163,19 @@ char *typeRepr(Type *type) {
             fatal("unknown type_index");
         }
     } else if (type->kind == ARRAY) {
-        Type *t = type;
-        while (t->kind == ARRAY) {
-            t = t->array.elementType;
-        }
-        off += sprintf(str + off, "%s", typeRepr(t));
-        t = type;
-        while (t->kind == ARRAY) {
-            off += sprintf(str + off, "[%d]", t->array.length);
-            t = t->array.elementType;
-        }
+        off += sprintf(str + off, "array(%d, %s)",
+                type->array.length, 
+                typeRepr(type->array.elementType));
+//        Type *t = type;
+//        while (t->kind == ARRAY) {
+//            t = t->array.elementType;
+//        }
+//        off += sprintf(str + off, "%s", typeRepr(t));
+//        t = type;
+//        while (t->kind == ARRAY) {
+//            off += sprintf(str + off, "[%d]", t->array.length);
+//            t = t->array.elementType;
+//        }
     } else if (type->kind == STRUCTURE) {
         off += sprintf(str + off, "%s", 
                 (type->structure.name == NULL)

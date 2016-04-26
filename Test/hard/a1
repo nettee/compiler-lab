@@ -1,0 +1,38 @@
+struct Complex { 
+    float real;
+    float imag;
+    struct {
+        int xxx;
+    } myth;
+};
+
+struct Complex sub(struct Complex c3, struct Complex c4) {
+    c4.real = -c4.real;
+    c4.imag = 0 - c4.imag;
+    return add(c3, c4);
+}
+
+struct Complex add(struct Complex c1, struct Complex c2) {
+    struct Complex z;
+    z.real = c1.real + c2.real;
+    z.imag = c1.imag + c2.imag;
+    return z;
+}
+
+struct Complex mul(struct Complex c5, int fact) {
+    struct Complex zz = 0;
+    struct Complex zs[2];
+    zz.real = 0.0 + 1 * 0.0 / 1.0;
+    zz.imag = 0.0;
+    zs[0] = zz;
+    while (fact > 0) {
+        zs[0] = add(zs[0], c5);
+        fact = fact - 1;
+    }
+    return zs[0];
+}
+
+int main() {
+}
+
+

@@ -224,8 +224,8 @@ typedef struct Stmt_ {
 typedef struct StmtList_ {
     int kind;
     int lineno;
-    struct Stmt_ *stmt;
-    struct StmtList_ *stmtList;
+    struct Stmt_ *stmt; // may be NULL
+    struct StmtList_ *stmtList; // may be NULL
     Type *attr_func_returnType;
 } StmtList;
 
@@ -257,7 +257,7 @@ typedef struct FunDec_ {
     int kind;
     int lineno;
     char *id_text;
-    struct VarList_ *varList;
+    struct VarList_ *varList; // NULL indicates empty varList
     Type *attr_returnType;
     TypeNode *attr_paramTypeList;
 } FunDec;
@@ -289,6 +289,7 @@ typedef struct OptTag_ {
     int kind;
     int lineno;
     char *id_text; // id == NULL indicates None
+    char *attr_name;
 } OptTag;
 
 typedef struct StructSpecifier_ {

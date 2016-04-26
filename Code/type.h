@@ -46,11 +46,9 @@ bool isStructureType(Type *t);
 bool isEqvType(Type *t1, Type *t2);
 bool isEqvTypeList(TypeNode *t1, TypeNode *t2);
 
-Type *newArbitType();
 Type *getArbitType();
-
-Type *newBasicInt();
-Type *newBasicFloat();
+Type *getBasicInt();
+Type *getBasicFloat();
 Type *newBasicType(int type_index);
 
 Type *newArrayType(Type *elementType, int length);

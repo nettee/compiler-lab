@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "common.h"
+
 //#define PRINT_AST
 #define SEMANTICS_ANALYSIS
 
@@ -39,7 +41,10 @@ int main(int argc, char **argv)
 #ifdef SEMANTICS_ANALYSIS
     init_env();
     semantics_analysis();
+
+#ifdef NETTEE_DEBUG
     print_symbol_table();
+#endif
 
     if (nr_semantics_error > 0) {
         return 2;

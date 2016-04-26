@@ -68,6 +68,7 @@ typedef struct {
         } variable;
         struct {
             enum { DECLARED, DEFINED } state;
+            int lineno;
             Type *returnType;
             TypeNode *paramTypeList;
         } function;
@@ -160,13 +161,15 @@ void install_function_defined(char *name, Type *returnType, TypeNode *paramTypeL
     st[cenv->top].kind = FUNCTION;
     st[cenv->top].name = name;
     st[cenv->top].function.state = DEFINED;
+    st[cenv->top].function.lineno = 233;
     st[cenv->top].function.returnType = returnType;
     st[cenv->top].function.paramTypeList = paramTypeList;
     cenv->top++;
     info("install function '%s'", name);
 }
 
-void install_function_declared(char *name, Type *returnType, TypeNode *paramTypeList) {
+void install_function_declared(char *name, Type *returnType, 
+        TypeNode *paramTypeList, int lineno) {
     Symbol *st = cenv->st;
     if (contains_function_defined(name)
             || contains_function_declared(name)) {
@@ -175,6 +178,7 @@ void install_function_declared(char *name, Type *returnType, TypeNode *paramType
     st[cenv->top].kind = FUNCTION;
     st[cenv->top].name = name;
     st[cenv->top].function.state = DECLARED;
+    st[cenv->top].function.lineno = lineno;
     st[cenv->top].function.returnType = returnType;
     st[cenv->top].function.paramTypeList = paramTypeList;
     cenv->top++;
@@ -267,7 +271,7 @@ bool check_function_declared_undefined() {
     for (int i = 1; i < cenv->top; i++) {
         if (st[i].kind == FUNCTION
                 && st[i].function.state == DECLARED) {
-            printf("Error type 18 at Line ??: Function '%s' declared but not defined\n", st[i].name);
+            printf("Error type 18 at Line %d: Function '%s' declared but not defined\n", st[i].function.lineno, st[i].name);
         }
         ret = false;
     }
@@ -287,7 +291,7 @@ void print_symbol_table() {
         } else if (st[i].kind == FUNCTION) {
             printf(" (function) ");
             if (st[i].function.state == DECLARED) {
-                printf("_ ");
+                printf("_[%d] ", st[i].function.lineno);
             }
             printf("%s", st[i].name);
             printf(" : ");
