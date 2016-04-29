@@ -163,20 +163,24 @@ char *typeRepr(Type *type) {
             fatal("unknown type_index");
         }
     } else if (type->kind == ARRAY) {
+#ifdef NETTEE_DEBUG
         off += sprintf(str + off, "array(%d, %s)",
                 type->array.length, 
                 typeRepr(type->array.elementType));
-//        Type *t = type;
-//        while (t->kind == ARRAY) {
-//            t = t->array.elementType;
-//        }
-//        off += sprintf(str + off, "%s", typeRepr(t));
-//        t = type;
-//        while (t->kind == ARRAY) {
-//            off += sprintf(str + off, "[%d]", t->array.length);
-//            t = t->array.elementType;
-//        }
+#else
+        Type *t = type;
+        while (t->kind == ARRAY) {
+            t = t->array.elementType;
+        }
+        off += sprintf(str + off, "%s", typeRepr(t));
+        t = type;
+        while (t->kind == ARRAY) {
+            off += sprintf(str + off, "[%d]", t->array.length);
+            t = t->array.elementType;
+        }
+#endif
     } else if (type->kind == STRUCTURE) {
+#ifdef NETTEE_DEBUG
         off += sprintf(str + off, "%s", 
                 (type->structure.name == NULL)
                 ? "<anonymous>"
@@ -191,6 +195,12 @@ char *typeRepr(Type *type) {
             }
         }
         off += sprintf(str + off, "}");
+#else
+        off += sprintf(str + off, "struct %s",
+                (type->structure.name == NULL)
+                ? "<anonymous>"
+                : type->structure.name);
+#endif
     } else if (type->kind == ARBIT) {
         off += sprintf(str + off, "<arbitrary>");
     } else {
