@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "st.h"
+#include "ir.h"
 
 enum ExpKind {
     EXP_T_INFIX = 2100,
@@ -146,11 +147,13 @@ typedef struct Exp_ {
 
         char *id_text; // for Exp : ID
         int int_value; // for Exp : INT
-        int float_value; // for Exp : FLOAT
+        float float_value; // for Exp : FLOAT
     };
 
     Type *attr_type;
     bool attr_lvalue;
+    Operand *ir_addr;
+    IRList *ir_code;
 } Exp;
 
 typedef struct Dec_ {
@@ -219,6 +222,7 @@ typedef struct Stmt_ {
         } while_;
     };
     Type *attr_func_returnType;
+    IRList *ir_code;
 } Stmt;
 
 typedef struct StmtList_ {

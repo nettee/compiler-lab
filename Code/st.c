@@ -272,6 +272,8 @@ bool check_function_declared_undefined() {
         if (st[i].kind == FUNCTION
                 && st[i].function.state == DECLARED) {
             printf("Error type 18 at Line %d: Function '%s' declared but not defined\n", st[i].function.lineno, st[i].name);
+            extern int nr_semantics_error;
+            nr_semantics_error++;
         }
         ret = false;
     }

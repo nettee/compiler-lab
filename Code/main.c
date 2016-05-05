@@ -4,6 +4,7 @@
 
 //#define PRINT_AST
 #define SEMANTICS_ANALYSIS
+#define IR_GENERATE
 
 extern int nr_lexical_error;
 extern int nr_syntax_error;
@@ -16,6 +17,7 @@ void print_ast();
 void init_env();
 void semantics_analysis();
 void print_symbol_table();
+void generate_intercode();
 
 int main(int argc, char **argv)
 {
@@ -49,7 +51,10 @@ int main(int argc, char **argv)
     if (nr_semantics_error > 0) {
         return 2;
     }
+#endif
 
+#ifdef IR_GENERATE
+    generate_intercode();
 #endif
 
 

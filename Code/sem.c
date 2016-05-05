@@ -19,6 +19,7 @@ static int indent = -1;
     printf("Error type %d at Line %d: ", error_id, lineno); \
     printf(__VA_ARGS__); \
     printf("\n"); \
+    nr_semantics_error++; \
 }
 
 // ===== check variable error =====

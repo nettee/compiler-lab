@@ -8,7 +8,7 @@
 
 #include "type.h"
 
-//#define NETTEE_DEBUG
+#define NETTEE_DEBUG
 
 #define fatal(...) { \
     fprintf(stderr, "\nFatal: "); \
