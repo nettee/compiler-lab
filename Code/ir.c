@@ -1,4 +1,5 @@
 #include "common.h"
+#include "syntax.tab.h"
 #include "pt.h"
 
 #include "ir.h"
@@ -55,22 +56,25 @@ static char *op_repr(Operand *op) {
 
 typedef struct {
     enum {
-        LABEL,
-        FUNCTION,
-        ASSIGN,
-        ADD, SUB, MUL, DIV,
-        ADDR,
-        INDIR,
-        ASSIGN_TO_ADDR,
-        GOTO,
-        COND_GOTO,
-        RETURN,
-        ALLOC,
-        ARG,
-        CALL,
-        PARAM,
-        READ,
-        WRITE,
+        IR_LABEL,
+        IR_FUNCTION,
+        IR_ASSIGN,
+        IR_ADD, 
+        IR_SUB, 
+        IR_MUL, 
+        IR_DIV,
+        IR_ADDR,
+        IR_INDIR,
+        IR_ASSIGN_TO_ADDR,
+        IR_GOTO,
+        IR_COND_GOTO,
+        IR_RETURN,
+        IR_ALLOC,
+        IR_ARG,
+        IR_CALL,
+        IR_PARAM,
+        IR_READ,
+        IR_WRITE,
     } kind;
     union {
         struct {
@@ -85,12 +89,35 @@ static char *ir_repr(IR *ir) {
     char *str = malloc(100);
     memset(str, 0, 100);
     int off = 0;
-    if (ir->kind == LABEL) {
+    if (ir->kind == IR_LABEL) {
         // TODO
-    } else if (ir->kind == ASSIGN) {
-        off += sprintf(str + off, "%s := %s", op_repr(ir->result), op_repr(ir->arg1));
-    } else if (ir->kind == RETURN) {
-        off += sprintf(str + off, "RETURN %s", op_repr(ir->arg1));
+    } else if (ir->kind == IR_ASSIGN) {
+        off += sprintf(str + off, "%s := %s",
+                op_repr(ir->result),
+                op_repr(ir->arg1));
+    } else if (ir->kind == IR_ADD) {
+        off += sprintf(str + off, "%s := %s + %s",
+                op_repr(ir->result),
+                op_repr(ir->arg1),
+                op_repr(ir->arg2));
+    } else if (ir->kind == IR_SUB) {
+        off += sprintf(str + off, "%s := %s - %s",
+                op_repr(ir->result),
+                op_repr(ir->arg1),
+                op_repr(ir->arg2));
+    } else if (ir->kind == IR_MUL) {
+        off += sprintf(str + off, "%s := %s * %s",
+                op_repr(ir->result),
+                op_repr(ir->arg1),
+                op_repr(ir->arg2));
+    } else if (ir->kind == IR_DIV) {
+        off += sprintf(str + off, "%s := %s / %s",
+                op_repr(ir->result),
+                op_repr(ir->arg1),
+                op_repr(ir->arg2));
+    } else if (ir->kind == IR_RETURN) {
+        off += sprintf(str + off, "RETURN %s",
+                op_repr(ir->arg1));
     } else {
         off += sprintf(str + off, "some-ir");
     }
@@ -98,21 +125,53 @@ static char *ir_repr(IR *ir) {
 }
 
 static IR *newAssignInt(Operand *result, int value) {
-    new_ir(ir, ASSIGN);
+    new_ir(ir, IR_ASSIGN);
     ir->result = result;
     ir->arg1 = newIntLiteral(value);
     return ir;
 }
 
 static IR *newAssignFloat(Operand *result, float value) {
-    new_ir(ir, ASSIGN);
+    new_ir(ir, IR_ASSIGN);
     ir->result = result;
     ir->arg1 = newFloatLiteral(value);
     return ir;
 }
 
+static IR *newAdd(Operand *result, Operand *arg1, Operand *arg2) {
+    new_ir(ir, IR_ADD);
+    ir->result = result;
+    ir->arg1 = arg1;
+    ir->arg2 = arg2;
+    return ir;
+}
+
+static IR *newSub(Operand *result, Operand *arg1, Operand *arg2) {
+    new_ir(ir, IR_SUB);
+    ir->result = result;
+    ir->arg1 = arg1;
+    ir->arg2 = arg2;
+    return ir;
+}
+
+static IR *newMul(Operand *result, Operand *arg1, Operand *arg2) {
+    new_ir(ir, IR_MUL);
+    ir->result = result;
+    ir->arg1 = arg1;
+    ir->arg2 = arg2;
+    return ir;
+}
+
+static IR *newDiv(Operand *result, Operand *arg1, Operand *arg2) {
+    new_ir(ir, IR_DIV);
+    ir->result = result;
+    ir->arg1 = arg1;
+    ir->arg2 = arg2;
+    return ir;
+}
+
 static IR *newReturn(Operand *temp) {
-    new_ir(ir, RETURN);
+    new_ir(ir, IR_RETURN);
     ir->arg1 = temp;
     return ir;
 }
@@ -136,7 +195,36 @@ static IRList *IR2List(IR *ir) {
     return irList;
 }
 
+static IRList *newEmptyIRList() {
+    IRList *irList = malloc(sizeof(IRList));
+    irList->head = NULL;
+    irList->tail = NULL;
+    return irList;
+}
+
+static bool isEmptyIRList(IRList *list) {
+    return list->head == NULL && list->tail == NULL;
+}
+
+static IRList *IRList_extend(IRList *a, IRList *b) {
+    if (isEmptyIRList(a)) {
+        return b;
+    }
+    if (isEmptyIRList(b)) {
+        return a;
+    }
+    a->tail->next = b->head;
+    b->head->prev = a->tail;
+    IRList *irList = malloc(sizeof(IRList));
+    irList->head = a->head;
+    irList->tail = b->tail;
+    return irList;
+}
+
 static IRList *IRList_append(IRList *irList, IR *ir) {
+    if (isEmptyIRList(irList)) {
+        return IR2List(ir);
+    }
     new_ir_node(node, ir);
     irList->tail->next = node;
     node->prev = irList->tail;
@@ -147,8 +235,16 @@ static IRList *IRList_append(IRList *irList, IR *ir) {
 }
 
 static void print_ir_list(IRList *irList) {
-    for (IRNode *q = irList->head; q != NULL; q = q->next) {
+    if (isEmptyIRList(irList)) {
+        return;
+    }
+    IRNode *q = irList->head;
+    while (true) {
         printf("%s\n", ir_repr(q->ir));
+        if (q == irList->tail) {
+            break;
+        }
+        q = q->next;
     }
 }
 
@@ -184,6 +280,7 @@ static void visitExtDef(void *node) {
         visit(extDef->fun.specifier);
         visit(extDef->fun.funDec);
         visit(extDef->fun.compSt);
+        print_ir_list(extDef->fun.compSt->ir_code);
 
     } else if (extDef->extdef_kind == EXT_DEF_T_FUN_DEC) {
         visit(extDef->fun.specifier);
@@ -276,26 +373,39 @@ static void visitCompSt(void *node) {
     CompSt *compSt = (CompSt *)node;
     visit(compSt->defList);
     visit(compSt->stmtList);
+    compSt->ir_code = compSt->stmtList->ir_code;
 }
 
 static void visitStmtList(void *node) {
     /* may produce epsilon */
     StmtList *stmtList = (StmtList *)node;
-    if (stmtList->stmt != NULL) {
+    if (stmtList->stmt == NULL) {
+        stmtList->ir_code = newEmptyIRList();
+    } else {
         // stmtList->stmt and stmtList->stmtList
         // will both be non-null
         visit(stmtList->stmt);
         visit(stmtList->stmtList);
+        stmtList->ir_code = IRList_extend(
+                stmtList->stmt->ir_code,
+                stmtList->stmtList->ir_code);
     }
 }
 
 static void visitStmt(void *node) {
     Stmt *stmt = (Stmt *)node;
     if (stmt->stmt_kind == STMT_T_EXP) {
+        /* assign a temp place for exp,
+         * but never use it
+         */
+        Operand *temp = newTemp();
+        stmt->exp.exp->ir_addr = temp;
         visit(stmt->exp.exp);
+        stmt->ir_code = stmt->exp.exp->ir_code;
 
     } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
         visit(stmt->compst.compSt);
+        stmt->ir_code = stmt->compst.compSt->ir_code;
 
     } else if (stmt->stmt_kind == STMT_T_RETURN) {
         Operand *temp = newTemp();
@@ -303,7 +413,6 @@ static void visitStmt(void *node) {
         visit(stmt->return_.exp);
         IR *ir = newReturn(temp);
         stmt->ir_code = IRList_append(stmt->return_.exp->ir_code, ir);
-        print_ir_list(stmt->ir_code);
 
     } else if (stmt->stmt_kind == STMT_T_IF) {
         visit(stmt->if_.exp);
@@ -359,14 +468,55 @@ static void visitExp(void *node) {
     Exp *exp = (Exp *)node;
 
     if (exp->exp_kind == EXP_T_INFIX) {
-        visit(exp->infix.exp_left);
-        visit(exp->infix.exp_right);
+
+        Exp *left = exp->infix.exp_left;
+        Exp *right = exp->infix.exp_right;
+
+        if (exp->infix.op == PLUS
+                || exp->infix.op == MINUS
+                || exp->infix.op == STAR
+                || exp->infix.op == DIV) {
+            Operand *temp1 = newTemp();
+            Operand *temp2 = newTemp();
+            left->ir_addr = temp1;
+            right->ir_addr = temp2;
+            visit(left);
+            visit(right);
+            IR *ir;
+            if (exp->infix.op == PLUS) {
+                ir = newAdd(exp->ir_addr, temp1, temp2);
+            } else if (exp->infix.op == MINUS) {
+                ir = newSub(exp->ir_addr, temp1, temp2);
+            } else if (exp->infix.op == STAR) {
+                ir = newMul(exp->ir_addr, temp1, temp2);
+            } else if (exp->infix.op == DIV) {
+                ir = newDiv(exp->ir_addr, temp1, temp2);
+            } else {
+                fatal("invalid exp->infix.op state");
+            }
+            exp->ir_code = IRList_extend(left->ir_code,
+                    IRList_append(right->ir_code, ir));
+        
+        } else {
+            fatal("unknown exp->infix.op");
+        }
 
     } else if (exp->exp_kind == EXP_T_PAREN) {
         visit(exp->paren.exp);
 
     } else if (exp->exp_kind == EXP_T_UNARY) {
-        visit(exp->unary.exp);
+
+        if (exp->unary.op == MINUS) {
+            Operand *temp = newTemp();
+            exp->unary.exp->ir_addr = temp;
+            visit(exp->unary.exp);
+            IR *ir = newSub(exp->ir_addr,
+                    newIntLiteral(0), temp);
+            exp->ir_code = IRList_append(
+                    exp->unary.exp->ir_code, ir);
+        } else {
+            fatal("unknown exp->unary.op");
+        }
 
     } else if (exp->exp_kind == EXP_T_CALL) {
         if (exp->call.args != NULL) {

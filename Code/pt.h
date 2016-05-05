@@ -231,6 +231,7 @@ typedef struct StmtList_ {
     struct Stmt_ *stmt; // may be NULL
     struct StmtList_ *stmtList; // may be NULL
     Type *attr_func_returnType;
+    IRList *ir_code;
 } StmtList;
 
 typedef struct CompSt_ {
@@ -239,6 +240,7 @@ typedef struct CompSt_ {
     DefList *defList;
     StmtList *stmtList;
     Type *attr_func_returnType;
+    IRList *ir_code;
 } CompSt;
 
 typedef struct ParamDec_ {
