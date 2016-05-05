@@ -60,27 +60,35 @@ Type *retrieve_struct(char *name) {
 }
 
 typedef struct {
-    enum { VARIABLE, FUNCTION } kind;
     char *name;
-    union {
-        struct {
-            Type *type;
-        } variable;
-        struct {
-            enum { DECLARED, DEFINED } state;
-            int lineno;
-            Type *returnType;
-            TypeNode *paramTypeList;
-        } function;
-    };
-} Symbol;
+    Type *type;
+} Variable;
+
+typedef struct VarNode_ VarNode;
+
+struct VarNode_ {
+    VarNode *next;
+    Variable *var;
+};
+
+typedef struct {
+    enum { DECLARED, DEFINED } state;
+    int lineno;
+    Type *returnType;
+    TypeNode *paramTypeList;
+} Function;
+
+typedef struct FunNode_ FunNode;
+
+struct FunNode_ {
+    FunNode *next;
+    Function *fun;
+};
 
 typedef struct Env_ {
     struct Env_ *next;
-    Symbol vst[NR_ST]; // variable symbol table
-    int vtop;
-    Symbol fst[NR_ST]; // function symbol table
-    int ftop;
+    VarNode *vst; // variable symbol table
+    FunNode *fst; // function symbol table
 } Env;
 
 static Env *cenv;
@@ -109,17 +117,15 @@ FieldNode *generateFieldList(Env *cenv) {
     FieldNode *tail = NULL;
     Symbol *st = cenv->vst;
     for (int i = 1; i < cenv->vtop; i++) {
-        if (st[i].kind == VARIABLE) {
-            FieldNode *field = newFieldNode(
-                    st[i].name,
-                    st[i].variable.type);
-            if (head == NULL) {
-                head = field;
-                tail = field;
-            } else {
-                tail->next = field;
-                tail = tail->next;
-            }
+        FieldNode *field = newFieldNode(
+                st[i].name,
+                st[i].variable.type);
+        if (head == NULL) {
+            head = field;
+            tail = field;
+        } else {
+            tail->next = field;
+            tail = tail->next;
         }
     }
     return head;
@@ -138,7 +144,6 @@ void install_variable(char *text, Type *type) {
     if (contains_variable(text)) {
         return;
     }
-    st[cenv->vtop].kind = VARIABLE;
     st[cenv->vtop].name = text;
     st[cenv->vtop].variable.type = type;
     cenv->vtop++;
@@ -152,8 +157,7 @@ void install_function_defined(char *name, Type *returnType, TypeNode *paramTypeL
     }
     if (contains_function_declared(name)) {
         for (int i = 1; i < cenv->ftop; i++) {
-            if (st[i].kind == FUNCTION
-                    && strcmp(st[i].name, name) == 0
+            if (strcmp(st[i].name, name) == 0
                     && st[i].function.state == DECLARED) {
                 st[i].function.state = DEFINED;
                 info("upgrade function '%s' to defined", name);
@@ -162,7 +166,6 @@ void install_function_defined(char *name, Type *returnType, TypeNode *paramTypeL
         }
     }
 
-    st[cenv->ftop].kind = FUNCTION;
     st[cenv->ftop].name = name;
     st[cenv->ftop].function.state = DEFINED;
     st[cenv->ftop].function.lineno = 233;
@@ -179,7 +182,6 @@ void install_function_declared(char *name, Type *returnType,
             || contains_function_declared(name)) {
         return;
     }
-    st[cenv->ftop].kind = FUNCTION;
     st[cenv->ftop].name = name;
     st[cenv->ftop].function.state = DECLARED;
     st[cenv->ftop].function.lineno = lineno;
@@ -198,8 +200,7 @@ int contains_symbol(char *name) {
 int contains_variable(char *name) {
     Symbol *st = cenv->vst;
     for (int i = 1; i < cenv->vtop; i++) {
-        if (st[i].kind == VARIABLE 
-                && strcmp(st[i].name, name) == 0) {
+        if (strcmp(st[i].name, name) == 0) {
             return 1;
         }
     }
@@ -209,8 +210,7 @@ int contains_variable(char *name) {
 int contains_function_defined(char *name) {
     Symbol *st = cenv->fst;
     for (int i = 1; i < cenv->ftop; i++) {
-        if (st[i].kind == FUNCTION 
-                && strcmp(st[i].name, name) == 0
+        if (strcmp(st[i].name, name) == 0
                 && st[i].function.state == DEFINED) {
             return 1;
         }
@@ -221,8 +221,7 @@ int contains_function_defined(char *name) {
 int contains_function_declared(char *name) {
     Symbol *st = cenv->fst;
     for (int i = 1; i < cenv->ftop; i++) {
-        if (st[i].kind == FUNCTION 
-                && strcmp(st[i].name, name) == 0
+        if (strcmp(st[i].name, name) == 0
                 && st[i].function.state == DECLARED) {
             return 1;
         }
@@ -233,8 +232,7 @@ int contains_function_declared(char *name) {
 Type *retrieve_variable_type(char *name) {
     Symbol *st = cenv->vst;
     for (int i = 1; i < cenv->vtop; i++) {
-        if (st[i].kind == VARIABLE
-                && strcmp(st[i].name, name) == 0) {
+        if (strcmp(st[i].name, name) == 0) {
             return st[i].variable.type;
         }
     }
@@ -245,8 +243,7 @@ Type *retrieve_variable_type(char *name) {
 Type *retrieve_function_returnType(char *name) {
     Symbol *st = cenv->fst;
     for (int i = 1; i < cenv->ftop; i++) {
-        if (st[i].kind == FUNCTION
-                && strcmp(st[i].name, name) == 0) {
+        if (strcmp(st[i].name, name) == 0) {
             return st[i].function.returnType;
         }
     }
@@ -257,8 +254,7 @@ Type *retrieve_function_returnType(char *name) {
 TypeNode *retrieve_function_paramTypeList(char *name) {
     Symbol *st = cenv->fst;
     for (int i = 1; i < cenv->ftop; i++) {
-        if (st[i].kind == FUNCTION
-                && strcmp(st[i].name, name) == 0) {
+        if (strcmp(st[i].name, name) == 0) {
             return st[i].function.paramTypeList;
         }
     }
@@ -269,8 +265,7 @@ bool check_function_declared_undefined() {
     bool ret = true;
     Symbol *st = cenv->fst;
     for (int i = 1; i < cenv->ftop; i++) {
-        if (st[i].kind == FUNCTION
-                && st[i].function.state == DECLARED) {
+        if (st[i].function.state == DECLARED) {
             printf("Error type 18 at Line %d: Function '%s' declared but not defined\n", st[i].function.lineno, st[i].name);
             extern int nr_semantics_error;
             nr_semantics_error++;
@@ -282,26 +277,27 @@ bool check_function_declared_undefined() {
 
 
 void print_symbol_table() {
-    Symbol *st = cenv->vst;
+    Symbol *st;
+    st = cenv->vst;
     for (int i = 1; i < cenv->vtop; i++) {
         printf("[%d]", i);
-        if (st[i].kind == VARIABLE) {
-            printf(" (variable) ");
-            printf("%s", st[i].name);
-            printf(" : ");
-            printf("%s", typeRepr(st[i].variable.type));
-        } else if (st[i].kind == FUNCTION) {
-            printf(" (function) ");
-            if (st[i].function.state == DECLARED) {
-                printf("_[%d] ", st[i].function.lineno);
-            }
-            printf("%s", st[i].name);
-            printf(" : ");
-            printf("%s", typeListRepr(st[i].function.paramTypeList));
-            printf(" -> %s", typeRepr(st[i].function.returnType));
-        } else {
-            fatal("unknown symbol kind");
+        printf(" (variable) ");
+        printf("%s", st[i].name);
+        printf(" : ");
+        printf("%s", typeRepr(st[i].variable.type));
+        printf("\n");
+    }
+
+    st = cenv->fst;
+    for (int i = 0; i < cenv->ftop; i++) {
+        printf(" (function) ");
+        if (st[i].function.state == DECLARED) {
+            printf("_[%d] ", st[i].function.lineno);
         }
+        printf("%s", st[i].name);
+        printf(" : ");
+        printf("%s", typeListRepr(st[i].function.paramTypeList));
+        printf(" -> %s", typeRepr(st[i].function.returnType));
         printf("\n");
     }
 }
