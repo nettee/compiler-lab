@@ -61,34 +61,91 @@ Type *retrieve_struct(char *name) {
 
 typedef struct {
     char *name;
-    Type *type;
-} Variable;
+    union {
+        // for variable
+        struct {
+            Type *type;
+        };
+        // for function
+        struct {
+            enum { DEFINED, DECLARED } state;
+            int lineno;
+            Type *returnType;
+            TypeNode *paramTypeList;
+        };
+    };
+} Symbol;
 
-typedef struct VarNode_ VarNode;
+Symbol *newVariableSymbol(char *name, Type *type) {
+    Symbol *symbol = malloc(sizeof(Symbol));
+    symbol->name = name;
+    symbol->type = type;
+    return symbol;
+}
 
-struct VarNode_ {
-    VarNode *next;
-    Variable *var;
+Symbol *newFunctionSymbol(char *name, int lineno, Type *returnType,
+        TypeNode *paramTypeList) {
+    Symbol *symbol = malloc(sizeof(Symbol));
+    symbol->name = name;
+    symbol->lineno = lineno;
+    symbol->returnType = returnType;
+    symbol->paramTypeList = paramTypeList;
+    return symbol;
+}
+
+typedef struct SymbolNode_ SymbolNode;
+
+struct SymbolNode_ {
+    SymbolNode *next;
+    Symbol *symbol;
 };
 
 typedef struct {
-    enum { DECLARED, DEFINED } state;
-    int lineno;
-    Type *returnType;
-    TypeNode *paramTypeList;
-} Function;
+    SymbolNode *head;
+    SymbolNode *tail;
+} SymbolTable;
 
-typedef struct FunNode_ FunNode;
+bool isEmptySymbolTable(SymbolTable *st) {
+    return st->head == NULL && st->tail == NULL;
+}
 
-struct FunNode_ {
-    FunNode *next;
-    Function *fun;
-};
+SymbolTable *newEmptySymbolTable() {
+    SymbolTable *st = malloc(sizeof(SymbolTable));
+    st->head = NULL;
+    st->tail = NULL;
+    return st;
+}
+
+static Symbol *SymbolTable_get(SymbolTable *st, char *name) {
+    for (SymbolNode *q = st->head; q != NULL; q = q->next) {
+        if (strcmp(q->symbol->name, name) == 0) {
+            return q->symbol;
+        }
+    }
+    return NULL;
+}
+
+static bool SymbolTable_contains(SymbolTable *st, char *name) {
+    return SymbolTable_get(st, name) != NULL;
+}
+
+void SymbolTable_append(SymbolTable *st, Symbol *sym) {
+    SymbolNode *node = malloc(sizeof(SymbolNode));
+    node->next = NULL;
+    node->symbol = sym;
+    if (isEmptySymbolTable(st)) {
+        st->head = node;
+        st->tail = node;
+    } else {
+        st->tail->next = node;
+        st->tail = node;
+    }
+}
 
 typedef struct Env_ {
     struct Env_ *next;
-    VarNode *vst; // variable symbol table
-    FunNode *fst; // function symbol table
+    SymbolTable *vst; // variable symbol table
+    SymbolTable *fst; // function symbol table
 } Env;
 
 static Env *cenv;
@@ -100,26 +157,25 @@ bool in_nested_env() {
 void init_env() {
     cenv = malloc(sizeof(Env));
     cenv->next = NULL;
-    cenv->vtop = 1;
-    cenv->ftop = 1;
+    cenv->vst = newEmptySymbolTable();
+    cenv->fst = newEmptySymbolTable();
 }
 
 void enter_new_env() {
     Env *env = malloc(sizeof(Env));
     env->next = cenv;
-    env->vtop = 1;
-    env->ftop = 1;
+    env->vst = newEmptySymbolTable();
+    env->fst = newEmptySymbolTable();
     cenv = env;
 }
 
 FieldNode *generateFieldList(Env *cenv) {
     FieldNode *head = NULL;
     FieldNode *tail = NULL;
-    Symbol *st = cenv->vst;
-    for (int i = 1; i < cenv->vtop; i++) {
-        FieldNode *field = newFieldNode(
-                st[i].name,
-                st[i].variable.type);
+    SymbolTable *st = cenv->vst;
+    for (SymbolNode *q = st->head; q != NULL; q = q->next) {
+        Symbol *sym = q->symbol;
+        FieldNode *field = newFieldNode(sym->name, sym->type);
         if (head == NULL) {
             head = field;
             tail = field;
@@ -139,134 +195,104 @@ FieldNode *exit_current_env() {
     return t;
 }
 
-void install_variable(char *text, Type *type) {
-    Symbol *st = cenv->vst;
-    if (contains_variable(text)) {
+int contains_variable(char *name) {
+    SymbolTable *st = cenv->vst;
+    return SymbolTable_contains(st, name);
+}
+
+int contains_function_defined(char *name) {
+    SymbolTable *st = cenv->fst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    return symbol != NULL && symbol->state == DEFINED;
+}
+
+int contains_function_declared(char *name) {
+    SymbolTable *st = cenv->fst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    return symbol != NULL && symbol->state == DECLARED;
+}
+
+void install_variable(char *name, Type *type) {
+    if (contains_variable(name)) {
         return;
     }
-    st[cenv->vtop].name = text;
-    st[cenv->vtop].variable.type = type;
-    cenv->vtop++;
-    info("install variable '%s'", text);
+    Symbol *symbol = newVariableSymbol(name, type);
+    SymbolTable *st = cenv->vst;
+    SymbolTable_append(st, symbol);
+    info("install variable '%s'", name);
 }
 
 void install_function_defined(char *name, Type *returnType, TypeNode *paramTypeList) {
-    Symbol *st = cenv->fst;
-    if (contains_function_defined(name)) {
-        return;
-    }
-    if (contains_function_declared(name)) {
-        for (int i = 1; i < cenv->ftop; i++) {
-            if (strcmp(st[i].name, name) == 0
-                    && st[i].function.state == DECLARED) {
-                st[i].function.state = DEFINED;
-                info("upgrade function '%s' to defined", name);
-                return;
-            }
+    SymbolTable *st = cenv->fst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    if (symbol == NULL) {
+        Symbol *symbol = newFunctionSymbol(name, 0, returnType, paramTypeList);
+        symbol->state = DEFINED;
+        SymbolTable_append(st, symbol);
+        info("install function (defined) '%s'", name);
+    } else {
+        if (symbol->state == DECLARED) {
+            symbol->state = DEFINED;
+            info("upgrade function '%s' to defined", name);
         }
     }
-
-    st[cenv->ftop].name = name;
-    st[cenv->ftop].function.state = DEFINED;
-    st[cenv->ftop].function.lineno = 233;
-    st[cenv->ftop].function.returnType = returnType;
-    st[cenv->ftop].function.paramTypeList = paramTypeList;
-    cenv->ftop++;
-    info("install function '%s'", name);
 }
 
 void install_function_declared(char *name, Type *returnType, 
         TypeNode *paramTypeList, int lineno) {
-    Symbol *st = cenv->fst;
-    if (contains_function_defined(name)
-            || contains_function_declared(name)) {
+    SymbolTable *st = cenv->fst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    if (symbol != NULL) {
         return;
     }
-    st[cenv->ftop].name = name;
-    st[cenv->ftop].function.state = DECLARED;
-    st[cenv->ftop].function.lineno = lineno;
-    st[cenv->ftop].function.returnType = returnType;
-    st[cenv->ftop].function.paramTypeList = paramTypeList;
-    cenv->ftop++;
-    info("install function '%s'", name);
-}
-
-int contains_symbol(char *name) {
-    return contains_variable(name)
-            || contains_function_defined(name)
-            || contains_function_declared(name);
-}
-
-int contains_variable(char *name) {
-    Symbol *st = cenv->vst;
-    for (int i = 1; i < cenv->vtop; i++) {
-        if (strcmp(st[i].name, name) == 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int contains_function_defined(char *name) {
-    Symbol *st = cenv->fst;
-    for (int i = 1; i < cenv->ftop; i++) {
-        if (strcmp(st[i].name, name) == 0
-                && st[i].function.state == DEFINED) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int contains_function_declared(char *name) {
-    Symbol *st = cenv->fst;
-    for (int i = 1; i < cenv->ftop; i++) {
-        if (strcmp(st[i].name, name) == 0
-                && st[i].function.state == DECLARED) {
-            return 1;
-        }
-    }
-    return 0;
+    Symbol *newSym = newFunctionSymbol(name, lineno, 
+            returnType, paramTypeList);
+    newSym->state = DECLARED;
+    SymbolTable_append(st, newSym);
+    info("install function (declared) '%s'", name);
 }
 
 Type *retrieve_variable_type(char *name) {
-    Symbol *st = cenv->vst;
-    for (int i = 1; i < cenv->vtop; i++) {
-        if (strcmp(st[i].name, name) == 0) {
-            return st[i].variable.type;
-        }
+    SymbolTable *st = cenv->vst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    if (symbol == NULL) {
+        warn("cannot retrieve variable '%s'", name);
+        return getArbitType();
+    } else {
+        return symbol->type;
     }
-    warn("cannot retrieve variable '%s'", name);
-    return getArbitType();
 }
 
 Type *retrieve_function_returnType(char *name) {
-    Symbol *st = cenv->fst;
-    for (int i = 1; i < cenv->ftop; i++) {
-        if (strcmp(st[i].name, name) == 0) {
-            return st[i].function.returnType;
-        }
+    debug("calling function '%s'", __func__);
+    SymbolTable *st = cenv->fst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    if (symbol == NULL) {
+        warn("cannot retrieve function '%s'", name);
+        return getArbitType();
+    } else {
+        return symbol->returnType;
     }
-    warn("cannot retrieve function '%s'", name);
-    return getArbitType();
 }
 
 TypeNode *retrieve_function_paramTypeList(char *name) {
-    Symbol *st = cenv->fst;
-    for (int i = 1; i < cenv->ftop; i++) {
-        if (strcmp(st[i].name, name) == 0) {
-            return st[i].function.paramTypeList;
-        }
+    debug("calling function '%s'", __func__);
+    SymbolTable *st = cenv->fst;
+    Symbol *symbol = SymbolTable_get(st, name);
+    if (symbol == NULL) {
+        fatal("cannot retrieve function '%s'", name);
+    } else {
+        return symbol->paramTypeList;
     }
-    fatal("cannot retrieve function '%s'", name);
 }
 
 bool check_function_declared_undefined() {
     bool ret = true;
-    Symbol *st = cenv->fst;
-    for (int i = 1; i < cenv->ftop; i++) {
-        if (st[i].function.state == DECLARED) {
-            printf("Error type 18 at Line %d: Function '%s' declared but not defined\n", st[i].function.lineno, st[i].name);
+    SymbolTable *st = cenv->fst;
+    for (SymbolNode *q = st->head; q != NULL; q = q->next) {
+        Symbol *sym = q->symbol;
+        if (sym->state == DECLARED) {
+            printf("Error type 18 at Line %d: Function '%s' declared but not defined\n", sym->lineno, sym->name);
             extern int nr_semantics_error;
             nr_semantics_error++;
         }
@@ -277,27 +303,18 @@ bool check_function_declared_undefined() {
 
 
 void print_symbol_table() {
-    Symbol *st;
-    st = cenv->vst;
-    for (int i = 1; i < cenv->vtop; i++) {
-        printf("[%d]", i);
-        printf(" (variable) ");
-        printf("%s", st[i].name);
-        printf(" : ");
-        printf("%s", typeRepr(st[i].variable.type));
-        printf("\n");
+    int i = 0;
+    for (SymbolNode *q = cenv->vst->head; q != NULL; q = q->next) {
+        i++;
+        Symbol *sym = q->symbol;
+        printf("[%d] (variable) %s : %s\n", i, sym->name, typeRepr(sym->type));
     }
 
-    st = cenv->fst;
-    for (int i = 0; i < cenv->ftop; i++) {
-        printf(" (function) ");
-        if (st[i].function.state == DECLARED) {
-            printf("_[%d] ", st[i].function.lineno);
-        }
-        printf("%s", st[i].name);
-        printf(" : ");
-        printf("%s", typeListRepr(st[i].function.paramTypeList));
-        printf(" -> %s", typeRepr(st[i].function.returnType));
-        printf("\n");
+    int j = 0;
+    for (SymbolNode *q = cenv->fst->head; q != NULL; q = q->next) {
+        j++;
+        Symbol *sym = q->symbol;
+        printf("[%d] (function) %s : %s -> %s\n", j, sym->name, 
+                typeListRepr(sym->paramTypeList), typeRepr(sym->returnType));
     }
 }
