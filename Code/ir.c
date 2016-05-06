@@ -4,6 +4,8 @@
 
 #include "ir.h"
 
+char *relop_repr(int relop);
+
 #define new_op(o, kkind) \
     Operand * o = malloc(sizeof(Operand)); \
     o->kind = kkind
@@ -63,6 +65,25 @@ static char *op_repr(Operand *op) {
     return str;
 }
 
+struct Label_ {
+    int label_no;
+};
+
+Label *newLabel() {
+    static int nr_label = 0;
+    Label *l = malloc(sizeof(Label));
+    l->label_no = ++ nr_label;
+    return l;
+}
+
+static char *label_repr(Label *label) {
+    char *str = malloc(100);
+    memset(str, 0, 100);
+    int off = 0;
+    off += sprintf(str + off, "L%d", label->label_no);
+    return str;
+}
+
 typedef struct {
     enum {
         IR_LABEL,
@@ -76,7 +97,7 @@ typedef struct {
         IR_INDIR,
         IR_ASSIGN_TO_ADDR,
         IR_GOTO,
-        IR_COND_GOTO,
+        IR_IF,
         IR_RETURN,
         IR_ALLOC,
         IR_ARG,
@@ -97,7 +118,22 @@ typedef struct {
         // for FUNCTION
         struct {
             char *name;
-        };
+        } function;
+        // for LABEL
+        struct {
+            int label_no;
+        } label;
+        // for IF
+        struct {
+            Operand *arg1;
+            Operand *arg2;
+            int relop;
+            Label *label;
+        } if_;
+        // for GOTO
+        struct {
+            Label *label;
+        } goto_;
     };
 } IR;
 
@@ -106,9 +142,9 @@ static char *ir_repr(IR *ir) {
     memset(str, 0, 100);
     int off = 0;
     if (ir->kind == IR_LABEL) {
-        // TODO
+        off += sprintf(str + off, "LABEL L%d :", ir->label.label_no);
     } else if (ir->kind == IR_FUNCTION) {
-        off += sprintf(str + off, "FUNCTION %s :", ir->name);
+        off += sprintf(str + off, "FUNCTION %s :", ir->function.name);
     } else if (ir->kind == IR_ASSIGN) {
         off += sprintf(str + off, "%s := %s",
                 op_repr(ir->result),
@@ -133,6 +169,15 @@ static char *ir_repr(IR *ir) {
                 op_repr(ir->result),
                 op_repr(ir->arg1),
                 op_repr(ir->arg2));
+    } else if (ir->kind == IR_GOTO) {
+        off += sprintf(str + off, "GOTO %s", 
+                label_repr(ir->goto_.label));
+    } else if (ir->kind == IR_IF) {
+        off += sprintf(str + off, "IF %s %s %s GOTO %s",
+                op_repr(ir->if_.arg1),
+                relop_repr(ir->if_.relop),
+                op_repr(ir->if_.arg2),
+                label_repr(ir->if_.label));
     } else if (ir->kind == IR_RETURN) {
         off += sprintf(str + off, "RETURN %s", op_repr(ir->arg1));
     } else if (ir->kind == IR_READ) {
@@ -145,9 +190,15 @@ static char *ir_repr(IR *ir) {
     return str;
 }
 
+static IR *newLabelIR(Label *label) {
+    new_ir(ir, IR_LABEL);
+    ir->label.label_no = label->label_no;
+    return ir;
+}
+
 static IR *newFunction(char *name) {
     new_ir(ir, IR_FUNCTION);
-    ir->name = name;
+    ir->function.name = name;
     return ir;
 }
 
@@ -201,6 +252,21 @@ static IR *newDiv(Operand *result, Operand *arg1, Operand *arg2) {
     ir->result = result;
     ir->arg1 = arg1;
     ir->arg2 = arg2;
+    return ir;
+}
+
+static IR *newGoto(Label *label) {
+    new_ir(ir, IR_GOTO);
+    ir->goto_.label = label;
+    return ir;
+}
+
+static IR *newIf(Operand *arg1, int relop, Operand *arg2, Label *label) {
+    new_ir(ir, IR_IF);
+    ir->if_.arg1 = arg1;
+    ir->if_.relop = relop;
+    ir->if_.arg2 = arg2;
+    ir->if_.label = label;
     return ir;
 }
 
@@ -465,8 +531,14 @@ static void visitStmt(void *node) {
         stmt->ir_code = IRList_append(stmt->return_.exp->ir_code, ir);
 
     } else if (stmt->stmt_kind == STMT_T_IF) {
-        visit(stmt->if_.exp);
-        visit(stmt->if_.then_stmt);
+        Exp *B = stmt->if_.exp;
+        Stmt *S1 = stmt->if_.then_stmt;
+        B->ir_true = newLabel();
+        B->ir_false = newLabel(); // TODO
+        S1->ir_next = newLabel(); // TODO
+        visit(B);
+        visit(S1);
+        stmt->ir_code = IRList_extend(B->ir_code, S1->ir_code);
 
     } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
         visit(stmt->ifelse.exp);
@@ -529,27 +601,45 @@ static void visitExp(void *node) {
         visit(left);
         visit(right);
 
-        IR *ir;
+        IRList *irList;
 
-        if (exp->infix.op == PLUS) {
-            ir = newAdd(exp->ir_addr, temp1, temp2);
-        } else if (exp->infix.op == MINUS) {
-            ir = newSub(exp->ir_addr, temp1, temp2);
-        } else if (exp->infix.op == STAR) {
-            ir = newMul(exp->ir_addr, temp1, temp2);
-        } else if (exp->infix.op == DIV) {
-            ir = newDiv(exp->ir_addr, temp1, temp2);
+        if (exp->infix.op == PLUS
+                || exp->infix.op == MINUS
+                || exp->infix.op == STAR
+                || exp->infix.op == DIV
+                || exp->infix.op == ASSIGNOP) {
+            IR *ir;
 
-        } else if (exp->infix.op == ASSIGNOP) {
-            // we not assume that ID appears on the left
-            ir = newAssign(left->ir_lvalue_addr, right->ir_addr);
+            if (exp->infix.op == PLUS) {
+                ir = newAdd(exp->ir_addr, temp1, temp2);
+            } else if (exp->infix.op == MINUS) {
+                ir = newSub(exp->ir_addr, temp1, temp2);
+            } else if (exp->infix.op == STAR) {
+                ir = newMul(exp->ir_addr, temp1, temp2);
+            } else if (exp->infix.op == DIV) {
+                ir = newDiv(exp->ir_addr, temp1, temp2);
+
+            } else if (exp->infix.op == ASSIGNOP) {
+                // we not assume that ID appears on the left
+                ir = newAssign(left->ir_lvalue_addr, right->ir_addr);
+            } else {
+                fatal("illegal state");
+            }
+
+            irList = IR2List(ir);
+
+        } else if (exp->infix.op == RELOP) {
+            IR *ir1 = newIf(left->ir_addr, exp->infix.op_yylval,
+                    right->ir_addr, exp->ir_true);
+            IR *ir2 = newGoto(exp->ir_false);
+            irList = IRList_append(IR2List(ir1), ir2);
 
         } else {
             fatal("unknown exp->infix.op");
         }
 
         exp->ir_code = IRList_extend(left->ir_code,
-                IRList_append(right->ir_code, ir));
+                IRList_extend(right->ir_code, irList));
 
     } else if (exp->exp_kind == EXP_T_PAREN) {
         visit(exp->paren.exp);

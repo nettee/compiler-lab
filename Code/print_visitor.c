@@ -123,6 +123,18 @@ static void print_terminal(int terminal) {
     indent--;
 }
 
+char *relop_repr(int relop) {
+    switch (relop) {
+    case RELOP_LT: return "<";
+    case RELOP_LE: return "<=";
+    case RELOP_GT: return ">";
+    case RELOP_GE: return ">=";
+    case RELOP_EQ: return "==";
+    case RELOP_NE: return "!=";
+    default: fatal("unknown relop");
+    }
+}
+
 static void print_relop(int yylval) {
     indent++;
     switch (yylval) {

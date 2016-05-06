@@ -154,6 +154,8 @@ typedef struct Exp_ {
     bool attr_lvalue;
     Operand *ir_lvalue_addr;
     Operand *ir_addr;
+    Label *ir_true;
+    Label *ir_false;
     IRList *ir_code;
 } Exp;
 
@@ -223,6 +225,7 @@ typedef struct Stmt_ {
         } while_;
     };
     Type *attr_func_returnType;
+    Label *ir_next;
     IRList *ir_code;
 } Stmt;
 
