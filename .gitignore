@@ -5,6 +5,7 @@ parser
 *.out
 *.o
 
+*.txt
 *.pdf
 
 Test/auto/*.cmm

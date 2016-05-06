@@ -16,12 +16,19 @@
     node->next = NULL; \
     node->ir = iir
 
+static int nr_temp = 0;
 
 static Operand *newTemp() {
-    static int n = 0;
     new_op(temp, TEMP);
-    temp->temp_no = ++n;
+    temp->temp_no = ++nr_temp;
     return temp;
+}
+
+static Operand *newVariableOperand() {
+    static int nr_variable = 0;
+    new_op(var, VAR_OPERAND);
+    var->var_no = ++nr_variable;
+    return var;
 }
 
 static Operand *newIntLiteral(int value) {
@@ -43,6 +50,8 @@ static char *op_repr(Operand *op) {
 
     if (op->kind == TEMP) {
         off += sprintf(str + off, "t%d", op->temp_no);
+    } else if (op->kind == VAR_OPERAND) {
+        off += sprintf(str + off, "v%d", op->var_no);
     } else if (op->kind == INT_LITERAL) {
         off += sprintf(str + off, "#%d", op->int_value);
     } else if (op->kind == FLOAT_LITERAL) {
@@ -77,10 +86,17 @@ typedef struct {
         IR_WRITE,
     } kind;
     union {
+        /* for ASSIGN, ADD, SUB, MUL, DIV,
+         * RETURN,
+         */
         struct {
             Operand *result;
             Operand *arg1;
             Operand *arg2;
+        };
+        // for FUNCTION
+        struct {
+            char *name;
         };
     };
 } IR;
@@ -91,6 +107,8 @@ static char *ir_repr(IR *ir) {
     int off = 0;
     if (ir->kind == IR_LABEL) {
         // TODO
+    } else if (ir->kind == IR_FUNCTION) {
+        off += sprintf(str + off, "FUNCTION %s :", ir->name);
     } else if (ir->kind == IR_ASSIGN) {
         off += sprintf(str + off, "%s := %s",
                 op_repr(ir->result),
@@ -116,12 +134,21 @@ static char *ir_repr(IR *ir) {
                 op_repr(ir->arg1),
                 op_repr(ir->arg2));
     } else if (ir->kind == IR_RETURN) {
-        off += sprintf(str + off, "RETURN %s",
-                op_repr(ir->arg1));
+        off += sprintf(str + off, "RETURN %s", op_repr(ir->arg1));
+    } else if (ir->kind == IR_READ) {
+        off += sprintf(str + off, "READ %s", op_repr(ir->arg1));
+    } else if (ir->kind == IR_WRITE) {
+        off += sprintf(str + off, "WRITE %s", op_repr(ir->arg1));
     } else {
         off += sprintf(str + off, "some-ir");
     }
     return str;
+}
+
+static IR *newFunction(char *name) {
+    new_ir(ir, IR_FUNCTION);
+    ir->name = name;
+    return ir;
 }
 
 static IR *newAssignInt(Operand *result, int value) {
@@ -135,6 +162,13 @@ static IR *newAssignFloat(Operand *result, float value) {
     new_ir(ir, IR_ASSIGN);
     ir->result = result;
     ir->arg1 = newFloatLiteral(value);
+    return ir;
+}
+
+static IR *newAssign(Operand *result, Operand *arg1) {
+    new_ir(ir, IR_ASSIGN);
+    ir->result = result;
+    ir->arg1 = arg1;
     return ir;
 }
 
@@ -172,6 +206,18 @@ static IR *newDiv(Operand *result, Operand *arg1, Operand *arg2) {
 
 static IR *newReturn(Operand *temp) {
     new_ir(ir, IR_RETURN);
+    ir->arg1 = temp;
+    return ir;
+}
+
+static IR *newRead(Operand *temp) {
+    new_ir(ir, IR_READ);
+    ir->arg1 = temp;
+    return ir;
+}
+
+static IR *newWrite(Operand *temp) {
+    new_ir(ir, IR_WRITE);
     ir->arg1 = temp;
     return ir;
 }
@@ -280,7 +326,11 @@ static void visitExtDef(void *node) {
         visit(extDef->fun.specifier);
         visit(extDef->fun.funDec);
         visit(extDef->fun.compSt);
-        print_ir_list(extDef->fun.compSt->ir_code);
+        IR *ir = newFunction(extDef->fun.funDec->id_text);
+        extDef->ir_code = IRList_extend(IR2List(ir), 
+                extDef->fun.compSt->ir_code);
+
+        print_ir_list(extDef->ir_code);
 
     } else if (extDef->extdef_kind == EXT_DEF_T_FUN_DEC) {
         visit(extDef->fun.specifier);
@@ -472,34 +522,34 @@ static void visitExp(void *node) {
         Exp *left = exp->infix.exp_left;
         Exp *right = exp->infix.exp_right;
 
-        if (exp->infix.op == PLUS
-                || exp->infix.op == MINUS
-                || exp->infix.op == STAR
-                || exp->infix.op == DIV) {
-            Operand *temp1 = newTemp();
-            Operand *temp2 = newTemp();
-            left->ir_addr = temp1;
-            right->ir_addr = temp2;
-            visit(left);
-            visit(right);
-            IR *ir;
-            if (exp->infix.op == PLUS) {
-                ir = newAdd(exp->ir_addr, temp1, temp2);
-            } else if (exp->infix.op == MINUS) {
-                ir = newSub(exp->ir_addr, temp1, temp2);
-            } else if (exp->infix.op == STAR) {
-                ir = newMul(exp->ir_addr, temp1, temp2);
-            } else if (exp->infix.op == DIV) {
-                ir = newDiv(exp->ir_addr, temp1, temp2);
-            } else {
-                fatal("invalid exp->infix.op state");
-            }
-            exp->ir_code = IRList_extend(left->ir_code,
-                    IRList_append(right->ir_code, ir));
-        
+        Operand *temp1 = newTemp();
+        Operand *temp2 = newTemp();
+        left->ir_addr = temp1;
+        right->ir_addr = temp2;
+        visit(left);
+        visit(right);
+
+        IR *ir;
+
+        if (exp->infix.op == PLUS) {
+            ir = newAdd(exp->ir_addr, temp1, temp2);
+        } else if (exp->infix.op == MINUS) {
+            ir = newSub(exp->ir_addr, temp1, temp2);
+        } else if (exp->infix.op == STAR) {
+            ir = newMul(exp->ir_addr, temp1, temp2);
+        } else if (exp->infix.op == DIV) {
+            ir = newDiv(exp->ir_addr, temp1, temp2);
+
+        } else if (exp->infix.op == ASSIGNOP) {
+            // we not assume that ID appears on the left
+            ir = newAssign(left->ir_lvalue_addr, right->ir_addr);
+
         } else {
             fatal("unknown exp->infix.op");
         }
+
+        exp->ir_code = IRList_extend(left->ir_code,
+                IRList_append(right->ir_code, ir));
 
     } else if (exp->exp_kind == EXP_T_PAREN) {
         visit(exp->paren.exp);
@@ -522,6 +572,12 @@ static void visitExp(void *node) {
         if (exp->call.args != NULL) {
             visit(exp->call.args);
         }
+        if (strcmp(exp->call.id_text, "read") == 0) {
+            IR *ir = newRead(exp->ir_addr);
+            exp->ir_code = IR2List(ir);
+        } else {
+            fatal("cannot deal function call");
+        }
 
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
         visit(exp->subscript.array);
@@ -531,6 +587,8 @@ static void visitExp(void *node) {
         visit(exp->dot.exp);
 
     } else if (exp->exp_kind == EXP_T_ID) {
+        exp->ir_lvalue_addr = newVariableOperand();
+        exp->ir_code = newEmptyIRList();
 
     } else if (exp->exp_kind == EXP_T_INT) {
         IR *ir = newAssignInt(exp->ir_addr, exp->int_value);

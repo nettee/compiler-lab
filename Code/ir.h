@@ -4,11 +4,13 @@
 typedef struct {
     enum { 
         TEMP, 
+        VAR_OPERAND,
         INT_LITERAL,
         FLOAT_LITERAL,
     } kind;
     union {
         int temp_no;
+        int var_no;
         int int_value;
         float float_value;
     };

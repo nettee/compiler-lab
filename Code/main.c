@@ -4,7 +4,7 @@
 
 //#define PRINT_AST
 #define SEMANTICS_ANALYSIS
-//#define IR_GENERATE
+#define IR_GENERATE
 
 extern int nr_lexical_error;
 extern int nr_syntax_error;

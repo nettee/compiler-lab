@@ -159,6 +159,7 @@ void init_env() {
     cenv->next = NULL;
     cenv->vst = newEmptySymbolTable();
     cenv->fst = newEmptySymbolTable();
+    install_function_defined("read", getBasicInt(), NULL);
 }
 
 void enter_new_env() {

@@ -152,6 +152,7 @@ typedef struct Exp_ {
 
     Type *attr_type;
     bool attr_lvalue;
+    Operand *ir_lvalue_addr;
     Operand *ir_addr;
     IRList *ir_code;
 } Exp;
@@ -361,6 +362,7 @@ typedef struct ExtDef_ {
             struct ExtDecList_ *extDecList;
         } var;
     };
+    IRList *ir_code;
 } ExtDef;
 
 typedef struct ExtDefList_ {
