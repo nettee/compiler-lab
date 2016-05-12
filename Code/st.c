@@ -160,6 +160,10 @@ void init_env() {
     cenv->vst = newEmptySymbolTable();
     cenv->fst = newEmptySymbolTable();
     install_function_defined("read", getBasicInt(), NULL);
+    TypeNode *typeNode = malloc(sizeof(TypeNode));
+    typeNode->next = NULL;
+    typeNode->type = getBasicInt();
+    install_function_defined("write", getBasicInt(), typeNode);
 }
 
 void enter_new_env() {

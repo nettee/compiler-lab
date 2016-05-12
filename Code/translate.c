@@ -19,9 +19,13 @@ static void gen(IR *ir) {
     printf("%s\n", ir_repr(ir));
 }
 
-typedef void (*funcptr)(void *);
+static void translate_Exp(Exp *exp, Operand *place);
+static void translate_Stmt(Stmt *stmt);
+static void translate_Condition(Exp *exp, Label *L1, Label *L2);
 
 static void visit(void *node);
+
+typedef void (*funcptr)(void *);
 
 static void visitProgram(void *node) {
     Program *program = (Program *)node;
@@ -159,46 +163,47 @@ static void visitStmtList(void *node) {
 
 static void visitStmt(void *node) {
     Stmt *stmt = (Stmt *)node;
-    if (stmt->stmt_kind == STMT_T_EXP) {
-        /* assign a temp place for exp,
-         * but never use it
-         */
-        Operand *temp = newTemp();
-        stmt->exp.exp->ir_addr = temp;
-        visit(stmt->exp.exp);
-
-    } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
-        visit(stmt->compst.compSt);
-
-    } else if (stmt->stmt_kind == STMT_T_RETURN) {
-        Operand *temp = newTemp();
-        stmt->return_.exp->ir_addr = temp;
-        visit(stmt->return_.exp);
-        gen(newReturn(temp));
-
-    } else if (stmt->stmt_kind == STMT_T_IF) {
-        Exp *B = stmt->if_.exp;
-        Stmt *S1 = stmt->if_.then_stmt;
-        B->ir_true = newLabel();
-        B->ir_false = newLabel(); // TODO
-        S1->ir_next = newLabel(); // TODO
-        visit(B);
-        gen(newLabelIR(B->ir_true));
-        visit(S1);
-        gen(newLabelIR(B->ir_false));
-
-    } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
-        visit(stmt->ifelse.exp);
-        visit(stmt->ifelse.then_stmt);
-        visit(stmt->ifelse.else_stmt);
-
-    } else if (stmt->stmt_kind == STMT_T_WHILE) {
-        visit(stmt->while_.exp);
-        visit(stmt->while_.stmt);
-
-    } else {
-        fatal("unknown stmt_type");
-    }
+    translate_Stmt(stmt);
+//    if (stmt->stmt_kind == STMT_T_EXP) {
+//        /* assign a temp place for exp,
+//         * but never use it
+//         */
+//        Operand *temp = newTemp();
+//        stmt->exp.exp->ir_addr = temp;
+//        visit(stmt->exp.exp);
+//
+//    } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
+//        visit(stmt->compst.compSt);
+//
+//    } else if (stmt->stmt_kind == STMT_T_RETURN) {
+//        Operand *temp = newTemp();
+//        stmt->return_.exp->ir_addr = temp;
+//        visit(stmt->return_.exp);
+//        gen(newReturn(temp));
+//
+//    } else if (stmt->stmt_kind == STMT_T_IF) {
+//        Exp *B = stmt->if_.exp;
+//        Stmt *S1 = stmt->if_.then_stmt;
+//        B->ir_true = newLabel();
+//        B->ir_false = newLabel(); // TODO
+//        S1->ir_next = newLabel(); // TODO
+//        visit(B);
+//        gen(newLabelIR(B->ir_true));
+//        visit(S1);
+//        gen(newLabelIR(B->ir_false));
+//
+//    } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
+//        visit(stmt->ifelse.exp);
+//        visit(stmt->ifelse.then_stmt);
+//        visit(stmt->ifelse.else_stmt);
+//
+//    } else if (stmt->stmt_kind == STMT_T_WHILE) {
+//        visit(stmt->while_.exp);
+//        visit(stmt->while_.stmt);
+//
+//    } else {
+//        fatal("unknown stmt_type");
+//    }
 }
 
 static void visitDefList(void *node) {
@@ -357,4 +362,143 @@ static void visit(void *node) {
 void generate_intercode() {
     info("generate intercode");
     visit(root);
+}
+
+void translate_Exp(Exp *exp, Operand *place) {
+    if (exp->exp_kind == EXP_T_INFIX) {
+
+        Exp *left = exp->infix.exp_left;
+        Exp *right = exp->infix.exp_right;
+
+        Operand *temp1 = newTemp();
+        Operand *temp2 = newTemp();
+        translate_Exp(left, temp1);
+        translate_Exp(right, temp2);
+
+        if (exp->infix.op == PLUS) {
+            gen(newAdd(place, temp1, temp2));
+        } else if (exp->infix.op == MINUS) {
+            gen(newSub(place, temp1, temp2));
+        } else if (exp->infix.op == STAR) {
+            gen(newMul(place, temp1, temp2));
+        } else if (exp->infix.op == DIV) {
+            gen(newDiv(place, temp1, temp2));
+
+        } else if (exp->infix.op == ASSIGNOP) {
+            // we now assume that ID appears on the left
+            gen(newAssign(left->ir_lvalue_addr, temp2));
+//            gen(newAssign(place, left->ir_lvalue_addr));
+
+        } else if (exp->infix.op == RELOP) {
+            fatal("cannot deal RELOP");
+
+        } else {
+            fatal("unknown exp->infix.op");
+        }
+
+    } else if (exp->exp_kind == EXP_T_PAREN) {
+        translate_Exp(exp->paren.exp, place);
+
+    } else if (exp->exp_kind == EXP_T_UNARY) {
+
+        if (exp->unary.op == MINUS) {
+            Operand *temp = newTemp();
+            translate_Exp(exp->unary.exp, temp);
+            gen(newSub(place, newIntLiteral(0), temp));
+        } else {
+            fatal("unknown exp->unary.op");
+        }
+
+    } else if (exp->exp_kind == EXP_T_CALL) {
+        if (exp->call.args != NULL) {
+            visit(exp->call.args);
+        }
+        if (strcmp(exp->call.id_text, "read") == 0) {
+            gen(newRead(place));
+        } else if (strcmp(exp->call.id_text, "write") == 0) {
+            // TODO
+            warn("TODO: write");
+        } else {
+            // TODO
+            fatal("cannot deal function call");
+        }
+
+//    } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
+//        visit(exp->subscript.array);
+//        visit(exp->subscript.index);
+//
+//    } else if (exp->exp_kind == EXP_T_DOT) {
+//        visit(exp->dot.exp);
+
+    } else if (exp->exp_kind == EXP_T_ID) {
+        exp->ir_lvalue_addr = newVariableOperand();
+
+    } else if (exp->exp_kind == EXP_T_INT) {
+        gen(newAssignInt(place, exp->int_value));
+
+    } else if (exp->exp_kind == EXP_T_FLOAT) {
+        gen(newAssignFloat(place, exp->float_value));
+
+    } else {
+        fatal("unknown exp_type");
+    }
+}
+
+void translate_Stmt(Stmt *stmt) {
+    if (stmt->stmt_kind == STMT_T_EXP) {
+        /* assign a temp place for exp,
+         * but never use it
+         */
+        Operand *temp = newTemp();
+        translate_Exp(stmt->exp.exp, temp);
+//        stmt->exp.exp->ir_addr = temp;
+//        visit(stmt->exp.exp);
+
+    } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
+        visit(stmt->compst.compSt);
+
+    } else if (stmt->stmt_kind == STMT_T_RETURN) {
+        Operand *temp = newTemp();
+        translate_Exp(stmt->return_.exp, temp);
+//        stmt->return_.exp->ir_addr = temp;
+//        visit(stmt->return_.exp);
+        gen(newReturn(temp));
+
+    } else if (stmt->stmt_kind == STMT_T_IF) {
+        Exp *B = stmt->if_.exp;
+        Stmt *S1 = stmt->if_.then_stmt;
+        Label *L1 = newLabel();
+        Label *L2 = newLabel();
+        translate_Condition(B, L1, L2);
+        gen(newLabelIR(L1));
+        translate_Stmt(S1);
+        gen(newLabelIR(L2));
+
+    } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
+        visit(stmt->ifelse.exp);
+        visit(stmt->ifelse.then_stmt);
+        visit(stmt->ifelse.else_stmt);
+
+    } else if (stmt->stmt_kind == STMT_T_WHILE) {
+        visit(stmt->while_.exp);
+        visit(stmt->while_.stmt);
+
+    } else {
+        fatal("unknown stmt_type");
+    }
+}
+
+static void translate_Condition(Exp *exp, Label *L_true, Label *L_false) {
+    if (exp->exp_kind == EXP_T_INFIX && exp->infix.op == RELOP) {
+        Operand *temp1 = newTemp();
+        Operand *temp2 = newTemp();
+        translate_Exp(exp->infix.exp_left, temp1);
+        translate_Exp(exp->infix.exp_right, temp2);
+        gen(newIf(temp1, exp->infix.op_yylval, temp2, L_true));
+        gen(newGoto(L_false));
+    } else {
+        fatal("cannot deal this condition");
+    }
+
+
 }
