@@ -156,7 +156,6 @@ typedef struct Exp_ {
     Operand *ir_addr;
     Label *ir_true;
     Label *ir_false;
-    IRList *ir_code;
 } Exp;
 
 typedef struct Dec_ {
@@ -226,7 +225,6 @@ typedef struct Stmt_ {
     };
     Type *attr_func_returnType;
     Label *ir_next;
-    IRList *ir_code;
 } Stmt;
 
 typedef struct StmtList_ {
@@ -235,7 +233,6 @@ typedef struct StmtList_ {
     struct Stmt_ *stmt; // may be NULL
     struct StmtList_ *stmtList; // may be NULL
     Type *attr_func_returnType;
-    IRList *ir_code;
 } StmtList;
 
 typedef struct CompSt_ {
@@ -244,7 +241,6 @@ typedef struct CompSt_ {
     DefList *defList;
     StmtList *stmtList;
     Type *attr_func_returnType;
-    IRList *ir_code;
 } CompSt;
 
 typedef struct ParamDec_ {
@@ -365,7 +361,6 @@ typedef struct ExtDef_ {
             struct ExtDecList_ *extDecList;
         } var;
     };
-    IRList *ir_code;
 } ExtDef;
 
 typedef struct ExtDefList_ {
