@@ -387,7 +387,7 @@ void translate_Exp(Exp *exp, Operand *place) {
         } else if (exp->infix.op == ASSIGNOP) {
             // we now assume that ID appears on the left
             gen(newAssign(left->ir_lvalue_addr, temp2));
-//            gen(newAssign(place, left->ir_lvalue_addr));
+            gen(newAssign(place, left->ir_lvalue_addr));
 
         } else if (exp->infix.op == RELOP) {
             fatal("cannot deal RELOP");
@@ -446,13 +446,9 @@ void translate_Exp(Exp *exp, Operand *place) {
 
 void translate_Stmt(Stmt *stmt) {
     if (stmt->stmt_kind == STMT_T_EXP) {
-        /* assign a temp place for exp,
-         * but never use it
-         */
+        // assign a temp place for exp, but never use it
         Operand *temp = newTemp();
         translate_Exp(stmt->exp.exp, temp);
-//        stmt->exp.exp->ir_addr = temp;
-//        visit(stmt->exp.exp);
 
     } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
         visit(stmt->compst.compSt);
@@ -460,8 +456,6 @@ void translate_Stmt(Stmt *stmt) {
     } else if (stmt->stmt_kind == STMT_T_RETURN) {
         Operand *temp = newTemp();
         translate_Exp(stmt->return_.exp, temp);
-//        stmt->return_.exp->ir_addr = temp;
-//        visit(stmt->return_.exp);
         gen(newReturn(temp));
 
     } else if (stmt->stmt_kind == STMT_T_IF) {
@@ -475,13 +469,32 @@ void translate_Stmt(Stmt *stmt) {
         gen(newLabelIR(L2));
 
     } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
-        visit(stmt->ifelse.exp);
-        visit(stmt->ifelse.then_stmt);
-        visit(stmt->ifelse.else_stmt);
+        Exp *B = stmt->ifelse.exp;
+        Stmt *S1 = stmt->ifelse.then_stmt;
+        Stmt *S2 = stmt->ifelse.else_stmt;
+        Label *L1 = newLabel();
+        Label *L2 = newLabel();
+        Label *L3 = newLabel();
+        translate_Condition(B, L1, L2);
+        gen(newLabelIR(L1));
+        translate_Stmt(S1);
+        gen(newGoto(L3));
+        gen(newLabelIR(L2));
+        translate_Stmt(S2);
+        gen(newLabelIR(L3));
 
     } else if (stmt->stmt_kind == STMT_T_WHILE) {
-        visit(stmt->while_.exp);
-        visit(stmt->while_.stmt);
+        Exp *B = stmt->while_.exp;
+        Stmt *S1 = stmt->while_.stmt;
+        Label *L1 = newLabel();
+        Label *L2 = newLabel();
+        Label *L3 = newLabel();
+        gen(newLabelIR(L1));
+        translate_Condition(B, L2, L3);
+        gen(newLabelIR(L2));
+        translate_Stmt(S1);
+        gen(newGoto(L1));
+        gen(newLabelIR(L3));
 
     } else {
         fatal("unknown stmt_type");
@@ -499,6 +512,4 @@ static void translate_Condition(Exp *exp, Label *L_true, Label *L_false) {
     } else {
         fatal("cannot deal this condition");
     }
-
-
 }
