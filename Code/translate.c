@@ -431,7 +431,9 @@ void translate_Exp(Exp *exp, Operand *place) {
 //        visit(exp->dot.exp);
 
     } else if (exp->exp_kind == EXP_T_ID) {
-        exp->ir_lvalue_addr = newVariableOperand();
+        Operand *var = getVariableOperand(exp->id_text);
+        exp->ir_lvalue_addr = var;
+        gen(newAssign(place, var));
 
     } else if (exp->exp_kind == EXP_T_INT) {
         gen(newAssignInt(place, exp->int_value));

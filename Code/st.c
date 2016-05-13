@@ -268,6 +268,18 @@ Type *retrieve_variable_type(char *name) {
     }
 }
 
+int retrieve_variable_rank(char *name) {
+    int rank = 0;
+    SymbolTable *st = cenv->vst;
+    for (SymbolNode *q = st->head; q != NULL; q = q->next) {
+        rank++;
+        if (strcmp(q->symbol->name, name) == 0) {
+            return rank;
+        }
+    }
+    return 0;
+}
+
 Type *retrieve_function_returnType(char *name) {
     debug("calling function '%s'", __func__);
     SymbolTable *st = cenv->fst;

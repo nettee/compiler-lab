@@ -1,6 +1,7 @@
 #include "common.h"
 #include "syntax.tab.h"
 #include "pt.h"
+#include "st.h"
 
 #include "ir.h"
 
@@ -30,6 +31,13 @@ Operand *newVariableOperand() {
     static int nr_variable = 0;
     new_op(var, VAR_OPERAND);
     var->var_no = ++nr_variable;
+    return var;
+}
+
+Operand *getVariableOperand(char *name) {
+    int var_no = retrieve_variable_rank(name);
+    new_op(var, VAR_OPERAND);
+    var->var_no = var_no;
     return var;
 }
 

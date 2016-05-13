@@ -22,6 +22,7 @@ typedef struct {
 
 Operand *newTemp();
 Operand *newVariableOperand();
+Operand *getVariableOperand(char *name);
 Operand *newIntLiteral(int value);
 Operand *newFloatLiteral(float value);
 
