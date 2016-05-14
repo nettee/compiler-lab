@@ -11,3 +11,5 @@ parser
 Test/auto/*.cmm
 
 *.swp
+
+*.ir

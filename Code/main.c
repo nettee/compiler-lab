@@ -19,10 +19,18 @@ void semantics_analysis();
 void print_symbol_table();
 void generate_intercode();
 
+FILE *ir_out_file;
+
 int main(int argc, char **argv)
 {
     if (argc <= 1) {
+        fprintf(stderr, "Fatal: too few arguments\n");
         return 1;
+    }
+    ir_out_file = fopen("a.ir", "w");
+    if (!ir_out_file) {
+        fprintf(stderr, "Fatal: cannot open %s\n",
+                "a.ir");
     }
     FILE *f = fopen(argv[1], "r");
     if (!f) {
