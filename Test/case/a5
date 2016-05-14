@@ -1,0 +1,13 @@
+int sum(int x, int y)
+{
+    return x + y;
+}
+
+int main()
+{
+    int a, b;
+    a = 21;
+    b = 179;
+    write(sum(a, b));
+    return 0;
+}
