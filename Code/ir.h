@@ -14,15 +14,14 @@ typedef struct {
     } kind;
     union {
         int temp_no;
-        int var_no;
+        char *var_name;
         int int_value;
         float float_value;
     };
 } Operand;
 
 Operand *newTemp();
-Operand *newVariableOperand();
-Operand *getVariableOperand(char *name);
+Operand *newVariableOperand(char *name);
 Operand *newIntLiteral(int value);
 Operand *newFloatLiteral(float value);
 

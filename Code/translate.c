@@ -31,6 +31,13 @@ static void visit(void *node);
 
 typedef void (*funcptr)(void *);
 
+#define error(...) { \
+    int lineno = ((int *)node)[1]; \
+    printf("Translation error at Line %d: ", lineno); \
+    printf(__VA_ARGS__); \
+    printf("\n"); \
+}
+
 static void visitProgram(void *node) {
     Program *program = (Program *)node;
     visit(program->extDefList);
@@ -197,7 +204,14 @@ static void visitDec(void *node) {
     Dec *dec = (Dec *)node;
     visit(dec->varDec);
     if (dec->exp != NULL) {
-        visit(dec->exp);
+        if (dec->varDec->vardec_kind == VAR_DEC_T_ID) {
+            Operand *var = newVariableOperand(dec->varDec->id_text);
+            Operand *temp = newTemp();
+            translate_Exp(dec->exp, temp);
+            gen(newAssign(var, temp));
+        } else {
+            error("only simple variable can be initialized");
+        }
     }
 
 }
@@ -275,7 +289,7 @@ static void visitExp(void *node) {
         visit(exp->dot.exp);
 
     } else if (exp->exp_kind == EXP_T_ID) {
-        exp->ir_lvalue_addr = newVariableOperand();
+        exp->ir_lvalue_addr = newVariableOperand(exp->id_text);
 
     } else if (exp->exp_kind == EXP_T_INT) {
         gen(newAssignInt(exp->ir_addr, exp->int_value));
@@ -410,7 +424,7 @@ void translate_Exp(Exp *exp, Operand *place) {
 //        visit(exp->dot.exp);
 
     } else if (exp->exp_kind == EXP_T_ID) {
-        Operand *var = getVariableOperand(exp->id_text);
+        Operand *var = newVariableOperand(exp->id_text);
         exp->ir_lvalue_addr = var;
         gen(newAssign(place, var));
 

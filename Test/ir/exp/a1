@@ -1,0 +1,13 @@
+int main()
+{
+    int x = 1;
+    int res;
+    if (x > 0) {
+        res = 233;
+    } else {
+        res = 234;
+    }
+    write(res);
+    return 0;
+}
+        

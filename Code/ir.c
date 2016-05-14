@@ -27,17 +27,10 @@ Operand *newTemp() {
     return temp;
 }
 
-Operand *newVariableOperand() {
+Operand *newVariableOperand(char *name) {
     static int nr_variable = 0;
     new_op(var, VAR_OPERAND);
-    var->var_no = ++nr_variable;
-    return var;
-}
-
-Operand *getVariableOperand(char *name) {
-    int var_no = retrieve_variable_rank(name);
-    new_op(var, VAR_OPERAND);
-    var->var_no = var_no;
+    var->var_name = name;
     return var;
 }
 
@@ -61,7 +54,7 @@ static char *op_repr(Operand *op) {
     if (op->kind == TEMP) {
         off += sprintf(str + off, "t%d", op->temp_no);
     } else if (op->kind == VAR_OPERAND) {
-        off += sprintf(str + off, "v%d", op->var_no);
+        off += sprintf(str + off, "v_%s", op->var_name);
     } else if (op->kind == INT_LITERAL) {
         off += sprintf(str + off, "#%d", op->int_value);
     } else if (op->kind == FLOAT_LITERAL) {

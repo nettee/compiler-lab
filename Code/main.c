@@ -27,10 +27,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "Fatal: too few arguments\n");
         return 1;
     }
-    ir_out_file = fopen("a.ir", "w");
+    ir_out_file = fopen("/home/dell/a.ir", "w");
     if (!ir_out_file) {
         fprintf(stderr, "Fatal: cannot open %s\n",
-                "a.ir");
+                "/home/dell/a.ir");
     }
     FILE *f = fopen(argv[1], "r");
     if (!f) {
