@@ -395,8 +395,9 @@ void translate_Exp(Exp *exp, Operand *place) {
 
         } else if (exp->infix.op == ASSIGNOP) {
             // we now assume that ID appears on the left
-            gen(newAssign(left->ir_lvalue_addr, temp2));
-            gen(newAssign(place, left->ir_lvalue_addr));
+//            gen(newAssign(left->ir_lvalue_addr, temp2));
+//            gen(newAssign(place, left->ir_lvalue_addr));
+            gen(newAssign(temp1, temp2));
 
         } else {
             fatal("unknown exp->infix.op");
@@ -443,8 +444,9 @@ void translate_Exp(Exp *exp, Operand *place) {
 
     } else if (exp->exp_kind == EXP_T_ID) {
         Operand *var = newVariableOperand(exp->id_text);
-        exp->ir_lvalue_addr = var;
-        gen(newAssign(place, var));
+        memcpy(place, var, sizeof(Operand));
+//        exp->ir_lvalue_addr = var;
+//        gen(newAssign(place, var));
 
     } else if (exp->exp_kind == EXP_T_INT) {
         gen(newAssignInt(place, exp->int_value));
