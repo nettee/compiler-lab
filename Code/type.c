@@ -53,6 +53,22 @@ bool isEqvTypeList(TypeNode *t1, TypeNode *t2) {
     return t1 == NULL && t2 == NULL;
 }
 
+int width(Type *t) {
+    if (isArbitType(t)) {
+        warn("compute width on Arbit type");
+        return 4;
+    } else if (isBasicType(t)) {
+        return 4;
+    } else if (isArrayType(t)) {
+        return t->array.length * width(t->array.elementType);
+    } else if (isStructureType(t)) {
+        warn("compute width on Structure type");
+        return 4;
+    } else {
+        fatal("unknown type");
+    }
+}
+
 Type *getArbitType() {
     static Type *type;
     if (type == NULL) {

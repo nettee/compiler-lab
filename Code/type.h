@@ -46,6 +46,8 @@ bool isStructureType(Type *t);
 bool isEqvType(Type *t1, Type *t2);
 bool isEqvTypeList(TypeNode *t1, TypeNode *t2);
 
+int width(Type *t);
+
 Type *getArbitType();
 Type *getBasicInt();
 Type *getBasicFloat();

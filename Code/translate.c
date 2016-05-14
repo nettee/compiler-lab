@@ -124,6 +124,10 @@ static void visitTag(void *node) {
 static void visitVarDec(void *node) {
     VarDec *varDec = (VarDec *)node;
     if (varDec->vardec_kind == VAR_DEC_T_ID) {
+        if (isArrayType(varDec->attr_type)) {
+            Operand *var = newVariableOperand(varDec->id_text);
+            gen(newAlloc(var, width(varDec->attr_type)));
+        }
 
     } else if (varDec->vardec_kind == VAR_DEC_T_DIM) {
         visit(varDec->dim.varDec);

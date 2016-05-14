@@ -146,6 +146,11 @@ struct IR_ {
         struct {
             Label *label;
         } goto_;
+        // for ALLOC(DEC)
+        struct {
+            Operand *var;
+            int size;
+        } alloc;
     };
 };
 
@@ -192,6 +197,10 @@ char *ir_repr(IR *ir) {
                 label_repr(ir->if_.label));
     } else if (ir->kind == IR_RETURN) {
         off += sprintf(str + off, "RETURN %s", op_repr(ir->arg1));
+    } else if (ir->kind == IR_ALLOC) {
+        off += sprintf(str + off, "DEC %s %d", 
+                op_repr(ir->alloc.var),
+                ir->alloc.size);
     } else if (ir->kind == IR_ARG) {
         off += sprintf(str + off, "ARG %s", op_repr(ir->arg1));
     } else if (ir->kind == IR_CALL) {
@@ -293,6 +302,13 @@ IR *newIf(Operand *arg1, int relop, Operand *arg2, Label *label) {
 IR *newReturn(Operand *arg1) {
     new_ir(ir, IR_RETURN);
     ir->arg1 = arg1;
+    return ir;
+}
+
+IR *newAlloc(Operand *var, int size) {
+    new_ir(ir, IR_ALLOC);
+    ir->alloc.var = var;
+    ir->alloc.size = size;
     return ir;
 }
 
