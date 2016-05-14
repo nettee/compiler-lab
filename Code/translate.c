@@ -416,8 +416,11 @@ void translate_Exp(Exp *exp, Operand *place) {
         if (strcmp(exp->call.id_text, "read") == 0) {
             gen(newRead(place));
         } else if (strcmp(exp->call.id_text, "write") == 0) {
-            // TODO
-            warn("TODO: write");
+            Exp *arg = exp->call.args->exp;
+            assert(arg != NULL);
+            Operand *temp = newTemp();
+            translate_Exp(arg, temp);
+            gen(newWrite(temp));
         } else {
             // TODO
             fatal("cannot deal function call");
