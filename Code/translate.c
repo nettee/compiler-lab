@@ -31,7 +31,7 @@ static void visit(void *node);
 
 typedef void (*funcptr)(void *);
 
-#define error(...) { \
+#define error(node, ...) { \
     int lineno = ((int *)node)[1]; \
     printf("Translation error at Line %d: ", lineno); \
     printf(__VA_ARGS__); \
@@ -153,6 +153,9 @@ static void visitParamDec(void *node) {
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
     visit(paramDec->varDec);
+    if (paramDec->varDec->vardec_kind == VAR_DEC_T_ID) {
+        gen(newParam(paramDec->varDec->id_text));
+    }
 }
 
 static void visitCompSt(void *node) {
@@ -210,7 +213,7 @@ static void visitDec(void *node) {
             translate_Exp(dec->exp, temp);
             gen(newAssign(var, temp));
         } else {
-            error("only simple variable can be initialized");
+            error(node, "only simple variable can be initialized");
         }
     }
 
@@ -344,6 +347,15 @@ void generate_intercode() {
     visit(root);
 }
 
+void translate_Args(Args *args) {
+    Operand *temp = newTemp();
+    translate_Exp(args->exp, temp);
+    gen(newArg(temp));
+    if (args->args != NULL) {
+        translate_Args(args->args);
+    }
+}
+
 void translate_Exp(Exp *exp, Operand *place) {
 
     if (exp->exp_kind == EXP_T_INFIX && exp->infix.op == RELOP
@@ -400,20 +412,22 @@ void translate_Exp(Exp *exp, Operand *place) {
         }
 
     } else if (exp->exp_kind == EXP_T_CALL) {
-        if (exp->call.args != NULL) {
-            visit(exp->call.args);
-        }
         if (strcmp(exp->call.id_text, "read") == 0) {
             gen(newRead(place));
         } else if (strcmp(exp->call.id_text, "write") == 0) {
-            Exp *arg = exp->call.args->exp;
-            assert(arg != NULL);
-            Operand *temp = newTemp();
-            translate_Exp(arg, temp);
-            gen(newWrite(temp));
+            Args *args = exp->call.args;
+            if (args == NULL) {
+                error(exp, "write() with no args");
+            } else {
+                Operand *temp = newTemp();
+                translate_Exp(args->exp, temp);
+                gen(newWrite(temp));
+            }
         } else {
-            // TODO
-            fatal("cannot deal function call");
+            if (exp->call.args != NULL) {
+                translate_Args(exp->call.args);
+            }
+            gen(newCall(place, exp->call.id_text));
         }
 
 //    } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {

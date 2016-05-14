@@ -27,8 +27,13 @@ Operand *newTemp() {
     return temp;
 }
 
+Operand *newSymbolOperand(char *name) {
+    new_op(sym, SYM_OPERAND);
+    sym->sym_name = name;
+    return sym;
+}
+
 Operand *newVariableOperand(char *name) {
-    static int nr_variable = 0;
     new_op(var, VAR_OPERAND);
     var->var_name = name;
     return var;
@@ -47,14 +52,20 @@ Operand *newFloatLiteral(float value) {
 }
 
 static char *op_repr(Operand *op) {
+    if (op == NULL) {
+        warn("op == NULL");
+        return "__";
+    }
     char *str = malloc(100);
     memset(str, 0, 100);
     int off = 0;
 
     if (op->kind == TEMP) {
         off += sprintf(str + off, "t%d", op->temp_no);
+    } else if (op->kind == SYM_OPERAND) {
+        off += sprintf(str + off, "%s", op->sym_name);
     } else if (op->kind == VAR_OPERAND) {
-        off += sprintf(str + off, "v_%s", op->var_name);
+        off += sprintf(str + off, "%s", op->var_name);
     } else if (op->kind == INT_LITERAL) {
         off += sprintf(str + off, "#%d", op->int_value);
     } else if (op->kind == FLOAT_LITERAL) {
@@ -181,6 +192,14 @@ char *ir_repr(IR *ir) {
                 label_repr(ir->if_.label));
     } else if (ir->kind == IR_RETURN) {
         off += sprintf(str + off, "RETURN %s", op_repr(ir->arg1));
+    } else if (ir->kind == IR_ARG) {
+        off += sprintf(str + off, "ARG %s", op_repr(ir->arg1));
+    } else if (ir->kind == IR_CALL) {
+        off += sprintf(str + off, "%s := CALL %s", 
+                op_repr(ir->result),
+                op_repr(ir->arg1));
+    } else if (ir->kind == IR_PARAM) {
+        off += sprintf(str + off, "PARAM %s", op_repr(ir->arg1));
     } else if (ir->kind == IR_READ) {
         off += sprintf(str + off, "READ %s", op_repr(ir->arg1));
     } else if (ir->kind == IR_WRITE) {
@@ -274,6 +293,28 @@ IR *newIf(Operand *arg1, int relop, Operand *arg2, Label *label) {
 IR *newReturn(Operand *arg1) {
     new_ir(ir, IR_RETURN);
     ir->arg1 = arg1;
+    return ir;
+}
+
+IR *newArg(Operand *arg1) {
+    new_ir(ir, IR_ARG);
+    ir->arg1 = arg1;
+    return ir;
+}
+
+IR *newCall(Operand *result, char *name) {
+    Operand *sym = newSymbolOperand(name);
+    new_ir(ir, IR_CALL);
+    ir->result = result;
+    ir->arg1 = sym;
+    return ir;
+}
+
+
+IR *newParam(char *name) {
+    Operand *var = newVariableOperand(name);
+    new_ir(ir, IR_PARAM);
+    ir->arg1 = var;
     return ir;
 }
 

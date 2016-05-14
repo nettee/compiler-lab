@@ -8,12 +8,14 @@ Label *newLabel();
 typedef struct {
     enum { 
         TEMP, 
+        SYM_OPERAND,
         VAR_OPERAND,
         INT_LITERAL,
         FLOAT_LITERAL,
     } kind;
     union {
         int temp_no;
+        char *sym_name;
         char *var_name;
         int int_value;
         float float_value;
@@ -46,8 +48,8 @@ IR *newIf(Operand *arg1, int relop, Operand *arg2, Label *label);
 IR *newReturn(Operand *arg1);
 IR *newAlloc(Operand *var, int size);
 IR *newArg(Operand *arg1);
-IR *newCall(Operand *result, Operand *arg1);
-IR *newParam(Operand *arg1);
+IR *newCall(Operand *result, char *name);
+IR *newParam(char *name);
 IR *newRead(Operand *arg1);
 IR *newWrite(Operand *arg1);
 
