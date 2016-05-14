@@ -3,6 +3,8 @@
 #include "syntax.tab.h"
 #include "pt.h"
 
+extern FILE *ir_out_file;
+
 typedef struct IRNode_ IRNode;
 
 struct IRNode_ {
@@ -16,7 +18,9 @@ typedef struct {
 } IRList;
 
 static void gen(IR *ir) {
-    printf("%s\n", ir_repr(ir));
+    char *repr = ir_repr(ir);
+    printf("%s\n", repr);
+    fprintf(ir_out_file, "%s\n", repr);
 }
 
 static void translate_Exp(Exp *exp, Operand *place);
@@ -164,46 +168,6 @@ static void visitStmtList(void *node) {
 static void visitStmt(void *node) {
     Stmt *stmt = (Stmt *)node;
     translate_Stmt(stmt);
-//    if (stmt->stmt_kind == STMT_T_EXP) {
-//        /* assign a temp place for exp,
-//         * but never use it
-//         */
-//        Operand *temp = newTemp();
-//        stmt->exp.exp->ir_addr = temp;
-//        visit(stmt->exp.exp);
-//
-//    } else if (stmt->stmt_kind == STMT_T_COMP_ST) {
-//        visit(stmt->compst.compSt);
-//
-//    } else if (stmt->stmt_kind == STMT_T_RETURN) {
-//        Operand *temp = newTemp();
-//        stmt->return_.exp->ir_addr = temp;
-//        visit(stmt->return_.exp);
-//        gen(newReturn(temp));
-//
-//    } else if (stmt->stmt_kind == STMT_T_IF) {
-//        Exp *B = stmt->if_.exp;
-//        Stmt *S1 = stmt->if_.then_stmt;
-//        B->ir_true = newLabel();
-//        B->ir_false = newLabel(); // TODO
-//        S1->ir_next = newLabel(); // TODO
-//        visit(B);
-//        gen(newLabelIR(B->ir_true));
-//        visit(S1);
-//        gen(newLabelIR(B->ir_false));
-//
-//    } else if (stmt->stmt_kind == STMT_T_IF_ELSE) {
-//        visit(stmt->ifelse.exp);
-//        visit(stmt->ifelse.then_stmt);
-//        visit(stmt->ifelse.else_stmt);
-//
-//    } else if (stmt->stmt_kind == STMT_T_WHILE) {
-//        visit(stmt->while_.exp);
-//        visit(stmt->while_.stmt);
-//
-//    } else {
-//        fatal("unknown stmt_type");
-//    }
 }
 
 static void visitDefList(void *node) {
@@ -240,6 +204,8 @@ static void visitDec(void *node) {
 
 static void visitExp(void *node) {
     Exp *exp = (Exp *)node;
+
+    warn("should not visit Exp");
 
     if (exp->exp_kind == EXP_T_INFIX) {
 
@@ -365,7 +331,20 @@ void generate_intercode() {
 }
 
 void translate_Exp(Exp *exp, Operand *place) {
-    if (exp->exp_kind == EXP_T_INFIX) {
+
+    if (exp->exp_kind == EXP_T_INFIX && exp->infix.op == RELOP
+            || exp->exp_kind == EXP_T_INFIX && exp->infix.op == AND
+            || exp->exp_kind == EXP_T_INFIX && exp->infix.op == OR
+            || exp->exp_kind == EXP_T_UNARY && exp->unary.op == NOT) {
+        Label *L1 = newLabel();
+        Label *L2 = newLabel();
+        gen(newAssignInt(place, 0));
+        translate_Condition(exp, L1, L2);
+        gen(newLabelIR(L1));
+        gen(newAssignInt(place, 1));
+        gen(newLabelIR(L2));
+
+    } else if (exp->exp_kind == EXP_T_INFIX) {
 
         Exp *left = exp->infix.exp_left;
         Exp *right = exp->infix.exp_right;
@@ -388,9 +367,6 @@ void translate_Exp(Exp *exp, Operand *place) {
             // we now assume that ID appears on the left
             gen(newAssign(left->ir_lvalue_addr, temp2));
             gen(newAssign(place, left->ir_lvalue_addr));
-
-        } else if (exp->infix.op == RELOP) {
-            fatal("cannot deal RELOP");
 
         } else {
             fatal("unknown exp->infix.op");
@@ -514,7 +490,31 @@ static void translate_Condition(Exp *exp, Label *L_true, Label *L_false) {
         translate_Exp(exp->infix.exp_right, temp2);
         gen(newIf(temp1, exp->infix.op_yylval, temp2, L_true));
         gen(newGoto(L_false));
+
+    } else if (exp->exp_kind == EXP_T_INFIX && exp->infix.op == AND) {
+        Label *L1 = newLabel();
+        translate_Condition(exp->infix.exp_left, L1, L_false);
+        gen(newLabelIR(L1));
+        translate_Condition(exp->infix.exp_right, L_true, L_false);
+
+    } else if (exp->exp_kind == EXP_T_INFIX && exp->infix.op == OR) {
+        Label *L1 = newLabel();
+        translate_Condition(exp->infix.exp_left, L_true, L1);
+        gen(newLabelIR(L1));
+        translate_Condition(exp->infix.exp_right, L_true, L_false);
+
+    } else if (exp->exp_kind == EXP_T_UNARY && exp->unary.op == NOT) {
+        // switch true label and false label
+        // TODO
+        translate_Condition(exp->unary.exp, L_false, L_true);
+
+    } else if (exp->exp_kind == EXP_T_PAREN) {
+        translate_Condition(exp->paren.exp, L_true, L_false);
+
     } else {
-        fatal("cannot deal this condition");
+        Operand *temp = newTemp();
+        translate_Exp(exp, temp);
+        gen(newIf(temp, RELOP_NE, newIntLiteral(0), L_true));
+        gen(newGoto(L_false));
     }
 }

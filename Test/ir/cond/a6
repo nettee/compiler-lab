@@ -1,0 +1,6 @@
+int main() {
+    if (45) {
+        return 233;
+    } 
+    return 234;
+}
