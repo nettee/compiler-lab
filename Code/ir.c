@@ -51,6 +51,18 @@ Operand *newFloatLiteral(float value) {
     return o;
 }
 
+Operand *newAddr(Operand *var) {
+    new_op(o, ADDR);
+    o->addr_var = var;
+    return o;
+}
+
+Operand *newIndir(Operand *var) {
+    new_op(o, INDIR);
+    o->indir_var = var;
+    return o;
+}
+
 static char *op_repr(Operand *op) {
     if (op == NULL) {
         warn("op == NULL");
@@ -70,6 +82,10 @@ static char *op_repr(Operand *op) {
         off += sprintf(str + off, "#%d", op->int_value);
     } else if (op->kind == FLOAT_LITERAL) {
         off += sprintf(str + off, "#%.2f", op->float_value);
+    } else if (op->kind == ADDR) {
+        off += sprintf(str + off, "&%s", op_repr(op->addr_var));
+    } else if (op->kind == INDIR) {
+        off += sprintf(str + off, "*%s", op_repr(op->indir_var));
     } else {
         off += sprintf(str + off, "some-op");
     }
@@ -105,9 +121,6 @@ struct IR_ {
         IR_SUB, 
         IR_MUL, 
         IR_DIV,
-        IR_ADDR,
-        IR_INDIR,
-        IR_ASSIGN_TO_ADDR,
         IR_GOTO,
         IR_IF,
         IR_RETURN,

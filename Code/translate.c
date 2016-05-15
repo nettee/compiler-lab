@@ -360,6 +360,21 @@ void translate_Args(Args *args) {
     }
 }
 
+void translate_Subscript(Exp *exp, Operand *offset) {
+    if (exp->exp_kind != EXP_T_SUBSCRIPT) {
+        gen(newAssignInt(offset, 0));
+        return;
+    }
+    Operand *sub_offset = newTemp();
+    translate_Subscript(exp->subscript.array, sub_offset);
+    Operand *this_offset = newTemp();
+    Operand *index = newTemp();
+    translate_Exp(exp->subscript.index, index);
+    int w = width(exp->attr_type);
+    gen(newMul(this_offset, index, newIntLiteral(w)));
+    gen(newAdd(offset, sub_offset, this_offset));
+}
+
 void translate_Exp(Exp *exp, Operand *place) {
 
     if (exp->exp_kind == EXP_T_INFIX && exp->infix.op == RELOP
@@ -394,9 +409,7 @@ void translate_Exp(Exp *exp, Operand *place) {
             gen(newDiv(place, temp1, temp2));
 
         } else if (exp->infix.op == ASSIGNOP) {
-            // we now assume that ID appears on the left
-//            gen(newAssign(left->ir_lvalue_addr, temp2));
-//            gen(newAssign(place, left->ir_lvalue_addr));
+            // temp1 is replaced by a lvalue place
             gen(newAssign(temp1, temp2));
 
         } else {
@@ -435,18 +448,28 @@ void translate_Exp(Exp *exp, Operand *place) {
             gen(newCall(place, exp->call.id_text));
         }
 
-//    } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
-//        visit(exp->subscript.array);
-//        visit(exp->subscript.index);
-//
-//    } else if (exp->exp_kind == EXP_T_DOT) {
-//        visit(exp->dot.exp);
+    } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
+        Operand *offset = newTemp();
+        translate_Subscript(exp, offset);
+        Exp *base = exp;
+        while (base->exp_kind == EXP_T_SUBSCRIPT) {
+            base = base->subscript.array;
+        }
+        if (base->exp_kind != EXP_T_ID) {
+            error(exp, "subscript on non-id");
+            return;
+        }
+        Operand *var = newVariableOperand(base->id_text);
+        Operand *offaddr = newTemp();
+        gen(newAdd(offaddr, newAddr(var), offset));
+        memcpy(place, newIndir(offaddr), sizeof(Operand));
+
+    } else if (exp->exp_kind == EXP_T_DOT) {
+        error(exp, "dot operation not supported");
 
     } else if (exp->exp_kind == EXP_T_ID) {
         Operand *var = newVariableOperand(exp->id_text);
         memcpy(place, var, sizeof(Operand));
-//        exp->ir_lvalue_addr = var;
-//        gen(newAssign(place, var));
 
     } else if (exp->exp_kind == EXP_T_INT) {
         gen(newAssignInt(place, exp->int_value));
