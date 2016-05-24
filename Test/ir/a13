@@ -1,0 +1,12 @@
+int inc(int a) {
+    return a + 1;
+}
+
+int main()
+{
+    int x, y;
+    x = read();
+    y = inc(x);
+    write(y);
+    return 0;
+}

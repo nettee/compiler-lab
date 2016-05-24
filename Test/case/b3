@@ -1,0 +1,19 @@
+int convert(int n)
+{
+    if (n == 0)
+        write(0);
+    else if (n == 1)
+        write(1);
+    else {
+        convert(n / 2);
+        write(n - n / 2 * 2);
+    }
+    return 0;
+}
+
+int main()
+{
+    int x = read();
+    convert(x);
+    return 0;
+}

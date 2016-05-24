@@ -1,0 +1,13 @@
+int add(int a[2]) {
+    return a[0] + a[1];
+}
+
+int main()
+{
+    int x[2], y;
+    x[0] = 5;
+    x[1] = 6;
+    y = add(x);
+    write(y);
+    return 0;
+}

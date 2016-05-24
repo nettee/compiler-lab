@@ -346,6 +346,8 @@ static void visitVarDec(void *node) {
         varDec->dim.varDec->attr_type = newArrayType(
                 varDec->attr_type, varDec->dim.int_value);
         visit(varDec->dim.varDec);
+        // new feature: integrate back
+        varDec->attr_type = varDec->dim.varDec->attr_type;
 
     } else {
         fatal("unknown vardec_type");
@@ -373,6 +375,7 @@ static void visitVarList(void *node) {
     TypeNode *typeNode = malloc(sizeof(TypeNode));
     typeNode->next = paramTypeListTail;
     typeNode->type = varList->paramDec->attr_paramType;
+    debug("paramType: %s", typeRepr(varList->paramDec->attr_paramType));
     varList->attr_paramTypeListTail = typeNode;
 }
 
@@ -381,7 +384,9 @@ static void visitParamDec(void *node) {
     visit(paramDec->specifier);
     paramDec->varDec->attr_type = paramDec->specifier->attr_type;
     visit(paramDec->varDec);
-    paramDec->attr_paramType = paramDec->specifier->attr_type;
+    debug("paramDec->varDec->attr_type = %s", typeRepr(paramDec->varDec->attr_type));
+    // new feature: array type function parameter
+    paramDec->attr_paramType = paramDec->varDec->attr_type;
 }
 
 static void visitCompSt(void *node) {

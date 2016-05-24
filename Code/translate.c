@@ -8,6 +8,7 @@ extern FILE *ir_out_file;
 typedef struct IRNode_ IRNode;
 
 struct IRNode_ {
+    IRNode *prev;
     IRNode *next;
     IR *ir;
 };
@@ -17,15 +18,47 @@ typedef struct {
     IRNode *tail;
 } IRList;
 
+static IRList irList;
+
+static void IRList_init() {
+    irList.head = NULL;
+    irList.tail = NULL;
+}
+
+static void IRList_add(IR *ir) {
+    IRNode *irNode = malloc(sizeof(IRNode));
+    irNode->prev = NULL;
+    irNode->next = NULL;
+    irNode->ir = ir;
+    if (irList.head == NULL) {
+        irList.head = irNode;
+        irList.tail = irNode;
+    } else {
+        irList.tail->next = irNode;
+        irNode->prev = irList.tail;
+        irList.tail = irNode;
+    }
+}
+
+static void IRList_print() {
+    for (IRNode *q = irList.head; q != NULL; q = q->next) {
+        IR *ir = q->ir;
+        char *repr = ir_repr(ir);
+        printf("%s\n", repr);
+        fprintf(ir_out_file, "%s\n", repr);
+    }
+}
+
+static bool can_translate = true;
+
 static void gen(IR *ir) {
-    char *repr = ir_repr(ir);
-    printf("%s\n", repr);
-    fprintf(ir_out_file, "%s\n", repr);
+    IRList_add(ir);
 }
 
 static void translate_Exp(Exp *exp, Operand *place);
 static void translate_Stmt(Stmt *stmt);
 static void translate_Condition(Exp *exp, Label *L1, Label *L2);
+static void translate_VarDec(VarDec *varDec, bool inParamDec);
 
 static void visit(void *node);
 
@@ -36,6 +69,7 @@ typedef void (*funcptr)(void *);
     printf("Translation error at Line %d: ", lineno); \
     printf(__VA_ARGS__); \
     printf("\n"); \
+    can_translate = false; \
 }
 
 static void visitProgram(void *node) {
@@ -79,7 +113,7 @@ static void visitExtDef(void *node) {
 
 static void visitExtDecList(void *node) {
     ExtDecList *extDecList = (ExtDecList *)node;
-    visit(extDecList->varDec);
+    translate_VarDec(extDecList->varDec, false);
     if (extDecList->extDecList != NULL) {
         visit(extDecList->extDecList);
     }
@@ -121,20 +155,29 @@ static void visitTag(void *node) {
     Tag *tag = (Tag *)node;
 }
 
-static void visitVarDec(void *node) {
-    VarDec *varDec = (VarDec *)node;
+static void translate_VarDec(VarDec *varDec, bool inParamDec) {
     if (varDec->vardec_kind == VAR_DEC_T_ID) {
         if (isArrayType(varDec->attr_type)) {
-            Operand *var = newVariableOperand(varDec->id_text);
-            gen(newAlloc(var, width(varDec->attr_type)));
+            if (!inParamDec) {
+                Operand *var = newVariableOperand(varDec->id_text);
+                Operand *temp = newTemp();
+                gen(newAlloc(temp, width(varDec->attr_type)));
+                gen(newAssign(var, newAddr(temp)));
+            }
         }
 
     } else if (varDec->vardec_kind == VAR_DEC_T_DIM) {
-        visit(varDec->dim.varDec);
+        translate_VarDec(varDec->dim.varDec, inParamDec);
 
     } else {
         fatal("unknown vardec_type");
     }
+}
+
+static void visitVarDec(void *node) {
+    warn("should not call visitVarDec");
+    VarDec *varDec = (VarDec *)node;
+    translate_VarDec(varDec, false);
 }
 
 static void visitFunDec(void *node) {
@@ -156,9 +199,18 @@ static void visitVarList(void *node) {
 static void visitParamDec(void *node) {
     ParamDec *paramDec = (ParamDec *)node;
     visit(paramDec->specifier);
-    visit(paramDec->varDec);
+    translate_VarDec(paramDec->varDec, true);
     if (paramDec->varDec->vardec_kind == VAR_DEC_T_ID) {
         gen(newParam(paramDec->varDec->id_text));
+    } else if (paramDec->varDec->vardec_kind == VAR_DEC_T_DIM) {
+        VarDec *vd = paramDec->varDec;
+        while (vd->vardec_kind == VAR_DEC_T_DIM) {
+            vd = vd->dim.varDec;
+        }
+        if (vd->vardec_kind != VAR_DEC_T_ID) {
+            fatal("something wrong of VarDec kind");
+        }
+        gen(newParam(vd->id_text));
     }
 }
 
@@ -209,7 +261,7 @@ static void visitDecList(void *node) {
 
 static void visitDec(void *node) {
     Dec *dec = (Dec *)node;
-    visit(dec->varDec);
+    translate_VarDec(dec->varDec, false);
     if (dec->exp != NULL) {
         if (dec->varDec->vardec_kind == VAR_DEC_T_ID) {
             Operand *var = newVariableOperand(dec->varDec->id_text);
@@ -346,11 +398,6 @@ static void visit(void *node) {
     visitor_table[type-400](node);
 }
 
-void generate_intercode() {
-    info("generate intercode");
-    visit(root);
-}
-
 void translate_Args(Args *args) {
     Operand *temp = newTemp();
     translate_Exp(args->exp, temp);
@@ -461,7 +508,7 @@ void translate_Exp(Exp *exp, Operand *place) {
         }
         Operand *var = newVariableOperand(base->id_text);
         Operand *offaddr = newTemp();
-        gen(newAdd(offaddr, newAddr(var), offset));
+        gen(newAdd(offaddr, var, offset));
         memcpy(place, newIndir(offaddr), sizeof(Operand));
 
     } else if (exp->exp_kind == EXP_T_DOT) {
@@ -573,5 +620,16 @@ static void translate_Condition(Exp *exp, Label *L_true, Label *L_false) {
         translate_Exp(exp, temp);
         gen(newIf(temp, RELOP_NE, newIntLiteral(0), L_true));
         gen(newGoto(L_false));
+    }
+}
+
+void generate_intercode() {
+    info("generate intercode");
+    IRList_init();
+    visit(root);
+    if (can_translate) {
+        IRList_print();
+    } else {
+        printf("Cannot translate.\n");
     }
 }
