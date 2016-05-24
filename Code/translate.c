@@ -3,51 +3,7 @@
 #include "syntax.tab.h"
 #include "pt.h"
 
-extern FILE *ir_out_file;
-
-typedef struct IRNode_ IRNode;
-
-struct IRNode_ {
-    IRNode *prev;
-    IRNode *next;
-    IR *ir;
-};
-
-typedef struct {
-    IRNode *head;
-    IRNode *tail;
-} IRList;
-
-static IRList irList;
-
-static void IRList_init() {
-    irList.head = NULL;
-    irList.tail = NULL;
-}
-
-static void IRList_add(IR *ir) {
-    IRNode *irNode = malloc(sizeof(IRNode));
-    irNode->prev = NULL;
-    irNode->next = NULL;
-    irNode->ir = ir;
-    if (irList.head == NULL) {
-        irList.head = irNode;
-        irList.tail = irNode;
-    } else {
-        irList.tail->next = irNode;
-        irNode->prev = irList.tail;
-        irList.tail = irNode;
-    }
-}
-
-static void IRList_print() {
-    for (IRNode *q = irList.head; q != NULL; q = q->next) {
-        IR *ir = q->ir;
-        char *repr = ir_repr(ir);
-        printf("%s\n", repr);
-        fprintf(ir_out_file, "%s\n", repr);
-    }
-}
+void optimize();
 
 static bool can_translate = true;
 
@@ -627,6 +583,7 @@ void generate_intercode() {
     info("generate intercode");
     IRList_init();
     visit(root);
+    optimize();
     if (can_translate) {
         IRList_print();
     } else {

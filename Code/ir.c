@@ -112,61 +112,6 @@ static char *label_repr(Label *label) {
     return str;
 }
 
-struct IR_ {
-    enum {
-        IR_LABEL,
-        IR_FUNCTION,
-        IR_ASSIGN,
-        IR_ADD, 
-        IR_SUB, 
-        IR_MUL, 
-        IR_DIV,
-        IR_GOTO,
-        IR_IF,
-        IR_RETURN,
-        IR_ALLOC,
-        IR_ARG,
-        IR_CALL,
-        IR_PARAM,
-        IR_READ,
-        IR_WRITE,
-    } kind;
-    union {
-        /* for ASSIGN, ADD, SUB, MUL, DIV,
-         * RETURN,
-         */
-        struct {
-            Operand *result;
-            Operand *arg1;
-            Operand *arg2;
-        };
-        // for FUNCTION
-        struct {
-            char *name;
-        } function;
-        // for LABEL
-        struct {
-            int label_no;
-        } label;
-        // for IF
-        struct {
-            Operand *arg1;
-            Operand *arg2;
-            int relop;
-            Label *label;
-        } if_;
-        // for GOTO
-        struct {
-            Label *label;
-        } goto_;
-        // for ALLOC(DEC)
-        struct {
-            Operand *var;
-            int size;
-        } alloc;
-    };
-};
-
 char *ir_repr(IR *ir) {
     char *str = malloc(100);
     memset(str, 0, 100);
@@ -358,3 +303,57 @@ IR *newWrite(Operand *temp) {
     ir->arg1 = temp;
     return ir;
 }
+
+extern FILE *ir_out_file;
+
+IRList irList;
+
+void IRList_init() {
+    irList.head = NULL;
+    irList.tail = NULL;
+}
+
+void IRList_add(IR *ir) {
+    IRNode *irNode = malloc(sizeof(IRNode));
+    irNode->prev = NULL;
+    irNode->next = NULL;
+    irNode->ir = ir;
+    if (irList.head == NULL) {
+        irList.head = irNode;
+        irList.tail = irNode;
+    } else {
+        irList.tail->next = irNode;
+        irNode->prev = irList.tail;
+        irList.tail = irNode;
+    }
+}
+
+void IRList_remove(IRNode *irNode) {
+    if (irList.head == NULL) {
+        fatal("remove from empty IRList");
+        return;
+    }
+    if (irList.head == irNode && irList.tail == irNode) {
+        irList.head = NULL;
+        irList.tail = NULL;
+    } else if (irList.head == irNode) {
+        irNode->next->prev = NULL;
+        irList.head = irNode->next;
+    } else if (irList.tail == irNode) {
+        irNode->prev->next = NULL;
+        irList.tail = irNode->prev;
+    } else {
+        irNode->prev->next = irNode->next;
+        irNode->next->prev = irNode->prev;
+    }
+}
+
+void IRList_print() {
+    for (IRNode *q = irList.head; q != NULL; q = q->next) {
+        IR *ir = q->ir;
+        char *repr = ir_repr(ir);
+        printf("%s\n", repr);
+        fprintf(ir_out_file, "%s\n", repr);
+    }
+}
+

@@ -37,6 +37,74 @@ Operand *newIndir(Operand *indir);
 
 typedef struct IR_ IR;
 
+struct IR_ {
+    enum {
+        IR_LABEL,
+        IR_FUNCTION,
+        IR_ASSIGN,
+        IR_ADD, 
+        IR_SUB, 
+        IR_MUL, 
+        IR_DIV,
+        IR_GOTO,
+        IR_IF,
+        IR_RETURN,
+        IR_ALLOC,
+        IR_ARG,
+        IR_CALL,
+        IR_PARAM,
+        IR_READ,
+        IR_WRITE,
+    } kind;
+    union {
+        /* for ASSIGN, ADD, SUB, MUL, DIV,
+         * RETURN,
+         */
+        struct {
+            Operand *result;
+            Operand *arg1;
+            Operand *arg2;
+        };
+        // for FUNCTION
+        struct {
+            char *name;
+        } function;
+        // for LABEL
+        struct {
+            int label_no;
+        } label;
+        // for IF
+        struct {
+            Operand *arg1;
+            Operand *arg2;
+            int relop;
+            Label *label;
+        } if_;
+        // for GOTO
+        struct {
+            Label *label;
+        } goto_;
+        // for ALLOC(DEC)
+        struct {
+            Operand *var;
+            int size;
+        } alloc;
+    };
+};
+
+typedef struct IRNode_ IRNode;
+
+struct IRNode_ {
+    IRNode *prev;
+    IRNode *next;
+    IR *ir;
+};
+
+typedef struct {
+    IRNode *head;
+    IRNode *tail;
+} IRList;
+
 char *ir_repr(IR *ir);
 
 IR *newLabelIR(Label *label);
@@ -57,5 +125,10 @@ IR *newCall(Operand *result, char *name);
 IR *newParam(char *name);
 IR *newRead(Operand *arg1);
 IR *newWrite(Operand *arg1);
+
+void IRList_init();
+void IRList_add(IR *ir);
+void IRList_remove(IRNode *irNode);
+void IRList_print();
 
 #endif
