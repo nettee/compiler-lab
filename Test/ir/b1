@@ -1,0 +1,6 @@
+int main()
+{
+    int b = 1 == 2;
+    write(b);
+    return 0;
+}

@@ -1,0 +1,14 @@
+int main()
+{
+    int i;
+    int j;
+    int k;
+    i = 1;
+    j = i * 2;
+    k = i * 3;
+    j = j + k;
+    i = j * i;
+    k = i - k;
+    write(k);
+    return 0;
+}

@@ -1,0 +1,9 @@
+int main()
+{
+    int x, y;
+    y = 2;
+    y = x = 1;
+    write(x);
+    write(y);
+    return 0;
+}

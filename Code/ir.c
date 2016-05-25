@@ -63,7 +63,7 @@ Operand *newIndir(Operand *var) {
     return o;
 }
 
-static char *op_repr(Operand *op) {
+char *op_repr(Operand *op) {
     if (op == NULL) {
         warn("op == NULL");
         return "__";
@@ -91,6 +91,33 @@ static char *op_repr(Operand *op) {
     }
 
     return str;
+}
+
+bool op_equals(Operand *a, Operand *b) {
+    if (a->kind == TEMP) {
+        return b->kind == TEMP
+            && a->temp_no == b->temp_no;
+    } else if (a->kind == SYM_OPERAND) {
+        return b->kind == SYM_OPERAND
+            && strcmp(a->sym_name, b->sym_name) == 0;
+    } else if (a->kind == VAR_OPERAND) {
+        return b->kind == VAR_OPERAND
+            && strcmp(a->var_name, b->var_name) == 0;
+    } else if (a->kind == INT_LITERAL) {
+        return b->kind == INT_LITERAL
+            && a->int_value == b->int_value;
+    } else if (a->kind == FLOAT_LITERAL) {
+        return b->kind == FLOAT_LITERAL
+            && a->float_value == b->float_value;
+    } else if (a->kind == ADDR) {
+        return b->kind == ADDR
+            && op_equals(a->addr_var, b->addr_var);
+    } else if (a->kind == INDIR) {
+        return b->kind == INDIR
+            && op_equals(a->indir_var, b->indir_var);
+    } else {
+        return false;
+    }
 }
 
 struct Label_ {
@@ -175,6 +202,46 @@ char *ir_repr(IR *ir) {
         off += sprintf(str + off, "some-ir");
     }
     return str;
+}
+
+bool ir_contains(IR *ir, Operand *op) {
+    // return true if there exist read of op in ir
+    if (ir->kind == IR_LABEL) {
+        return false;
+    } else if (ir->kind == IR_FUNCTION) {
+        return false;
+    } else if (ir->kind == IR_ASSIGN) {
+        return op_equals(ir->arg1, op);
+    } else if (ir->kind == IR_ADD) {
+        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+    } else if (ir->kind == IR_SUB) {
+        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+    } else if (ir->kind == IR_MUL) {
+        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+    } else if (ir->kind == IR_DIV) {
+        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+    } else if (ir->kind == IR_GOTO) {
+        return false;
+    } else if (ir->kind == IR_IF) {
+        return op_equals(ir->if_.arg1, op) 
+            || op_equals(ir->if_.arg2, op);
+    } else if (ir->kind == IR_RETURN) {
+        return op_equals(ir->arg1, op);
+    } else if (ir->kind == IR_ALLOC) {
+        return op_equals(ir->alloc.var, op);
+    } else if (ir->kind == IR_ARG) {
+        return op_equals(ir->arg1, op);
+    } else if (ir->kind == IR_CALL) {
+        return false;
+    } else if (ir->kind == IR_PARAM) {
+        return false;
+    } else if (ir->kind == IR_READ) {
+        return false;
+    } else if (ir->kind == IR_WRITE) {
+        return op_equals(ir->arg1, op);
+    } else {
+        return false;
+    }
 }
 
 IR *newLabelIR(Label *label) {
@@ -305,12 +372,18 @@ IR *newWrite(Operand *temp) {
 }
 
 extern FILE *ir_out_file;
+extern FILE *ir_out_file2;
 
 IRList irList;
 
 void IRList_init() {
+    irList.length = 0;
     irList.head = NULL;
     irList.tail = NULL;
+}
+
+int IRList_length() {
+    return irList.length;
 }
 
 void IRList_add(IR *ir) {
@@ -326,6 +399,7 @@ void IRList_add(IR *ir) {
         irNode->prev = irList.tail;
         irList.tail = irNode;
     }
+    irList.length += 1;
 }
 
 void IRList_remove(IRNode *irNode) {
@@ -346,14 +420,22 @@ void IRList_remove(IRNode *irNode) {
         irNode->prev->next = irNode->next;
         irNode->next->prev = irNode->prev;
     }
+    irList.length -= 1;
 }
 
-void IRList_print() {
+void IRList_print_to_file(FILE *file) {
     for (IRNode *q = irList.head; q != NULL; q = q->next) {
         IR *ir = q->ir;
         char *repr = ir_repr(ir);
         printf("%s\n", repr);
-        fprintf(ir_out_file, "%s\n", repr);
+        fprintf(file, "%s\n", repr);
     }
 }
 
+void IRList_print() {
+    IRList_print_to_file(ir_out_file);
+}
+
+void IRList_print_2() {
+    IRList_print_to_file(ir_out_file2);
+}

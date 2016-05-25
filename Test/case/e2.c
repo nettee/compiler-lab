@@ -1,3 +1,4 @@
+#include <stdio.h>
 int get_m2nd(int arr[20], int m)
 {
     int m1st, m2nd;
@@ -27,10 +28,8 @@ int main()
     int num[20];
     int i = 0;
     while (i < 20) {
-        int ti = i * i + i * 2 + 4;
-        num[i] = ti - ti / (i + 1) * i + 2 * i;
-        i = i + 1;
+        int ti = i * i + i * 2 
     }
-    write(get_m2nd(num, 20));
+    printf("%d\n", get_m2nd(num, 20));
     return 0;
 }

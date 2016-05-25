@@ -1,0 +1,13 @@
+int sub(int a, int b)
+{
+    return a - b;
+}
+
+int main()
+{
+    int x = 5;
+    int y = 3;
+    int d = sub(x, y);
+    write(d);
+    return 0;
+}

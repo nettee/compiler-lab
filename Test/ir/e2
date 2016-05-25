@@ -1,0 +1,10 @@
+int main()
+{
+    int i = 1;
+    int j = 2;
+    int k = 3;
+    int l = 4;
+    int p = i + j + k + l;
+    write(p);
+    return 0;
+}

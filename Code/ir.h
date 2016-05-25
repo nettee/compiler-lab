@@ -35,6 +35,9 @@ Operand *newFloatLiteral(float value);
 Operand *newAddr(Operand *var);
 Operand *newIndir(Operand *indir);
 
+char *op_repr(Operand *op);
+bool op_equals(Operand *, Operand *);
+
 typedef struct IR_ IR;
 
 struct IR_ {
@@ -92,20 +95,8 @@ struct IR_ {
     };
 };
 
-typedef struct IRNode_ IRNode;
-
-struct IRNode_ {
-    IRNode *prev;
-    IRNode *next;
-    IR *ir;
-};
-
-typedef struct {
-    IRNode *head;
-    IRNode *tail;
-} IRList;
-
 char *ir_repr(IR *ir);
+bool ir_contains(IR *ir, Operand *op);
 
 IR *newLabelIR(Label *label);
 IR *newFunction(char *name);
@@ -126,9 +117,25 @@ IR *newParam(char *name);
 IR *newRead(Operand *arg1);
 IR *newWrite(Operand *arg1);
 
+typedef struct IRNode_ IRNode;
+
+struct IRNode_ {
+    IRNode *prev;
+    IRNode *next;
+    IR *ir;
+};
+
+typedef struct {
+    int length;
+    IRNode *head;
+    IRNode *tail;
+} IRList;
+
 void IRList_init();
+int IRList_length();
 void IRList_add(IR *ir);
 void IRList_remove(IRNode *irNode);
 void IRList_print();
+void IRList_print_2();
 
 #endif

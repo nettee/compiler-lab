@@ -355,12 +355,13 @@ static void visit(void *node) {
 }
 
 void translate_Args(Args *args) {
-    Operand *temp = newTemp();
-    translate_Exp(args->exp, temp);
-    gen(newArg(temp));
+    // generate ARG code in reverse order
     if (args->args != NULL) {
         translate_Args(args->args);
     }
+    Operand *temp = newTemp();
+    translate_Exp(args->exp, temp);
+    gen(newArg(temp));
 }
 
 void translate_Subscript(Exp *exp, Operand *offset) {
@@ -414,6 +415,7 @@ void translate_Exp(Exp *exp, Operand *place) {
         } else if (exp->infix.op == ASSIGNOP) {
             // temp1 is replaced by a lvalue place
             gen(newAssign(temp1, temp2));
+            gen(newAssign(place, temp1));
 
         } else {
             fatal("unknown exp->infix.op");
@@ -452,6 +454,10 @@ void translate_Exp(Exp *exp, Operand *place) {
         }
 
     } else if (exp->exp_kind == EXP_T_SUBSCRIPT) {
+        // example: x = a[i] will translate to:
+        // offset = i * 4
+        // offaddr = x + offset
+        // x = *offaddr
         Operand *offset = newTemp();
         translate_Subscript(exp, offset);
         Exp *base = exp;
@@ -583,9 +589,12 @@ void generate_intercode() {
     info("generate intercode");
     IRList_init();
     visit(root);
-    optimize();
     if (can_translate) {
         IRList_print();
+        info("[Before optimizing] %d IR lines", IRList_length());
+        optimize();
+        IRList_print_2();
+        info("[After optimizing] %d IR lines", IRList_length());
     } else {
         printf("Cannot translate.\n");
     }
