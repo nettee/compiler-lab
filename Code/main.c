@@ -22,32 +22,40 @@ void generate_intercode();
 FILE *ir_out_file;
 FILE *ir_out_file2;
 
+FILE *ir_out;
+
 int main(int argc, char **argv)
 {
-    if (argc <= 1) {
+    if (argc <= 2) {
         fprintf(stderr, "Fatal: too few arguments\n");
         return 1;
     }
-    ir_out_file = fopen("/home/dell/a.ir", "w");
-    ir_out_file2 = fopen("/home/dell/b.ir", "w");
-    if (!ir_out_file) {
-        fprintf(stderr, "Fatal: cannot open %s\n",
-                "/home/dell/a.ir");
-    }
-    if (!ir_out_file2) {
-        fprintf(stderr, "Fatal: cannot open %s\n",
-                "/home/dell/b.ir");
-    }
+//    ir_out_file = fopen("/home/dell/a.ir", "w");
+//    ir_out_file2 = fopen("/home/dell/b.ir", "w");
+//    if (!ir_out_file) {
+//        fprintf(stderr, "Fatal: cannot open %s\n",
+//                "/home/dell/a.ir");
+//    }
+//    if (!ir_out_file2) {
+//        fprintf(stderr, "Fatal: cannot open %s\n",
+//                "/home/dell/b.ir");
+//    }
     FILE *f = fopen(argv[1], "r");
     if (!f) {
         perror(argv[1]);
         return 1;
     }
+    ir_out = fopen(argv[2], "w");
+    if (!f) {
+        perror(argv[2]);
+        return 1;
+    }
+
     yyrestart(f);
     yyparse();
 
     if (nr_lexical_error > 0 || nr_syntax_error > 0) {
-        return 1;
+        return 2;
     }
 
 #ifdef PRINT_AST
@@ -63,7 +71,7 @@ int main(int argc, char **argv)
 #endif
 
     if (nr_semantics_error > 0) {
-        return 2;
+        return 3;
     }
 #endif
 

@@ -126,7 +126,8 @@ static bool can_fold_temp(IR *ir1, IR *ir2) {
         return false;
     }
     return ir2->kind == IR_ASSIGN 
-            && ir_contains(ir2, ir1->result);
+            && (ir2->result->kind == TEMP || ir2->result->kind == VAR_OPERAND)
+            && op_equals(ir2->arg1, ir1->result);
 }
 
 static void fold_temp(IRNode *begin, IRNode *end) {
@@ -150,19 +151,19 @@ static void fold_temp(IRNode *begin, IRNode *end) {
 
 void optimize_block(IRNode *begin, IRNode *end) {
     info("optimizing block...");
-    for (IRNode *q = begin; q != end; q = q->next) {
-        IR *ir = q->ir;
-        printf("    %s\n", ir_repr(ir));
-    }
+//    for (IRNode *q = begin; q != end; q = q->next) {
+//        IR *ir = q->ir;
+//        printf("    %s\n", ir_repr(ir));
+//    }
     for (int _ = 0; _ < 5; _++) {
         fold_constant(begin, end);
         compute_constant(begin, end);
     }
     fold_temp(begin, end);
-    for (IRNode *q = begin; q != end; q = q->next) {
-        IR *ir = q->ir;
-        printf("    %s\n", ir_repr(ir));
-    }
+//    for (IRNode *q = begin; q != end; q = q->next) {
+//        IR *ir = q->ir;
+//        printf("    %s\n", ir_repr(ir));
+//    }
 }
 
 bool is_dead_ir(IR *ir) {

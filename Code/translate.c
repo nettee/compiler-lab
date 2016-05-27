@@ -21,11 +21,12 @@ static void visit(void *node);
 typedef void (*funcptr)(void *);
 
 #define error(node, ...) { \
-    int lineno = ((int *)node)[1]; \
-    printf("Translation error at Line %d: ", lineno); \
-    printf(__VA_ARGS__); \
-    printf("\n"); \
     can_translate = false; \
+}
+//    int lineno = ((int *)node)[1]; \
+//    printf("Translation error at Line %d: ", lineno); \
+//    printf(__VA_ARGS__); \
+//    printf("\n"); \
 }
 
 static void visitProgram(void *node) {
@@ -590,15 +591,15 @@ void generate_intercode() {
     IRList_init();
     visit(root);
     if (can_translate) {
-        IRList_print();
         int irlist_length_before_optimizing = IRList_length();
         optimize();
-        IRList_print_2();
+//        IRList_print_2();
         int irlist_length_after_optimizing = IRList_length();
         info("[Before optimizing] %d IR lines",
                 irlist_length_before_optimizing);
         info("[After optimizing] %d IR lines",
                 irlist_length_after_optimizing);
+        IRList_print();
     } else {
         printf("Cannot translate.\n");
     }

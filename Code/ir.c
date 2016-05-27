@@ -388,6 +388,7 @@ IR *newWrite(Operand *temp) {
 
 extern FILE *ir_out_file;
 extern FILE *ir_out_file2;
+extern FILE *ir_out;
 
 IRList irList;
 
@@ -442,13 +443,14 @@ void IRList_print_to_file(FILE *file) {
     for (IRNode *q = irList.head; q != NULL; q = q->next) {
         IR *ir = q->ir;
         char *repr = ir_repr(ir);
-        printf("%s\n", repr);
+//        printf("%s\n", repr);
         fprintf(file, "%s\n", repr);
     }
 }
 
 void IRList_print() {
-    IRList_print_to_file(ir_out_file);
+//    IRList_print_to_file(ir_out_file);
+    IRList_print_to_file(ir_out);
 }
 
 void IRList_print_2() {
