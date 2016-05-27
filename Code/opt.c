@@ -32,7 +32,8 @@ static int ir_replace_operand(IR *ir, Operand *temp, Operand *repl) {
         cnt += op_replace(&ir->arg1, temp_no, repl);
         cnt += op_replace(&ir->arg2, temp_no, repl);
     } else if (ir->kind == IR_ASSIGN
-            || ir->kind == IR_RETURN) {
+            || ir->kind == IR_RETURN
+            || ir->kind == IR_WRITE) {
         cnt += op_replace(&ir->arg1, temp_no, repl);
     } else if (ir->kind == IR_IF) {
         cnt += op_replace(&ir->if_.arg1, temp_no, repl);
@@ -85,9 +86,9 @@ static IR *ir_compute_constant(IR *ir) {
             }
         } else if (b->kind == INT_LITERAL) {
             if (b->int_value == 0 && ir->kind == IR_ADD) {
-                return newAssign(ir->result, b);
+                return newAssign(ir->result, a);
             } else if (b->int_value == 0 && ir->kind == IR_SUB) {
-                return newAssign(ir->result, b);
+                return newAssign(ir->result, a);
             } else if (b->int_value == 0 && ir->kind == IR_MUL) {
                 return newAssignInt(ir->result, 0);
             } else {
@@ -112,6 +113,41 @@ static void compute_constant(IRNode *begin, IRNode *end) {
     }
 }
 
+static bool can_fold_temp(IR *ir1, IR *ir2) {
+    if (ir1->kind != IR_ASSIGN
+            && ir1->kind != IR_ADD
+            && ir1->kind != IR_SUB
+            && ir1->kind != IR_MUL
+            && ir1->kind != IR_DIV
+            && ir1->kind != IR_CALL) {
+        return false;
+    }
+    if (ir1->result->kind != TEMP) {
+        return false;
+    }
+    return ir2->kind == IR_ASSIGN 
+            && ir_contains(ir2, ir1->result);
+}
+
+static void fold_temp(IRNode *begin, IRNode *end) {
+    bool last_folded = false;
+    for (IRNode *q = begin; q != end; q = q->next) {
+        if (last_folded) {
+            last_folded = false;
+            continue;
+        }
+        if (q->next != NULL && can_fold_temp(q->ir, q->next->ir)) {
+            info("fold two lines: '%s' and '%s'",
+                    ir_repr(q->ir), ir_repr(q->next->ir));
+            Operand *result = q->next->ir->result;
+            q->next->ir = q->ir;
+            q->next->ir->result = result;
+            q->ir = newAssignInt(newTemp(), 0); // no value ir
+            last_folded = true;
+        }
+    }
+}
+
 void optimize_block(IRNode *begin, IRNode *end) {
     info("optimizing block...");
     for (IRNode *q = begin; q != end; q = q->next) {
@@ -122,6 +158,7 @@ void optimize_block(IRNode *begin, IRNode *end) {
         fold_constant(begin, end);
         compute_constant(begin, end);
     }
+    fold_temp(begin, end);
     for (IRNode *q = begin; q != end; q = q->next) {
         IR *ir = q->ir;
         printf("    %s\n", ir_repr(ir));

@@ -37,6 +37,7 @@ Operand *newIndir(Operand *indir);
 
 char *op_repr(Operand *op);
 bool op_equals(Operand *, Operand *);
+bool op_contains(Operand *, Operand *);
 
 typedef struct IR_ IR;
 
@@ -61,7 +62,8 @@ struct IR_ {
     } kind;
     union {
         /* for ASSIGN, ADD, SUB, MUL, DIV,
-         * RETURN,
+         * RETURN, ARG, CALL, PARAM,
+         * READ, WRITE
          */
         struct {
             Operand *result;

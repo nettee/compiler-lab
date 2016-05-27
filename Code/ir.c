@@ -120,6 +120,21 @@ bool op_equals(Operand *a, Operand *b) {
     }
 }
 
+bool op_contains(Operand *a, Operand *b) {
+    if (op_equals(a, b)) {
+        return true;
+    } 
+    if (a->kind == ADDR 
+            && op_contains(a->addr_var, b)) {
+        return true;
+    } 
+    if (a->kind == INDIR
+            && op_contains(a->indir_var, b)) {
+        return true;
+    }
+    return false;
+}
+
 struct Label_ {
     int label_no;
 };
@@ -211,26 +226,26 @@ bool ir_contains(IR *ir, Operand *op) {
     } else if (ir->kind == IR_FUNCTION) {
         return false;
     } else if (ir->kind == IR_ASSIGN) {
-        return op_equals(ir->arg1, op);
+        return op_contains(ir->arg1, op);
     } else if (ir->kind == IR_ADD) {
-        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+        return op_contains(ir->arg1, op) || op_contains(ir->arg2, op);
     } else if (ir->kind == IR_SUB) {
-        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+        return op_contains(ir->arg1, op) || op_contains(ir->arg2, op);
     } else if (ir->kind == IR_MUL) {
-        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+        return op_contains(ir->arg1, op) || op_contains(ir->arg2, op);
     } else if (ir->kind == IR_DIV) {
-        return op_equals(ir->arg1, op) || op_equals(ir->arg2, op);
+        return op_contains(ir->arg1, op) || op_contains(ir->arg2, op);
     } else if (ir->kind == IR_GOTO) {
         return false;
     } else if (ir->kind == IR_IF) {
-        return op_equals(ir->if_.arg1, op) 
-            || op_equals(ir->if_.arg2, op);
+        return op_contains(ir->if_.arg1, op) 
+            || op_contains(ir->if_.arg2, op);
     } else if (ir->kind == IR_RETURN) {
-        return op_equals(ir->arg1, op);
+        return op_contains(ir->arg1, op);
     } else if (ir->kind == IR_ALLOC) {
-        return op_equals(ir->alloc.var, op);
+        return op_contains(ir->alloc.var, op);
     } else if (ir->kind == IR_ARG) {
-        return op_equals(ir->arg1, op);
+        return op_contains(ir->arg1, op);
     } else if (ir->kind == IR_CALL) {
         return false;
     } else if (ir->kind == IR_PARAM) {
@@ -238,7 +253,7 @@ bool ir_contains(IR *ir, Operand *op) {
     } else if (ir->kind == IR_READ) {
         return false;
     } else if (ir->kind == IR_WRITE) {
-        return op_equals(ir->arg1, op);
+        return op_contains(ir->arg1, op);
     } else {
         return false;
     }

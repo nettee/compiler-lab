@@ -591,10 +591,14 @@ void generate_intercode() {
     visit(root);
     if (can_translate) {
         IRList_print();
-        info("[Before optimizing] %d IR lines", IRList_length());
+        int irlist_length_before_optimizing = IRList_length();
         optimize();
         IRList_print_2();
-        info("[After optimizing] %d IR lines", IRList_length());
+        int irlist_length_after_optimizing = IRList_length();
+        info("[Before optimizing] %d IR lines",
+                irlist_length_before_optimizing);
+        info("[After optimizing] %d IR lines",
+                irlist_length_after_optimizing);
     } else {
         printf("Cannot translate.\n");
     }
