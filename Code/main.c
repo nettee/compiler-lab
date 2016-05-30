@@ -5,6 +5,7 @@
 //#define PRINT_AST
 #define SEMANTICS_ANALYSIS
 #define IR_GENERATE
+#define ASM_GENERATE
 
 extern int nr_lexical_error;
 extern int nr_syntax_error;
@@ -18,15 +19,17 @@ void init_env();
 void semantics_analysis();
 void print_symbol_table();
 void generate_intercode();
+void generate_asm();
 
 FILE *ir_out_file;
 FILE *ir_out_file2;
 
 FILE *ir_out;
+FILE *asm_out;
 
 int main(int argc, char **argv)
 {
-    if (argc <= 2) {
+    if (argc <= 1) {
         fprintf(stderr, "Fatal: too few arguments\n");
         return 1;
     }
@@ -45,9 +48,15 @@ int main(int argc, char **argv)
         perror(argv[1]);
         return 1;
     }
-    ir_out = fopen(argv[2], "w");
-    if (!f) {
-        perror(argv[2]);
+//    ir_out = fopen(argv[2], "w");
+//    if (!f) {
+//        perror(argv[2]);
+//        return 1;
+//    }
+    asm_out = fopen("/home/dell/a.s", "w");
+    if (!asm_out) {
+        fprintf(stderr, "fatal: cannot open %s\n",
+                "/home/dell/a.s");
         return 1;
     }
 
@@ -77,6 +86,10 @@ int main(int argc, char **argv)
 
 #ifdef IR_GENERATE
     generate_intercode();
+#endif
+
+#ifdef ASM_GENERATE
+    generate_asm();
 #endif
 
 

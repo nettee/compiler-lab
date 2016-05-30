@@ -146,7 +146,7 @@ Label *newLabel() {
     return l;
 }
 
-static char *label_repr(Label *label) {
+char *label_repr(Label *label) {
     char *str = malloc(100);
     memset(str, 0, 100);
     int off = 0;
@@ -443,8 +443,8 @@ void IRList_print_to_file(FILE *file) {
     for (IRNode *q = irList.head; q != NULL; q = q->next) {
         IR *ir = q->ir;
         char *repr = ir_repr(ir);
-//        printf("%s\n", repr);
-        fprintf(file, "%s\n", repr);
+        printf("%s\n", repr);
+//        fprintf(file, "%s\n", repr);
     }
 }
 

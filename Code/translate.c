@@ -592,7 +592,7 @@ void generate_intercode() {
     visit(root);
     if (can_translate) {
         int irlist_length_before_optimizing = IRList_length();
-        optimize();
+//        optimize();
 //        IRList_print_2();
         int irlist_length_after_optimizing = IRList_length();
         info("[Before optimizing] %d IR lines",

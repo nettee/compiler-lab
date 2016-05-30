@@ -4,6 +4,7 @@
 typedef struct Label_ Label;
 
 Label *newLabel();
+char *label_repr(Label *label);
 
 typedef struct Operand_ Operand;
 
