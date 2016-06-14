@@ -1,28 +1,19 @@
-int main()
+int fact(int n)
 {
-    int a = read();
-    int b = read();
-    int c = read();
-    int tmp;
-    if (a > b) {
-        a = a + b;
-        b = a - b;
-        a = a - b;
-    }
-    if (c < a) {
-        tmp = b;
-        b = a;
-        a = c;
-        c = tmp;
-    } else if (c < b) {
-        b = b + c;
-        c = b - c;
-        b = b - c;
-    }
-    write(a);
-    write(b);
-    write(c);
-    return 0;
+    if (n == 1)
+        return n;
+    else
+        return n * fact(n - 1);
 }
 
-
+int main()
+{
+    int m, result;
+    m = read();
+    if (m > 1)
+        result = fact(m);
+    else
+        result = 0;
+    write(result);
+    return 0;
+}

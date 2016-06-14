@@ -1,0 +1,11 @@
+int hello() {
+    write(233);
+}
+
+int main()
+{
+    hello();
+    hello();
+    hello();
+    return 0;
+}

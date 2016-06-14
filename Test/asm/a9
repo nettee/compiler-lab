@@ -1,0 +1,17 @@
+int sub0(int a0, int b0) {
+    return a0 - b0;
+}
+
+int sub(int a, int b) {
+    return sub0(a, b);
+}
+
+int main()
+{
+    int x;
+    int y;
+    x = read();
+    y = read();
+    write(sub(x, y));
+    return 0;
+}

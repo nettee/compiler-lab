@@ -20,36 +20,48 @@ extern FILE *asm_out;
     mips0(__VA_ARGS__); \
 }
 
-#define load(reg, var) mips("lw %s, %s", reg, var_repr(var))
-#define store(reg, var) mips("sw %s, %s", reg, var_repr(var))
-static void push(char *reg) {
-    mips("addi $sp, $sp, -4");
-    mips("sw %s, 0($sp)", reg);
+#define load(reg, var) \
+    mips("lw %s, %s", reg, var_repr(var))
+#define store(reg, var) \
+    mips("sw %s, %s", reg, var_repr(var))
+#define push(reg) { \
+    mips("addi $sp, $sp, -4"); \
+    mips("sw %s, 0($sp)", reg); \
 }
-
-static void pop(char *reg) {
-    mips("lw %s, 0($sp)", reg);
-    mips("addi $sp, $sp, 4");
+#define pop(reg) { \
+    mips("lw %s, 0($sp)", reg); \
+    mips("addi $sp, $sp, 4"); \
 }
 
 
 #define t0 "$t0"
 #define t1 "$t1"
 #define t2 "$t2"
+#define a0 "$a0"
+#define v0 "$v0"
 #define ra "$ra"
+
+int arg_cnt = 0;
+int param_cnt = 0;
 
 static void translate_label(IR *ir) {
     mips0("L%d:", ir->label.label_no);
 }
 
 static void translate_function(IR *ir) {
+    mips("jr $ra"); // deal with previous no return function
     mips0("  ");
-    mips0("%s:", ir->function.name);
+    if (strcmp(ir->function.name, "main") == 0) {
+        mips0("main:");
+    } else {
+        mips0("func_%s:", ir->function.name);
+    }
+    param_cnt = 0;
 }
 
 static void translate_assign_const(IR *ir) {
     mips("li %s, %d", t0, ir->arg1->int_value);
-    mips("sw %s, %s", t0, var_repr(ir->result));
+    store(t0, ir->result);
 }
 
 static void translate_assign(IR *ir) {
@@ -122,7 +134,8 @@ static void translate_if(IR *ir) {
 }
 
 static void translate_return(IR *ir) {
-//    printf("  %s\n", ir_repr(ir));
+    load(v0, ir->arg1);
+    mips("jr $ra");
 }
 
 static void translate_alloc(IR *ir) {
@@ -130,15 +143,26 @@ static void translate_alloc(IR *ir) {
 }
 
 static void translate_arg(IR *ir) {
-//    printf("  %s\n", ir_repr(ir));
+    load(t0, ir->arg1);
+    push(t0);
+    arg_cnt++;
 }
 
 static void translate_call(IR *ir) {
-//    printf("  %s\n", ir_repr(ir));
+    push(ra);
+    mips("jal func_%s", op_repr(ir->arg1));
+    pop(ra);
+    store(v0, ir->result);
+    // remove pushed arguments
+    mips("addi $sp, $sp, %d", 4 * arg_cnt);
+    arg_cnt = 0;
 }
 
 static void translate_param(IR *ir) {
-    printf("  %s\n", ir_repr(ir));
+    param_cnt++;
+    // move arguments in stack to static area
+    mips("lw %s, %d($sp)", t0, 4 * param_cnt);
+    store(t0, ir->arg1);
 }
 
 static void translate_read(IR *ir) {
@@ -147,12 +171,12 @@ static void translate_read(IR *ir) {
     pop(ra);
 
     // get result
-    mips("sw $v0, %s", var_repr(ir->arg1));
+    store(v0, ir->arg1);
 }
 
 static void translate_write(IR *ir) {
     // pass argument
-    mips("lw $a0, %s", var_repr(ir->arg1));
+    load(a0, ir->arg1);
 
     push(ra);
     mips("jal write");
@@ -225,11 +249,6 @@ static void generate_func() {
     mips("jr $ra");
 }
 
-static void generate_post() {
-    mips("move $v0, $0");
-    mips("jr $ra");
-}
-
 void generate_asm() {
     info("generating mips...");
     generate_data();
@@ -238,6 +257,7 @@ void generate_asm() {
         IR *ir = q->ir;
         translate_IR(ir);
     }
-    generate_post();
+    mips("move $v0, $0");
+    mips("jr $ra");
 }
 

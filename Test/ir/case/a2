@@ -1,0 +1,28 @@
+int main()
+{
+    int a = read();
+    int b = read();
+    int c = read();
+    int tmp;
+    if (a > b) {
+        a = a + b;
+        b = a - b;
+        a = a - b;
+    }
+    if (c < a) {
+        tmp = b;
+        b = a;
+        a = c;
+        c = tmp;
+    } else if (c < b) {
+        b = b + c;
+        c = b - c;
+        b = b - c;
+    }
+    write(a);
+    write(b);
+    write(c);
+    return 0;
+}
+
+
