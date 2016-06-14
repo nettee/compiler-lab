@@ -37,6 +37,7 @@ Operand *newAddr(Operand *var);
 Operand *newIndir(Operand *indir);
 
 char *op_repr(Operand *op);
+char *var_repr(Operand *op);
 bool op_equals(Operand *, Operand *);
 bool op_contains(Operand *, Operand *);
 

@@ -59,23 +59,6 @@ Type *retrieve_struct(char *name) {
     return getArbitType();
 }
 
-typedef struct {
-    char *name;
-    union {
-        // for variable
-        struct {
-            Type *type;
-        };
-        // for function
-        struct {
-            enum { DEFINED, DECLARED } state;
-            int lineno;
-            Type *returnType;
-            TypeNode *paramTypeList;
-        };
-    };
-} Symbol;
-
 Symbol *newVariableSymbol(char *name, Type *type) {
     Symbol *symbol = malloc(sizeof(Symbol));
     symbol->name = name;
@@ -92,18 +75,6 @@ Symbol *newFunctionSymbol(char *name, int lineno, Type *returnType,
     symbol->paramTypeList = paramTypeList;
     return symbol;
 }
-
-typedef struct SymbolNode_ SymbolNode;
-
-struct SymbolNode_ {
-    SymbolNode *next;
-    Symbol *symbol;
-};
-
-typedef struct {
-    SymbolNode *head;
-    SymbolNode *tail;
-} SymbolTable;
 
 bool isEmptySymbolTable(SymbolTable *st) {
     return st->head == NULL && st->tail == NULL;
@@ -142,13 +113,11 @@ void SymbolTable_append(SymbolTable *st, Symbol *sym) {
     }
 }
 
-typedef struct Env_ {
-    struct Env_ *next;
-    SymbolTable *vst; // variable symbol table
-    SymbolTable *fst; // function symbol table
-} Env;
-
 static Env *cenv;
+
+Env *get_current_env() {
+    return cenv;
+}
 
 bool in_nested_env() {
     return cenv->next != NULL;

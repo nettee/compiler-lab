@@ -33,12 +33,12 @@ int main(int argc, char **argv)
         fprintf(stderr, "Fatal: too few arguments\n");
         return 1;
     }
-//    ir_out_file = fopen("/home/dell/a.ir", "w");
+    ir_out_file = fopen("/home/dell/a.ir", "w");
 //    ir_out_file2 = fopen("/home/dell/b.ir", "w");
-//    if (!ir_out_file) {
-//        fprintf(stderr, "Fatal: cannot open %s\n",
-//                "/home/dell/a.ir");
-//    }
+    if (!ir_out_file) {
+        fprintf(stderr, "Fatal: cannot open %s\n",
+                "/home/dell/a.ir");
+    }
 //    if (!ir_out_file2) {
 //        fprintf(stderr, "Fatal: cannot open %s\n",
 //                "/home/dell/b.ir");

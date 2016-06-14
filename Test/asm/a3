@@ -1,0 +1,8 @@
+int main()
+{
+    int x, y;
+    x = 6 / 3;
+    y = 7 / 2;
+    write(x);
+    write(y);
+}

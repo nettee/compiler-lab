@@ -19,7 +19,7 @@ char *relop_repr(int relop);
     node->next = NULL; \
     node->ir = iir
 
-static int nr_temp = 0;
+int nr_temp = 0;
 
 Operand *newTemp() {
     new_op(temp, TEMP);
@@ -90,6 +90,17 @@ char *op_repr(Operand *op) {
         off += sprintf(str + off, "some-op");
     }
 
+    return str;
+}
+
+char *var_repr(Operand *op) {
+    if (op->kind != VAR_OPERAND && op->kind != TEMP) {
+        warn("op '%s' is not variable or temp", op_repr(op));
+        return op_repr(op);
+    }
+    char *str = malloc(100);
+    memset(str, 0, 100);
+    sprintf(str, "var_%s", op_repr(op));
     return str;
 }
 
@@ -443,14 +454,14 @@ void IRList_print_to_file(FILE *file) {
     for (IRNode *q = irList.head; q != NULL; q = q->next) {
         IR *ir = q->ir;
         char *repr = ir_repr(ir);
-        printf("%s\n", repr);
-//        fprintf(file, "%s\n", repr);
+//        printf("%s\n", repr);
+        fprintf(file, "%s\n", repr);
     }
 }
 
 void IRList_print() {
-//    IRList_print_to_file(ir_out_file);
-    IRList_print_to_file(ir_out);
+    IRList_print_to_file(ir_out_file);
+//    IRList_print_to_file(ir_out);
 }
 
 void IRList_print_2() {
