@@ -1,0 +1,9 @@
+int main()
+{
+    int x = 3;
+    if (x > 3) {
+        write(1);
+    } else {
+        write(0);
+    }
+}

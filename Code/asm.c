@@ -2,6 +2,7 @@
 #include "ir.h"
 #include "reg.h"
 #include "st.h"
+#include "syntax.tab.h"
 
 extern IRList irList;
 extern FILE *asm_out;
@@ -21,10 +22,21 @@ extern FILE *asm_out;
 
 #define load(reg, var) mips("lw %s, %s", reg, var_repr(var))
 #define store(reg, var) mips("sw %s, %s", reg, var_repr(var))
+static void push(char *reg) {
+    mips("addi $sp, $sp, -4");
+    mips("sw %s, 0($sp)", reg);
+}
+
+static void pop(char *reg) {
+    mips("lw %s, 0($sp)", reg);
+    mips("addi $sp, $sp, 4");
+}
+
 
 #define t0 "$t0"
 #define t1 "$t1"
 #define t2 "$t2"
+#define ra "$ra"
 
 static void translate_label(IR *ir) {
     mips0("L%d:", ir->label.label_no);
@@ -84,8 +96,29 @@ static void translate_goto(IR *ir) {
     mips("j %s", label_repr(ir->goto_.label));
 }
 
+char *break_repr(int relop) {
+    if (relop == RELOP_LT) {
+        return "lt";
+    } else if (relop == RELOP_LE) {
+        return "le";
+    } else if (relop == RELOP_GT) {
+        return "gt";
+    } else if (relop == RELOP_GE) {
+        return "ge";
+    } else if (relop == RELOP_EQ) {
+        return "eq";
+    } else if (relop == RELOP_NE) {
+        return "ne";
+    } else {
+        fatal("unknown relop");
+    }
+}
+
 static void translate_if(IR *ir) {
-    printf("  %s\n", ir_repr(ir));
+    load(t1, ir->if_.arg1);
+    load(t2, ir->if_.arg2);
+    mips("b%s %s, %s, %s", break_repr(ir->if_.relop),
+            t1, t2, label_repr(ir->if_.label));
 }
 
 static void translate_return(IR *ir) {
@@ -109,26 +142,21 @@ static void translate_param(IR *ir) {
 }
 
 static void translate_read(IR *ir) {
-    printf("  %s\n", ir_repr(ir));
-}
+    push(ra);
+    mips("jal read");
+    pop(ra);
 
-static void translate_push(char *reg) {
-    mips("addi $sp, $sp, -4");
-    mips("sw %s, 0($sp)", reg);
-}
-
-static void translate_pop(char *reg) {
-    mips("lw %s, 0($sp)", reg);
-    mips("addi $sp, $sp, 4");
+    // get result
+    mips("sw $v0, %s", var_repr(ir->arg1));
 }
 
 static void translate_write(IR *ir) {
     // pass argument
     mips("lw $a0, %s", var_repr(ir->arg1));
 
-    translate_push("$ra");
+    push(ra);
     mips("jal write");
-    translate_pop("$ra");
+    pop(ra);
 }
 
 typedef void (*funcptr)(IR *ir);
@@ -169,12 +197,22 @@ static void generate_data() {
     }
 
     mips0("_newline: .asciiz \"\\n\"");
+    mips0("_prompt: .asciiz \"Enter an integer: \"");
     mips0("  ");
     mips0(".globl main");
 }
 
 static void generate_func() {
     mips0(".text");
+    mips0("  ");
+    mips0("read:");
+    mips("li $v0, 4 # print_string");
+    mips("la $a0, _prompt");
+    mips("syscall");
+    mips("li $v0, 5 # read_int");
+    mips("syscall");
+    mips("# $v0 takes the result");
+    mips("jr $ra");
     mips0("  ");
     mips0("write:");
     mips("li $v0, 1 # print_int");
