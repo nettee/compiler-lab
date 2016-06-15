@@ -20,10 +20,22 @@ extern FILE *asm_out;
     mips0(__VA_ARGS__); \
 }
 
+#define li(reg, i) \
+    mips("li %s, %d", reg, i);
+#define la(reg, var) \
+    mips("la %s, %s", reg, var_repr(var))
 #define load(reg, var) \
     mips("lw %s, %s", reg, var_repr(var))
 #define store(reg, var) \
     mips("sw %s, %s", reg, var_repr(var))
+#define load_indir(reg, var) { \
+    load(t3, var); \
+    mips("lw %s, 0(%s)", reg, t3); \
+}
+#define store_indir(reg, var) { \
+    load(t3, var); \
+    mips("sw %s, 0(%s)", reg, t3); \
+}
 #define push(reg) { \
     mips("addi $sp, $sp, -4"); \
     mips("sw %s, 0($sp)", reg); \
@@ -37,12 +49,25 @@ extern FILE *asm_out;
 #define t0 "$t0"
 #define t1 "$t1"
 #define t2 "$t2"
+#define t3 "$t3"
 #define a0 "$a0"
 #define v0 "$v0"
 #define ra "$ra"
 
 int arg_cnt = 0;
 int param_cnt = 0;
+
+static void load_to(char *reg, Operand *op) {
+    if (op->kind == INT_LITERAL) {
+        li(reg, op->int_value);
+    } else if (op->kind == ADDR) {
+        la(reg, op->addr_var);
+    } else if (op->kind == INDIR) {
+        load_indir(reg, op->indir_var);
+    } else {
+        load(reg, op);
+    }
+}
 
 static void translate_label(IR *ir) {
     mips0("L%d:", ir->label.label_no);
@@ -59,46 +84,40 @@ static void translate_function(IR *ir) {
     param_cnt = 0;
 }
 
-static void translate_assign_const(IR *ir) {
-    mips("li %s, %d", t0, ir->arg1->int_value);
-    store(t0, ir->result);
-}
-
 static void translate_assign(IR *ir) {
-    if (ir->arg1->kind == INT_LITERAL) {
-        translate_assign_const(ir);
+    load_to(t1, ir->arg1);
+    mips("move %s, %s", t0, t1);
+    if (ir->result->kind == INDIR) {
+        store_indir(t0, ir->result->indir_var);
     } else {
-        load(t0, ir->result);
-        load(t1, ir->arg1);
-        mips("move %s, %s", t0, t1);
         store(t0, ir->result);
     }
 }
 
-static void translate_infix(IR *ir, char *infix_op) {
-    load(t0, ir->result);
-    load(t1, ir->arg1);
-    load(t2, ir->arg2);
-    mips("%s %s, %s, %s", infix_op, t0, t1, t2);
+static void translate_add(IR *ir) {
+    load_to(t1, ir->arg1);
+    load_to(t2, ir->arg2);
+    mips("add %s, %s, %s", t0, t1, t2);
     store(t0, ir->result);
 }
 
-static void translate_add(IR *ir) {
-    translate_infix(ir, "add");
-}
-
 static void translate_sub(IR *ir) {
-    translate_infix(ir, "sub");
+    load_to(t1, ir->arg1);
+    load_to(t2, ir->arg2);
+    mips("sub %s, %s, %s", t0, t1, t2);
+    store(t0, ir->result);
 }
 
 static void translate_mul(IR *ir) {
-    translate_infix(ir, "mul");
+    load_to(t1, ir->arg1);
+    load_to(t2, ir->arg2);
+    mips("mul %s, %s, %s", t0, t1, t2);
+    store(t0, ir->result);
 }
 
 static void translate_div(IR *ir) {
-    load(t0, ir->result);
-    load(t1, ir->arg1);
-    load(t2, ir->arg2);
+    load_to(t1, ir->arg1);
+    load_to(t2, ir->arg2);
     mips("div %s, %s", t1, t2);
     mips("mflo %s", t0);
     store(t0, ir->result);
@@ -127,14 +146,14 @@ char *break_repr(int relop) {
 }
 
 static void translate_if(IR *ir) {
-    load(t1, ir->if_.arg1);
-    load(t2, ir->if_.arg2);
+    load_to(t1, ir->if_.arg1);
+    load_to(t2, ir->if_.arg2);
     mips("b%s %s, %s, %s", break_repr(ir->if_.relop),
             t1, t2, label_repr(ir->if_.label));
 }
 
 static void translate_return(IR *ir) {
-    load(v0, ir->arg1);
+    load_to(v0, ir->arg1);
     mips("jr $ra");
 }
 
@@ -143,7 +162,7 @@ static void translate_alloc(IR *ir) {
 }
 
 static void translate_arg(IR *ir) {
-    load(t0, ir->arg1);
+    load_to(t0, ir->arg1);
     push(t0);
     arg_cnt++;
 }
@@ -176,7 +195,7 @@ static void translate_read(IR *ir) {
 
 static void translate_write(IR *ir) {
     // pass argument
-    load(a0, ir->arg1);
+    load_to(a0, ir->arg1);
 
     push(ra);
     mips("jal write");
@@ -210,14 +229,35 @@ static void translate_IR(IR *ir) {
 
 static void generate_data() {
     mips0(".data");
+
     SymbolTable *vst = get_current_env()->vst;
     for (SymbolNode *q = vst->head; q != NULL; q = q->next) {
         Symbol *sym = q->symbol;
-        mips0("var_%s: .word 0", sym->name);
+        mips0("var_%s: .space 4", sym->name);
     }
+
     extern int nr_temp;
+    int *shadowed = malloc((nr_temp + 1) * sizeof(int));
     for (int i = 1; i <= nr_temp; i++) {
-        mips0("var_t%d: .word 0", i);
+        shadowed[i] = false;
+    }
+    for (IRNode *q = irList.head; q != NULL; q = q->next) {
+        IR *ir = q->ir;
+        if (ir->kind == IR_ALLOC) {
+            mips0("var_%s: .space %d",
+                    op_repr(ir->alloc.var), 
+                    ir->alloc.size);
+            // assume that all DEC is for temp var
+            int temp_no = ir->alloc.var->temp_no;
+            shadowed[temp_no] = true;
+        }
+    }
+
+    for (int i = 1; i <= nr_temp; i++) {
+        if (shadowed[i]) {
+            continue;
+        }
+        mips0("var_t%d: .space 4", i);
     }
 
     mips0("_newline: .asciiz \"\\n\"");

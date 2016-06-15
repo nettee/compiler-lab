@@ -1,9 +1,17 @@
 int fact(int n)
 {
-    if (n == 1)
-        return n;
-    else
-        return n * fact(n - 1);
+    int r;
+    int f;
+    if (n == 1) {
+        r = 1;
+        write(r);
+        return r;
+    } else {
+        f = fact(n - 1);
+        r = n * fact(n - 1);
+        write(r);
+        return r;
+    }
 }
 
 int main()
